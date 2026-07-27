@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+  davidbel/ai-search by David Belicza
+  SPDX-License-Identifier: MIT
+  https://github.com/DavidBelicza/Magento-AI-Search
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="DavidBel\AiSearch\Model\Chunking">
+        <arguments>
+            <argument name="chunkingStrategies" xsi:type="array">
+                <item name="general" xsi:type="object">DavidBel\AiSearch\Model\Chunking\GeneralChunking</item>
+            </argument>
+        </arguments>
+    </type>
+</config>
