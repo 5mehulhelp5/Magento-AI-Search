@@ -1,0 +1,42 @@
+{
+    "_comment": [
+        "davidbel/ai-search by David Belicza",
+        "SPDX-License-Identifier: MIT",
+        "https://github.com/DavidBelicza/Magento-AI-Search"
+    ],
+    "name": "davidbel/ai-search",
+    "description": "AI search module for Magento 2.",
+    "type": "magento2-module",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "David Belicza",
+            "homepage": "https://github.com/DavidBelicza"
+        }
+    ],
+    "homepage": "https://github.com/DavidBelicza/Magento-AI-Search",
+    "support": {
+        "issues": "https://github.com/DavidBelicza/Magento-AI-Search/issues",
+        "source": "https://github.com/DavidBelicza/Magento-AI-Search"
+    },
+    "require": {
+        "php": ">=8.3",
+        "magento/framework": "103.0.*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.0"
+    },
+    "autoload": {
+        "files": [
+            "src/registration.php"
+        ],
+        "psr-4": {
+            "DavidBel\\AiSearch\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DavidBel\\AiSearch\\Tests\\": "tests/"
+        }
+    }
+}
