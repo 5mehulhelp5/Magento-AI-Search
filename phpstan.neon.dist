@@ -1,0 +1,17 @@
+# davidbel/ai-search by David Belicza
+# SPDX-License-Identifier: MIT
+# https://github.com/DavidBelicza/Magento-AI-Search
+
+includes:
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+    - vendor/phpstan/phpstan-phpunit/rules.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+
+parameters:
+    level: max
+    paths:
+        - src
+        - tests
+    tmpDir: .phpstan.cache
+    checkUninitializedProperties: true
+    reportUnmatchedIgnoredErrors: true

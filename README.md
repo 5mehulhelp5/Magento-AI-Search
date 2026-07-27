@@ -6,4 +6,8 @@ https://github.com/DavidBelicza/Magento-AI-Search
 
 # Magento AI Search
 
-AI search module for Magento 2.
+## Install
+
+```shell
+composer require davidbel/ai-search
+```
