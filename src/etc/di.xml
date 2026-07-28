@@ -6,6 +6,18 @@
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="DavidBel\AiSearch\Api\Data\DocumentInterface"
+                type="DavidBel\AiSearch\Model\Document"/>
+    <preference for="DavidBel\AiSearch\Api\Data\ChunkInterface"
+                type="DavidBel\AiSearch\Model\Chunk"/>
+    <preference for="DavidBel\AiSearch\Api\Data\DocumentSearchResultsInterface"
+                type="DavidBel\AiSearch\Model\DocumentSearchResults"/>
+    <preference for="DavidBel\AiSearch\Api\Data\ChunkSearchResultsInterface"
+                type="DavidBel\AiSearch\Model\ChunkSearchResults"/>
+    <preference for="DavidBel\AiSearch\Api\DocumentRepositoryInterface"
+                type="DavidBel\AiSearch\Repository\DocumentRepository"/>
+    <preference for="DavidBel\AiSearch\Api\ChunkRepositoryInterface"
+                type="DavidBel\AiSearch\Repository\ChunkRepository"/>
     <type name="DavidBel\AiSearch\Model\Chunking">
         <arguments>
             <argument name="chunkingStrategies" xsi:type="array">

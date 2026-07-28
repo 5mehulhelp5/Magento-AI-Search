@@ -13,7 +13,7 @@ use DavidBel\AiSearch\Model\Chunking\ChunkingInterface;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
-final class ChunkingTest extends TestCase
+class ChunkingTest extends TestCase
 {
     public function testDelegatesToFirstConfiguredStrategy(): void
     {

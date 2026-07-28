@@ -27,9 +27,7 @@
         <exclude name="Magento2.PHP.FinalImplementation"/>
     </rule>
 
-    <rule ref="Magento2.PHP.FinalImplementation">
-        <exclude-pattern>tests/*</exclude-pattern>
-    </rule>
+    <config name="testVersion" value="8.3-"/>
 
     <rule ref="SlevomatCodingStandard.Commenting.DisallowCommentAfterCode"/>
     <rule ref="SlevomatCodingStandard.Commenting.UselessFunctionDocComment"/>
@@ -52,7 +50,13 @@
         </properties>
     </rule>
     <rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHint"/>
+    <rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHint.UselessAnnotation">
+        <exclude-pattern>src/Api/*</exclude-pattern>
+    </rule>
     <rule ref="SlevomatCodingStandard.TypeHints.PropertyTypeHint"/>
     <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint"/>
+    <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint.UselessAnnotation">
+        <exclude-pattern>src/Api/*</exclude-pattern>
+    </rule>
     <rule ref="SlevomatCodingStandard.Variables.UnusedVariable"/>
 </ruleset>

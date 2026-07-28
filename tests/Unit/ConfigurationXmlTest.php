@@ -13,13 +13,17 @@ use Magento\Framework\Config\Dom;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-final class ConfigurationXmlTest extends TestCase
+class ConfigurationXmlTest extends TestCase
 {
     /**
      * @return iterable<string, array{string, string}>
      */
     public static function configurations(): iterable
     {
+        yield 'database schema' => [
+            'db_schema.xml',
+            'urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd',
+        ];
         yield 'dependency injection' => [
             'di.xml',
             'urn:magento:framework:ObjectManager/etc/config.xsd',

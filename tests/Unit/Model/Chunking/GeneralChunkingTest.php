@@ -11,7 +11,7 @@ namespace DavidBel\AiSearch\Tests\Unit\Model\Chunking;
 use DavidBel\AiSearch\Model\Chunking\GeneralChunking;
 use PHPUnit\Framework\TestCase;
 
-final class GeneralChunkingTest extends TestCase
+class GeneralChunkingTest extends TestCase
 {
     private GeneralChunking $chunking;
 

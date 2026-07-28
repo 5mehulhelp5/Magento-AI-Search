@@ -31,6 +31,7 @@
         "php": ">=8.3"
     },
     "require-dev": {
+        "bitexpert/phpstan-magento": "^0.43",
         "magento/magento-coding-standard": "40",
         "php-parallel-lint/php-parallel-lint": "^1.4",
         "phpmd/phpmd": "^2.15",
@@ -62,8 +63,8 @@
     },
     "scripts": {
         "analyse": "@php vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress",
-        "cs": "@php vendor/bin/phpcs --standard=phpcs.xml.dist",
-        "cs:fix": "@php vendor/bin/phpcbf --standard=phpcs.xml.dist",
+        "cs": "@php vendor/bin/phpcs --runtime-set testVersion 8.3- --standard=phpcs.xml.dist",
+        "cs:fix": "@php vendor/bin/phpcbf --runtime-set testVersion 8.3- --standard=phpcs.xml.dist",
         "lint": "@php vendor/bin/parallel-lint --exclude vendor src tests",
         "mess": "@php vendor/bin/phpmd src,tests text phpmd.xml",
         "qa": [

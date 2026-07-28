@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<!--
+  davidbel/ai-search by David Belicza
+  SPDX-License-Identifier: MIT
+  https://github.com/DavidBelicza/Magento-AI-Search
+-->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="davidbel_ai_search_document"
+           resource="default"
+           engine="innodb"
+           comment="AI Search Documents">
+        <column xsi:type="bigint"
+                name="document_id"
+                unsigned="true"
+                nullable="false"
+                identity="true"
+                comment="Document ID"/>
+        <column xsi:type="varchar"
+                name="source_entity_type"
+                nullable="false"
+                length="64"
+                comment="Source Entity Type"/>
+        <column xsi:type="bigint"
+                name="source_entity_id"
+                unsigned="true"
+                nullable="false"
+                comment="Source Entity ID"/>
+        <column xsi:type="smallint"
+                name="store_id"
+                unsigned="true"
+                nullable="false"
+                comment="Store ID"/>
+        <column xsi:type="varchar"
+                name="source_code"
+                nullable="false"
+                length="64"
+                comment="Source Code"/>
+        <column xsi:type="varchar"
+                name="source_hash"
+                nullable="false"
+                length="64"
+                comment="Normalized Source SHA-256 Hash"/>
+        <column xsi:type="timestamp"
+                name="created_at"
+                nullable="false"
+                default="CURRENT_TIMESTAMP"
+                on_update="false"
+                comment="Created At"/>
+        <column xsi:type="timestamp"
+                name="updated_at"
+                nullable="false"
+                default="CURRENT_TIMESTAMP"
+                on_update="true"
+                comment="Updated At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="document_id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="DAVIDBEL_AI_SEARCH_DOCUMENT_SOURCE">
+            <column name="source_entity_type"/>
+            <column name="source_entity_id"/>
+            <column name="store_id"/>
+            <column name="source_code"/>
+        </constraint>
+        <index referenceId="DAVIDBEL_AI_SEARCH_DOCUMENT_SOURCE_HASH" indexType="btree">
+            <column name="source_hash"/>
+        </index>
+    </table>
+    <table name="davidbel_ai_search_chunk"
+           resource="default"
+           engine="innodb"
+           comment="AI Search Document Chunks">
+        <column xsi:type="bigint"
+                name="chunk_id"
+                unsigned="true"
+                nullable="false"
+                identity="true"
+                comment="Chunk ID"/>
+        <column xsi:type="bigint"
+                name="document_id"
+                unsigned="true"
+                nullable="false"
+                comment="Document ID"/>
+        <column xsi:type="int"
+                name="chunk_index"
+                unsigned="true"
+                nullable="false"
+                comment="Chunk Index"/>
+        <column xsi:type="text"
+                name="content"
+                nullable="false"
+                comment="Normalized Chunk Content"/>
+        <column xsi:type="varchar"
+                name="content_hash"
+                nullable="false"
+                length="64"
+                comment="Chunk SHA-256 Hash"/>
+        <column xsi:type="timestamp"
+                name="created_at"
+                nullable="false"
+                default="CURRENT_TIMESTAMP"
+                on_update="false"
+                comment="Created At"/>
+        <column xsi:type="timestamp"
+                name="updated_at"
+                nullable="false"
+                default="CURRENT_TIMESTAMP"
+                on_update="true"
+                comment="Updated At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="chunk_id"/>
+        </constraint>
+        <constraint xsi:type="foreign"
+                    referenceId="DAVIDBEL_AI_SEARCH_CHUNK_DOCUMENT_ID_DOCUMENT_DOCUMENT_ID"
+                    table="davidbel_ai_search_chunk"
+                    column="document_id"
+                    referenceTable="davidbel_ai_search_document"
+                    referenceColumn="document_id"
+                    onDelete="CASCADE"/>
+        <constraint xsi:type="unique" referenceId="DAVIDBEL_AI_SEARCH_CHUNK_DOCUMENT_INDEX">
+            <column name="document_id"/>
+            <column name="chunk_index"/>
+        </constraint>
+        <index referenceId="DAVIDBEL_AI_SEARCH_CHUNK_CONTENT_HASH" indexType="btree">
+            <column name="content_hash"/>
+        </index>
+    </table>
+</schema>

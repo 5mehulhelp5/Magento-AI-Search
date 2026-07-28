@@ -3,6 +3,7 @@
 # https://github.com/DavidBelicza/Magento-AI-Search
 
 includes:
+    - vendor/bitexpert/phpstan-magento/extension.neon
     - vendor/phpstan/phpstan-phpunit/extension.neon
     - vendor/phpstan/phpstan-phpunit/rules.neon
     - vendor/phpstan/phpstan-strict-rules/rules.neon
