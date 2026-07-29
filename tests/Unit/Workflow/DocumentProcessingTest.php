@@ -92,4 +92,31 @@ class DocumentProcessingTest extends TestCase
 
         (new DocumentProcessing($sourceProvider, $documentUpdater))->deltaUpdate([]);
     }
+
+    public function testLoadsDeltaUpdatesInBoundedBatches(): void
+    {
+        $productIds = range(1, DocumentProcessing::BATCH_SIZE + 1);
+        $loadedBatches = [];
+        $sourceProvider = $this->createMock(SourceProvider::class);
+        $sourceProvider->expects(self::exactly(2))
+            ->method('getByProductIds')
+            ->willReturnCallback(
+                static function (array $productIdBatch) use (&$loadedBatches): array {
+                    $loadedBatches[] = $productIdBatch;
+
+                    return [];
+                }
+            );
+        $documentUpdater = self::createStub(DocumentUpdater::class);
+
+        (new DocumentProcessing($sourceProvider, $documentUpdater))->deltaUpdate($productIds);
+
+        self::assertSame(
+            [
+                range(1, DocumentProcessing::BATCH_SIZE),
+                [DocumentProcessing::BATCH_SIZE + 1],
+            ],
+            $loadedBatches
+        );
+    }
 }

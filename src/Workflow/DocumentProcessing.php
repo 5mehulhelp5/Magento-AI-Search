@@ -48,11 +48,9 @@ readonly class DocumentProcessing
      */
     public function deltaUpdate(array $productIds): void
     {
-        if ($productIds === []) {
-            return;
+        foreach (array_chunk($productIds, self::BATCH_SIZE) as $productIdBatch) {
+            $this->processProducts($productIdBatch, UpdateMode::DeltaUpdate);
         }
-
-        $this->processProducts($productIds, UpdateMode::DeltaUpdate);
     }
 
     /**

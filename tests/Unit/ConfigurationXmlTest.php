@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit;
 
 use DOMDocument;
+use DOMXPath;
 use Magento\Framework\Config\Dom;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -20,6 +21,14 @@ class ConfigurationXmlTest extends TestCase
      */
     public static function configurations(): iterable
     {
+        yield 'cron' => [
+            'crontab.xml',
+            'urn:magento:module:Magento_Cron:etc/crontab.xsd',
+        ];
+        yield 'cron groups' => [
+            'cron_groups.xml',
+            'urn:magento:module:Magento_Cron:etc/cron_groups.xsd',
+        ];
         yield 'database schema' => [
             'db_schema.xml',
             'urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd',
@@ -50,5 +59,53 @@ class ConfigurationXmlTest extends TestCase
 
         self::assertTrue($document->load($path));
         self::assertSame([], Dom::validateDomDocument($document, $schema));
+    }
+
+    public function testVectorEmbeddingCronUsesDedicatedProcessGroup(): void
+    {
+        $configurationDirectory = dirname(__DIR__, 2) . '/src/etc/';
+        $crontab = new DOMDocument();
+        $cronGroups = new DOMDocument();
+
+        self::assertTrue($crontab->load($configurationDirectory . 'crontab.xml'));
+        self::assertTrue($cronGroups->load($configurationDirectory . 'cron_groups.xml'));
+
+        $crontabXPath = new DOMXPath($crontab);
+        $cronGroupsXPath = new DOMXPath($cronGroups);
+
+        self::assertSame(
+            1.0,
+            $crontabXPath->evaluate(
+                'count(/config/group[@id="davidbel_ai_search"]'
+                . '/job[@name="davidbel_ai_search_vector_embedding"'
+                . ' and @instance="DavidBel\AiSearch\Cron\VectorEmbedding"'
+                . ' and @method="execute"])'
+            )
+        );
+        self::assertSame(
+            '1',
+            $cronGroupsXPath->evaluate(
+                'string(/config/group[@id="davidbel_ai_search"]/use_separate_process)'
+            )
+        );
+    }
+
+    public function testDeclaresMagentoCronModuleDependency(): void
+    {
+        $module = new DOMDocument();
+
+        self::assertTrue(
+            $module->load(dirname(__DIR__, 2) . '/src/etc/module.xml')
+        );
+
+        $moduleXPath = new DOMXPath($module);
+
+        self::assertSame(
+            1.0,
+            $moduleXPath->evaluate(
+                'count(/config/module[@name="DavidBel_AiSearch"]'
+                . '/sequence/module[@name="Magento_Cron"])'
+            )
+        );
     }
 }

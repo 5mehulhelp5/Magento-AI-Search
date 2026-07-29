@@ -9,6 +9,7 @@
     <module name="DavidBel_AiSearch">
         <sequence>
             <module name="Magento_Catalog"/>
+            <module name="Magento_Cron"/>
             <module name="Magento_Indexer"/>
             <module name="Magento_Store"/>
         </sequence>
