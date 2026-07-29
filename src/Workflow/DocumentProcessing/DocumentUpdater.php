@@ -182,12 +182,7 @@ readonly class DocumentUpdater
         }
 
         $existingChunks = $this->getChunks($documentId);
-
-        if ($this->getStoredChunkData($existingChunks) === $this->getGeneratedChunkData($chunks)) {
-            return;
-        }
-
-        $this->replaceChunks($documentId, $existingChunks, $chunks);
+        $this->updateChunks($documentId, $existingChunks, $chunks);
     }
 
     private function createDocument(
@@ -243,45 +238,72 @@ readonly class DocumentUpdater
     }
 
     /**
-     * @param list<ChunkInterface> $chunks
-     * @return list<array{string, string}>
-     */
-    private function getStoredChunkData(array $chunks): array
-    {
-        return array_map(
-            static fn (ChunkInterface $chunk): array => [
-                $chunk->getContentHash(),
-                $chunk->getContent(),
-            ],
-            $chunks
-        );
-    }
-
-    /**
-     * @param list<string> $chunks
-     * @return list<array{string, string}>
-     */
-    private function getGeneratedChunkData(array $chunks): array
-    {
-        return array_map(
-            static fn (string $chunk): array => [
-                hash('sha256', $chunk),
-                $chunk,
-            ],
-            $chunks
-        );
-    }
-
-    /**
      * @param list<ChunkInterface> $existingChunks
      * @param list<string> $generatedChunks
      */
-    private function replaceChunks(
+    private function updateChunks(
         int $documentId,
         array $existingChunks,
         array $generatedChunks
     ): void {
-        foreach ($existingChunks as $chunk) {
+        $existingChunksByIndex = $this->getChunksByIndex($existingChunks);
+
+        foreach ($generatedChunks as $chunkIndex => $content) {
+            $existingChunk = $existingChunksByIndex[$chunkIndex] ?? null;
+            unset($existingChunksByIndex[$chunkIndex]);
+            $contentHash = hash('sha256', $content);
+
+            if ($this->hasChunkContent($existingChunk, $content, $contentHash)) {
+                continue;
+            }
+
+            $chunk = $existingChunk ?? $this->createChunk($documentId, $chunkIndex);
+            $chunk->setContent($content)
+                ->setContentHash($contentHash);
+            $this->chunkRepository->save($chunk);
+        }
+
+        $this->deleteChunks($existingChunksByIndex);
+    }
+
+    /**
+     * @param list<ChunkInterface> $chunks
+     * @return array<int, ChunkInterface>
+     */
+    private function getChunksByIndex(array $chunks): array
+    {
+        $chunksByIndex = [];
+
+        foreach ($chunks as $chunk) {
+            $chunksByIndex[$chunk->getChunkIndex()] = $chunk;
+        }
+
+        return $chunksByIndex;
+    }
+
+    private function hasChunkContent(
+        ?ChunkInterface $chunk,
+        string $content,
+        string $contentHash
+    ): bool {
+        return $chunk !== null
+            && hash_equals($chunk->getContentHash(), $contentHash)
+            && $chunk->getContent() === $content;
+    }
+
+    private function createChunk(int $documentId, int $chunkIndex): ChunkInterface
+    {
+        return $this->chunkFactory->create()
+            ->setDocumentId($documentId)
+            ->setChunkIndex($chunkIndex);
+    }
+
+    /**
+     * @param array<int, ChunkInterface> $chunks
+     */
+    private function deleteChunks(array $chunks): void
+    {
+        foreach ($chunks as $chunk) {
             $chunkId = $chunk->getChunkId();
 
             if ($chunkId === null) {
@@ -289,15 +311,6 @@ readonly class DocumentUpdater
             }
 
             $this->chunkRepository->deleteById($chunkId);
-        }
-
-        foreach ($generatedChunks as $chunkIndex => $content) {
-            $chunk = $this->chunkFactory->create()
-                ->setDocumentId($documentId)
-                ->setChunkIndex($chunkIndex)
-                ->setContent($content)
-                ->setContentHash(hash('sha256', $content));
-            $this->chunkRepository->save($chunk);
         }
     }
 
