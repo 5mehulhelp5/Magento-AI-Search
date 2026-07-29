@@ -125,4 +125,65 @@
             <column name="content_hash"/>
         </index>
     </table>
+    <table name="davidbel_ai_search_embedding_backlog"
+           resource="default"
+           engine="innodb"
+           comment="AI Search Embedding Backlog">
+        <column xsi:type="bigint"
+                name="backlog_id"
+                unsigned="true"
+                nullable="false"
+                identity="true"
+                comment="Backlog ID"/>
+        <column xsi:type="bigint"
+                name="chunk_id"
+                unsigned="true"
+                nullable="false"
+                comment="Target Chunk ID"/>
+        <column xsi:type="varchar"
+                name="operation"
+                nullable="false"
+                default="upsert"
+                length="16"
+                comment="Operation"/>
+        <column xsi:type="varchar"
+                name="status"
+                nullable="false"
+                default="pending"
+                length="16"
+                comment="Status"/>
+        <column xsi:type="smallint"
+                name="attempt_count"
+                unsigned="true"
+                nullable="false"
+                default="0"
+                comment="Attempt Count"/>
+        <column xsi:type="varchar"
+                name="last_error_category"
+                nullable="true"
+                length="64"
+                comment="Last Error Category"/>
+        <column xsi:type="timestamp"
+                name="created_at"
+                nullable="false"
+                default="CURRENT_TIMESTAMP"
+                on_update="false"
+                comment="Created At"/>
+        <column xsi:type="timestamp"
+                name="updated_at"
+                nullable="false"
+                default="CURRENT_TIMESTAMP"
+                on_update="true"
+                comment="Updated At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="backlog_id"/>
+        </constraint>
+        <constraint xsi:type="unique"
+                    referenceId="DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_CHUNK_ID">
+            <column name="chunk_id"/>
+        </constraint>
+        <index referenceId="DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_STATUS" indexType="btree">
+            <column name="status"/>
+        </index>
+    </table>
 </schema>

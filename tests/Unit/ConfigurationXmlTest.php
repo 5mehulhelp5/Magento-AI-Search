@@ -128,4 +128,77 @@ class ConfigurationXmlTest extends TestCase
             )
         );
     }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function embeddingBacklogPreferences(): iterable
+    {
+        yield 'data model' => [
+            'DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface',
+            'DavidBel\AiSearch\Model\EmbeddingBacklog',
+        ];
+        yield 'search results' => [
+            'DavidBel\AiSearch\Api\Data\EmbeddingBacklogSearchResultsInterface',
+            'DavidBel\AiSearch\Model\EmbeddingBacklogSearchResults',
+        ];
+        yield 'repository' => [
+            'DavidBel\AiSearch\Api\EmbeddingBacklogRepositoryInterface',
+            'DavidBel\AiSearch\Repository\EmbeddingBacklogRepository',
+        ];
+    }
+
+    #[DataProvider('embeddingBacklogPreferences')]
+    public function testDeclaresEmbeddingBacklogPreference(
+        string $interface,
+        string $implementation
+    ): void {
+        $dependencyInjection = new DOMDocument();
+
+        self::assertTrue(
+            $dependencyInjection->load(dirname(__DIR__, 2) . '/src/etc/di.xml')
+        );
+
+        $dependencyInjectionXPath = new DOMXPath($dependencyInjection);
+
+        self::assertSame(
+            1.0,
+            $dependencyInjectionXPath->evaluate(
+                sprintf(
+                    'count(/config/preference[@for="%s"][@type="%s"])',
+                    $interface,
+                    $implementation
+                )
+            )
+        );
+    }
+
+    public function testDefinesEmbeddingBacklogSchema(): void
+    {
+        $databaseSchema = new DOMDocument();
+
+        self::assertTrue(
+            $databaseSchema->load(dirname(__DIR__, 2) . '/src/etc/db_schema.xml')
+        );
+
+        $databaseSchemaXPath = new DOMXPath($databaseSchema);
+        $tablePath = '/schema/table[@name="davidbel_ai_search_embedding_backlog"]';
+
+        self::assertSame(
+            1.0,
+            $databaseSchemaXPath->evaluate(
+                sprintf(
+                    'count(%s'
+                    . '[column[@name="backlog_id"][@identity="true"]]'
+                    . '[column[@name="chunk_id"]]'
+                    . '[column[@name="operation"][@default="upsert"]]'
+                    . '[column[@name="status"][@default="pending"]]'
+                    . '[column[@name="attempt_count"][@default="0"]]'
+                    . '[constraint/column[@name="chunk_id"]]'
+                    . '[index/column[@name="status"]])',
+                    $tablePath
+                )
+            )
+        );
+    }
 }
