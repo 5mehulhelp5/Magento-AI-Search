@@ -28,9 +28,17 @@ class ConfigurationXmlTest extends TestCase
             'di.xml',
             'urn:magento:framework:ObjectManager/etc/config.xsd',
         ];
+        yield 'indexer' => [
+            'indexer.xml',
+            'urn:magento:framework:Indexer/etc/indexer.xsd',
+        ];
         yield 'module' => [
             'module.xml',
             'urn:magento:framework:Module/etc/module.xsd',
+        ];
+        yield 'materialized view' => [
+            'mview.xml',
+            'urn:magento:framework:Mview/etc/mview.xsd',
         ];
     }
 

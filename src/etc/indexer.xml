@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+  davidbel/ai-search by David Belicza
+  SPDX-License-Identifier: MIT
+  https://github.com/DavidBelicza/Magento-AI-Search
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Indexer/etc/indexer.xsd">
+    <indexer id="davidbel_ai_search_product_indexer"
+             view_id="davidbel_ai_search_product_mview"
+             class="DavidBel\AiSearch\Indexer\ProductIndexer">
+        <title translate="true">AI Search Product</title>
+        <description translate="true">Process store-scoped product data into normalized chunks</description>
+    </indexer>
+</config>

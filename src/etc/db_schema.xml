@@ -40,7 +40,7 @@
                 name="source_hash"
                 nullable="false"
                 length="64"
-                comment="Normalized Source SHA-256 Hash"/>
+                comment="Resolved Source Value SHA-256 Hash"/>
         <column xsi:type="timestamp"
                 name="created_at"
                 nullable="false"

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+  davidbel/ai-search by David Belicza
+  SPDX-License-Identifier: MIT
+  https://github.com/DavidBelicza/Magento-AI-Search
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Mview/etc/mview.xsd">
+    <view id="davidbel_ai_search_product_mview"
+          class="DavidBel\AiSearch\Indexer\ProductIndexer"
+          group="indexer">
+        <subscriptions>
+            <table name="catalog_product_entity" entity_column="entity_id"/>
+            <table name="catalog_product_entity_text" entity_column="entity_id"/>
+            <table name="catalog_product_website" entity_column="product_id"/>
+        </subscriptions>
+    </view>
+</config>

@@ -102,14 +102,14 @@ interface DocumentInterface extends ExtensibleDataInterface
     public function setSourceCode(string $sourceCode): DocumentInterface;
 
     /**
-     * Get the normalized source SHA-256 hash.
+     * Get the resolved source value SHA-256 hash.
      *
      * @return string
      */
     public function getSourceHash(): string;
 
     /**
-     * Set the normalized source SHA-256 hash.
+     * Set the resolved source value SHA-256 hash.
      *
      * @param string $sourceHash
      * @return \DavidBel\AiSearch\Api\Data\DocumentInterface
