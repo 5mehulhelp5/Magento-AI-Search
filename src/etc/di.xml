@@ -18,6 +18,8 @@
                 type="DavidBel\AiSearch\Repository\DocumentRepository"/>
     <preference for="DavidBel\AiSearch\Api\ChunkRepositoryInterface"
                 type="DavidBel\AiSearch\Repository\ChunkRepository"/>
+    <preference for="DavidBel\AiSearch\Api\EmbedderClientInterface"
+                type="DavidBel\AiSearch\Embedding\Client\OpenAi"/>
     <type name="DavidBel\AiSearch\Workflow\DocumentProcessing\Chunking">
         <arguments>
             <argument name="chunkingStrategies" xsi:type="array">

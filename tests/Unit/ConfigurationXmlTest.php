@@ -108,4 +108,24 @@ class ConfigurationXmlTest extends TestCase
             )
         );
     }
+
+    public function testDeclaresOpenAiEmbedderClientPreference(): void
+    {
+        $dependencyInjection = new DOMDocument();
+
+        self::assertTrue(
+            $dependencyInjection->load(dirname(__DIR__, 2) . '/src/etc/di.xml')
+        );
+
+        $dependencyInjectionXPath = new DOMXPath($dependencyInjection);
+
+        self::assertSame(
+            1.0,
+            $dependencyInjectionXPath->evaluate(
+                'count(/config/preference'
+                . '[@for="DavidBel\AiSearch\Api\EmbedderClientInterface"]'
+                . '[@type="DavidBel\AiSearch\Embedding\Client\OpenAi"])'
+            )
+        );
+    }
 }
