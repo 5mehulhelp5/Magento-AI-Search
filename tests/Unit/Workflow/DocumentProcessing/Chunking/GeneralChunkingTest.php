@@ -6,9 +6,9 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Tests\Unit\Model\Chunking;
+namespace DavidBel\AiSearch\Tests\Unit\Workflow\DocumentProcessing\Chunking;
 
-use DavidBel\AiSearch\Model\Chunking\GeneralChunking;
+use DavidBel\AiSearch\Workflow\DocumentProcessing\Chunking\GeneralChunking;
 use PHPUnit\Framework\TestCase;
 
 class GeneralChunkingTest extends TestCase

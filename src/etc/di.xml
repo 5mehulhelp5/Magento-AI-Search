@@ -18,10 +18,11 @@
                 type="DavidBel\AiSearch\Repository\DocumentRepository"/>
     <preference for="DavidBel\AiSearch\Api\ChunkRepositoryInterface"
                 type="DavidBel\AiSearch\Repository\ChunkRepository"/>
-    <type name="DavidBel\AiSearch\Model\Chunking">
+    <type name="DavidBel\AiSearch\Workflow\DocumentProcessing\Chunking">
         <arguments>
             <argument name="chunkingStrategies" xsi:type="array">
-                <item name="general" xsi:type="object">DavidBel\AiSearch\Model\Chunking\GeneralChunking</item>
+                <item name="general"
+                      xsi:type="object">DavidBel\AiSearch\Workflow\DocumentProcessing\Chunking\GeneralChunking</item>
             </argument>
         </arguments>
     </type>

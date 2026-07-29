@@ -6,7 +6,7 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Model\Chunking;
+namespace DavidBel\AiSearch\Workflow\DocumentProcessing\Chunking;
 
 use InvalidArgumentException;
 

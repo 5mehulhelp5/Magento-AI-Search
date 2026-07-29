@@ -6,10 +6,10 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Tests\Unit\Model;
+namespace DavidBel\AiSearch\Tests\Unit\Workflow\DocumentProcessing;
 
-use DavidBel\AiSearch\Model\Chunking;
-use DavidBel\AiSearch\Model\Chunking\ChunkingInterface;
+use DavidBel\AiSearch\Workflow\DocumentProcessing\Chunking;
+use DavidBel\AiSearch\Workflow\DocumentProcessing\Chunking\ChunkingInterface;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 

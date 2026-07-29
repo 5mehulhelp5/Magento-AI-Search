@@ -13,7 +13,6 @@ use DavidBel\AiSearch\Api\Data\ChunkInterface;
 use DavidBel\AiSearch\Api\Data\DocumentInterface;
 use DavidBel\AiSearch\Api\DocumentRepositoryInterface;
 use DavidBel\AiSearch\Model\ChunkFactory;
-use DavidBel\AiSearch\Model\Chunking;
 use DavidBel\AiSearch\Model\DocumentFactory;
 use LogicException;
 use Magento\Framework\Api\SearchCriteriaBuilderFactory;

@@ -6,7 +6,7 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Model;
+namespace DavidBel\AiSearch\Workflow\DocumentProcessing;
 
 use InvalidArgumentException;
 
@@ -17,12 +17,12 @@ readonly class Chunking
     public const int ESTIMATED_CHARACTERS_PER_TOKEN = 4;
 
     /**
-     * @var list<\DavidBel\AiSearch\Model\Chunking\ChunkingInterface>
+     * @var list<Chunking\ChunkingInterface>
      */
     private array $chunkingStrategies;
 
     /**
-     * @param array<string, \DavidBel\AiSearch\Model\Chunking\ChunkingInterface> $chunkingStrategies
+     * @param array<string, Chunking\ChunkingInterface> $chunkingStrategies
      */
     public function __construct(array $chunkingStrategies)
     {
