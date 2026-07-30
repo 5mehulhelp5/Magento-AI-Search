@@ -16,7 +16,7 @@ use UnexpectedValueException;
 
 use function is_finite;
 
-readonly class OpenAi implements EmbedderClientInterface
+class OpenAi implements EmbedderClientInterface
 {
     private const BASE_URL = 'http://127.0.0.1:1234';
     private const MODEL = 'text-embedding-embeddinggemma-300m-qat';
@@ -24,8 +24,8 @@ readonly class OpenAi implements EmbedderClientInterface
     private const REQUEST_TIMEOUT_SECONDS = 60;
 
     public function __construct(
-        private CurlFactory $curlFactory,
-        private SerializerInterface $serializer
+        private readonly CurlFactory $curlFactory,
+        private readonly SerializerInterface $serializer
     ) {
     }
 

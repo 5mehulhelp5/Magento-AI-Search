@@ -13,11 +13,11 @@ use DavidBel\AiSearch\Model\EmbeddingBacklogFactory;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use Magento\Framework\Exception\NoSuchEntityException;
 
-readonly class Get
+class Get
 {
     public function __construct(
-        private EmbeddingBacklogFactory $embeddingBacklogFactory,
-        private CollectionFactory $collectionFactory
+        private readonly EmbeddingBacklogFactory $embeddingBacklogFactory,
+        private readonly CollectionFactory $collectionFactory
     ) {
     }
 

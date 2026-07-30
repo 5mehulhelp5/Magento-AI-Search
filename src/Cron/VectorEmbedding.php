@@ -10,10 +10,10 @@ namespace DavidBel\AiSearch\Cron;
 
 use DavidBel\AiSearch\Workflow\VectorEmbedding as VectorEmbeddingWorkflow;
 
-readonly class VectorEmbedding
+class VectorEmbedding
 {
     public function __construct(
-        private VectorEmbeddingWorkflow $vectorEmbedding
+        private readonly VectorEmbeddingWorkflow $vectorEmbedding
     ) {
     }
 

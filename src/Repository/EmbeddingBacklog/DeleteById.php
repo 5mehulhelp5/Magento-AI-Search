@@ -13,11 +13,11 @@ use Exception;
 use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Model\AbstractModel;
 
-readonly class DeleteById
+class DeleteById
 {
     public function __construct(
-        private Get $get,
-        private CollectionFactory $collectionFactory
+        private readonly Get $get,
+        private readonly CollectionFactory $collectionFactory
     ) {
     }
 

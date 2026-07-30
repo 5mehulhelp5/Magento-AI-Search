@@ -10,7 +10,7 @@ namespace DavidBel\AiSearch\Workflow\DocumentProcessing\Chunking;
 
 use InvalidArgumentException;
 
-readonly class GeneralChunking implements ChunkingInterface
+class GeneralChunking implements ChunkingInterface
 {
     private const string PARAGRAPH_SEPARATOR = "\n\n";
     private const string SENTENCE_SEPARATOR = ' ';

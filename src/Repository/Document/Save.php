@@ -14,10 +14,10 @@ use Exception;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Model\AbstractModel;
 
-readonly class Save
+class Save
 {
     public function __construct(
-        private CollectionFactory $collectionFactory
+        private readonly CollectionFactory $collectionFactory
     ) {
     }
 

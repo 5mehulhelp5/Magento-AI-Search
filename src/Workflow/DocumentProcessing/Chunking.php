@@ -10,7 +10,7 @@ namespace DavidBel\AiSearch\Workflow\DocumentProcessing;
 
 use InvalidArgumentException;
 
-readonly class Chunking
+class Chunking
 {
     public const int MAX_TOKENS = 350;
     public const int OVERLAP_TOKENS = 50;
@@ -19,7 +19,7 @@ readonly class Chunking
     /**
      * @var list<Chunking\ChunkingInterface>
      */
-    private array $chunkingStrategies;
+    private readonly array $chunkingStrategies;
 
     /**
      * @param array<string, Chunking\ChunkingInterface> $chunkingStrategies

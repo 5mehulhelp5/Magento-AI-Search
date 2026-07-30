@@ -16,12 +16,12 @@ use Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface;
 use Magento\Framework\Api\SearchCriteriaInterface;
 use UnexpectedValueException;
 
-readonly class GetList
+class GetList
 {
     public function __construct(
-        private CollectionFactory $collectionFactory,
-        private CollectionProcessorInterface $collectionProcessor,
-        private ChunkSearchResultsFactory $searchResultsFactory
+        private readonly CollectionFactory $collectionFactory,
+        private readonly CollectionProcessorInterface $collectionProcessor,
+        private readonly ChunkSearchResultsFactory $searchResultsFactory
     ) {
     }
 

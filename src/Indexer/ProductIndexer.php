@@ -13,10 +13,10 @@ use InvalidArgumentException;
 use Magento\Framework\Indexer\ActionInterface as IndexerActionInterface;
 use Magento\Framework\Mview\ActionInterface as MviewActionInterface;
 
-readonly class ProductIndexer implements IndexerActionInterface, MviewActionInterface
+class ProductIndexer implements IndexerActionInterface, MviewActionInterface
 {
     public function __construct(
-        private DocumentProcessing $documentProcessing
+        private readonly DocumentProcessing $documentProcessing
     ) {
     }
 

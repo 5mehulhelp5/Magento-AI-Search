@@ -17,13 +17,13 @@ use DavidBel\AiSearch\Repository\Document\GetList;
 use DavidBel\AiSearch\Repository\Document\Save;
 use Magento\Framework\Api\SearchCriteriaInterface;
 
-readonly class DocumentRepository implements DocumentRepositoryInterface
+class DocumentRepository implements DocumentRepositoryInterface
 {
     public function __construct(
-        private Save $save,
-        private DeleteById $deleteById,
-        private Get $get,
-        private GetList $getList
+        private readonly Save $save,
+        private readonly DeleteById $deleteById,
+        private readonly Get $get,
+        private readonly GetList $getList
     ) {
     }
 

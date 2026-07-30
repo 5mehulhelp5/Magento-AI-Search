@@ -17,13 +17,13 @@ use DavidBel\AiSearch\Repository\EmbeddingBacklog\GetList;
 use DavidBel\AiSearch\Repository\EmbeddingBacklog\Save;
 use Magento\Framework\Api\SearchCriteriaInterface;
 
-readonly class EmbeddingBacklogRepository implements EmbeddingBacklogRepositoryInterface
+class EmbeddingBacklogRepository implements EmbeddingBacklogRepositoryInterface
 {
     public function __construct(
-        private Save $save,
-        private DeleteById $deleteById,
-        private Get $get,
-        private GetList $getList
+        private readonly Save $save,
+        private readonly DeleteById $deleteById,
+        private readonly Get $get,
+        private readonly GetList $getList
     ) {
     }
 

@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Workflow;
 
-readonly class VectorEmbedding
+class VectorEmbedding
 {
     public function execute(): int
     {

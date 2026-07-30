@@ -13,11 +13,11 @@ use DavidBel\AiSearch\Model\DocumentFactory;
 use DavidBel\AiSearch\Model\ResourceModel\Document\CollectionFactory;
 use Magento\Framework\Exception\NoSuchEntityException;
 
-readonly class Get
+class Get
 {
     public function __construct(
-        private DocumentFactory $documentFactory,
-        private CollectionFactory $collectionFactory
+        private readonly DocumentFactory $documentFactory,
+        private readonly CollectionFactory $collectionFactory
     ) {
     }
 

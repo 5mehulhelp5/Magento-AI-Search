@@ -13,11 +13,11 @@ use DavidBel\AiSearch\Model\ChunkFactory;
 use DavidBel\AiSearch\Model\ResourceModel\Chunk\CollectionFactory;
 use Magento\Framework\Exception\NoSuchEntityException;
 
-readonly class Get
+class Get
 {
     public function __construct(
-        private ChunkFactory $chunkFactory,
-        private CollectionFactory $collectionFactory
+        private readonly ChunkFactory $chunkFactory,
+        private readonly CollectionFactory $collectionFactory
     ) {
     }
 

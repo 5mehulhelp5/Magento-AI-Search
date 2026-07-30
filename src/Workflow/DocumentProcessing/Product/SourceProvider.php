@@ -14,7 +14,7 @@ use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use RuntimeException;
 
-readonly class SourceProvider
+class SourceProvider
 {
     private const string PRODUCT_ENTITY_TYPE = 'catalog_product';
     // TODO Make this configurable via admin UI
@@ -22,7 +22,7 @@ readonly class SourceProvider
     private const int DEFAULT_STORE_ID = 0;
 
     public function __construct(
-        private CollectionFactory $collectionFactory
+        private readonly CollectionFactory $collectionFactory
     ) {
     }
 

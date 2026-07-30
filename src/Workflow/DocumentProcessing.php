@@ -18,16 +18,16 @@ use DavidBel\AiSearch\Workflow\DocumentProcessing\UpdateMode;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Throwable;
 
-readonly class DocumentProcessing
+class DocumentProcessing
 {
     public const int BATCH_SIZE = 200;
     private const string SOURCE_ENTITY_TYPE = 'product';
     private const string SOURCE_CODE = 'description';
 
     public function __construct(
-        private SourceProvider $sourceProvider,
-        private DocumentUpdater $documentUpdater,
-        private EmbeddingBacklogCollectionFactory $embeddingBacklogCollectionFactory
+        private readonly SourceProvider $sourceProvider,
+        private readonly DocumentUpdater $documentUpdater,
+        private readonly EmbeddingBacklogCollectionFactory $embeddingBacklogCollectionFactory
     ) {
     }
 

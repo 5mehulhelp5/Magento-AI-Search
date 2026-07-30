@@ -18,16 +18,16 @@ use LogicException;
 use Magento\Framework\Api\SearchCriteriaBuilderFactory;
 use Magento\Framework\Api\SortOrderBuilder;
 
-readonly class DocumentUpdater
+class DocumentUpdater
 {
     public function __construct(
-        private SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory,
-        private SortOrderBuilder $sortOrderBuilder,
-        private DocumentRepositoryInterface $documentRepository,
-        private ChunkRepositoryInterface $chunkRepository,
-        private DocumentFactory $documentFactory,
-        private ChunkFactory $chunkFactory,
-        private Chunking $chunking
+        private readonly SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory,
+        private readonly SortOrderBuilder $sortOrderBuilder,
+        private readonly DocumentRepositoryInterface $documentRepository,
+        private readonly ChunkRepositoryInterface $chunkRepository,
+        private readonly DocumentFactory $documentFactory,
+        private readonly ChunkFactory $chunkFactory,
+        private readonly Chunking $chunking
     ) {
     }
 
