@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Repository\Chunk;
 
 use DavidBel\AiSearch\Api\Data\ChunkInterface;
-use DavidBel\AiSearch\Model\ResourceModel\Chunk as ChunkResource;
+use DavidBel\AiSearch\Model\ResourceModel\Chunk\CollectionFactory;
 use Exception;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Model\AbstractModel;
@@ -17,7 +17,7 @@ use Magento\Framework\Model\AbstractModel;
 readonly class Save
 {
     public function __construct(
-        private ChunkResource $chunkResource
+        private CollectionFactory $collectionFactory
     ) {
     }
 
@@ -28,7 +28,7 @@ readonly class Save
         }
 
         try {
-            $this->chunkResource->save($chunk);
+            $this->collectionFactory->create()->getResourceModel()->save($chunk);
         } catch (Exception $exception) {
             throw new CouldNotSaveException(__('Could not save the AI search chunk.'), $exception);
         }

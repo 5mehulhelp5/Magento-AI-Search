@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Repository\Document;
 
-use DavidBel\AiSearch\Model\ResourceModel\Document as DocumentResource;
+use DavidBel\AiSearch\Model\ResourceModel\Document\CollectionFactory;
 use Exception;
 use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Model\AbstractModel;
@@ -17,7 +17,7 @@ readonly class DeleteById
 {
     public function __construct(
         private Get $get,
-        private DocumentResource $documentResource
+        private CollectionFactory $collectionFactory
     ) {
     }
 
@@ -30,7 +30,7 @@ readonly class DeleteById
         }
 
         try {
-            $this->documentResource->delete($document);
+            $this->collectionFactory->create()->getResourceModel()->delete($document);
         } catch (Exception $exception) {
             throw new CouldNotDeleteException(__('Could not delete the AI search document.'), $exception);
         }

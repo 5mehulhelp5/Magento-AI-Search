@@ -9,7 +9,9 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Workflow\DocumentProcessing\Product;
 
 use InvalidArgumentException;
-use Magento\Framework\App\ResourceConnection;
+use Magento\Catalog\Model\ResourceModel\Product as ProductResource;
+use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
+use Magento\Framework\DB\Adapter\AdapterInterface;
 use RuntimeException;
 
 readonly class SourceProvider
@@ -20,7 +22,7 @@ readonly class SourceProvider
     private const int DEFAULT_STORE_ID = 0;
 
     public function __construct(
-        private ResourceConnection $resourceConnection
+        private CollectionFactory $collectionFactory
     ) {
     }
 
@@ -33,10 +35,11 @@ readonly class SourceProvider
             throw new InvalidArgumentException('The product batch limit must be positive.');
         }
 
-        $connection = $this->resourceConnection->getConnection();
+        $productResource = $this->createProductResource();
+        $connection = $productResource->getConnection();
         $select = $connection->select()
             ->from(
-                $this->resourceConnection->getTableName('catalog_product_entity'),
+                $productResource->getEntityTable(),
                 ['entity_id']
             )
             ->where('entity_id > ?', $lastProductId)
@@ -56,17 +59,23 @@ readonly class SourceProvider
             return [];
         }
 
-        $connection = $this->resourceConnection->getConnection();
-        $attributeId = $this->getDescriptionAttributeId();
-        $values = $this->getDescriptionValues($productIds, $attributeId);
+        $productResource = $this->createProductResource();
+        $connection = $productResource->getConnection();
+        $attributeId = $this->getDescriptionAttributeId($productResource, $connection);
+        $values = $this->getDescriptionValues(
+            $productIds,
+            $attributeId,
+            $productResource,
+            $connection
+        );
         $assignments = $connection->fetchAll(
             $connection->select()
                 ->from(
-                    ['assignment' => $this->resourceConnection->getTableName('catalog_product_website')],
+                    ['assignment' => $productResource->getProductWebsiteTable()],
                     ['product_id']
                 )
                 ->join(
-                    ['store' => $this->resourceConnection->getTableName('store')],
+                    ['store' => $productResource->getTable('store')],
                     'store.website_id = assignment.website_id',
                     ['store_id']
                 )
@@ -79,11 +88,20 @@ readonly class SourceProvider
         return $this->buildScopedSources($assignments, $values);
     }
 
-    private function getDescriptionAttributeId(): int
+    private function createProductResource(): ProductResource
     {
-        $connection = $this->resourceConnection->getConnection();
-        $attributeTable = $this->resourceConnection->getTableName('eav_attribute');
-        $entityTypeTable = $this->resourceConnection->getTableName('eav_entity_type');
+        /** @var ProductResource $productResource */
+        $productResource = $this->collectionFactory->create()->getEntity();
+
+        return $productResource;
+    }
+
+    private function getDescriptionAttributeId(
+        ProductResource $productResource,
+        AdapterInterface $connection
+    ): int {
+        $attributeTable = $productResource->getTable('eav_attribute');
+        $entityTypeTable = $productResource->getTable('eav_entity_type');
         $select = $connection->select()
             ->from(['attribute' => $attributeTable], ['attribute_id'])
             ->join(
@@ -107,13 +125,16 @@ readonly class SourceProvider
      * @param list<int> $productIds
      * @return array<string, string>
      */
-    private function getDescriptionValues(array $productIds, int $attributeId): array
-    {
-        $connection = $this->resourceConnection->getConnection();
+    private function getDescriptionValues(
+        array $productIds,
+        int $attributeId,
+        ProductResource $productResource,
+        AdapterInterface $connection
+    ): array {
         $rows = $connection->fetchAll(
             $connection->select()
                 ->from(
-                    $this->resourceConnection->getTableName('catalog_product_entity_text'),
+                    $productResource->getTable('catalog_product_entity_text'),
                     ['entity_id', 'store_id', 'value']
                 )
                 ->where('attribute_id = ?', $attributeId)

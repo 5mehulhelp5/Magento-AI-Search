@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Repository\Document;
 
 use DavidBel\AiSearch\Api\Data\DocumentInterface;
-use DavidBel\AiSearch\Model\ResourceModel\Document as DocumentResource;
+use DavidBel\AiSearch\Model\ResourceModel\Document\CollectionFactory;
 use Exception;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Model\AbstractModel;
@@ -17,7 +17,7 @@ use Magento\Framework\Model\AbstractModel;
 readonly class Save
 {
     public function __construct(
-        private DocumentResource $documentResource
+        private CollectionFactory $collectionFactory
     ) {
     }
 
@@ -28,7 +28,7 @@ readonly class Save
         }
 
         try {
-            $this->documentResource->save($document);
+            $this->collectionFactory->create()->getResourceModel()->save($document);
         } catch (Exception $exception) {
             throw new CouldNotSaveException(__('Could not save the AI search document.'), $exception);
         }

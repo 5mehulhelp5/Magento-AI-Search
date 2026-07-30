@@ -8,9 +8,15 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Workflow;
 
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory
+    as EmbeddingBacklogCollectionFactory;
+use DavidBel\AiSearch\Workflow\DocumentProcessing\DocumentUpdateResult;
 use DavidBel\AiSearch\Workflow\DocumentProcessing\DocumentUpdater;
 use DavidBel\AiSearch\Workflow\DocumentProcessing\Product\SourceProvider;
 use DavidBel\AiSearch\Workflow\DocumentProcessing\UpdateMode;
+use Magento\Framework\DB\Adapter\AdapterInterface;
+use Throwable;
 
 readonly class DocumentProcessing
 {
@@ -20,7 +26,8 @@ readonly class DocumentProcessing
 
     public function __construct(
         private SourceProvider $sourceProvider,
-        private DocumentUpdater $documentUpdater
+        private DocumentUpdater $documentUpdater,
+        private EmbeddingBacklogCollectionFactory $embeddingBacklogCollectionFactory
     ) {
     }
 
@@ -59,26 +66,85 @@ readonly class DocumentProcessing
     private function processProducts(array $productIds, UpdateMode $updateMode): void
     {
         $sourcesByProductId = $this->sourceProvider->getByProductIds($productIds);
+        $embeddingBacklogResource = $this->embeddingBacklogCollectionFactory
+            ->create()
+            ->getResourceModel();
+        /** @var AdapterInterface $connection */
+        $connection = $embeddingBacklogResource->getConnection();
 
         foreach ($productIds as $productId) {
             $sources = $sourcesByProductId[$productId] ?? [];
+            $this->processProduct(
+                $productId,
+                $sources,
+                $updateMode,
+                $embeddingBacklogResource,
+                $connection
+            );
+        }
+    }
 
-            if ($updateMode === UpdateMode::FullUpdate) {
-                $this->documentUpdater->fullUpdate(
-                    self::SOURCE_ENTITY_TYPE,
-                    $productId,
-                    self::SOURCE_CODE,
-                    $sources
-                );
-                continue;
-            }
+    /**
+     * @param list<\DavidBel\AiSearch\Workflow\DocumentProcessing\Product\ScopedSource> $sources
+     */
+    private function processProduct(
+        int $productId,
+        array $sources,
+        UpdateMode $updateMode,
+        EmbeddingBacklogResource $embeddingBacklogResource,
+        AdapterInterface $connection
+    ): void {
+        $connection->beginTransaction();
 
-            $this->documentUpdater->deltaUpdate(
+        try {
+            $updateResult = $this->updateProduct($productId, $sources, $updateMode);
+            $this->saveBacklog($updateResult, $embeddingBacklogResource);
+            $connection->commit();
+        } catch (Throwable $throwable) {
+            $connection->rollBack();
+            throw $throwable;
+        }
+    }
+
+    /**
+     * @param list<\DavidBel\AiSearch\Workflow\DocumentProcessing\Product\ScopedSource> $sources
+     */
+    private function updateProduct(
+        int $productId,
+        array $sources,
+        UpdateMode $updateMode
+    ): DocumentUpdateResult {
+        if ($updateMode === UpdateMode::FullUpdate) {
+            return $this->documentUpdater->fullUpdate(
                 self::SOURCE_ENTITY_TYPE,
                 $productId,
                 self::SOURCE_CODE,
                 $sources
             );
+        }
+
+        return $this->documentUpdater->deltaUpdate(
+            self::SOURCE_ENTITY_TYPE,
+            $productId,
+            self::SOURCE_CODE,
+            $sources
+        );
+    }
+
+    private function saveBacklog(
+        DocumentUpdateResult $updateResult,
+        EmbeddingBacklogResource $embeddingBacklogResource
+    ): void {
+        if ($updateResult->upsertChunkIds === [] && $updateResult->deletionChunkIds === []) {
+            return;
+        }
+
+        foreach ($updateResult->upsertChunkIds as $chunkId) {
+            $embeddingBacklogResource->saveByChunkId($chunkId);
+        }
+
+        foreach ($updateResult->deletionChunkIds as $chunkId) {
+            $embeddingBacklogResource->deleteByChunkId($chunkId);
         }
     }
 }

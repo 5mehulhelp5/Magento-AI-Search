@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Repository\EmbeddingBacklog;
 
-use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use Exception;
 use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Model\AbstractModel;
@@ -17,7 +17,7 @@ readonly class DeleteById
 {
     public function __construct(
         private Get $get,
-        private EmbeddingBacklogResource $embeddingBacklogResource
+        private CollectionFactory $collectionFactory
     ) {
     }
 
@@ -32,7 +32,7 @@ readonly class DeleteById
         }
 
         try {
-            $this->embeddingBacklogResource->delete($embeddingBacklog);
+            $this->collectionFactory->create()->getResourceModel()->delete($embeddingBacklog);
         } catch (Exception $exception) {
             throw new CouldNotDeleteException(
                 __('Could not delete the AI search embedding backlog entry.'),

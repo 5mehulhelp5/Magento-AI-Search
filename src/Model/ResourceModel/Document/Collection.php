@@ -14,6 +14,14 @@ use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
 
 class Collection extends AbstractCollection
 {
+    public function getResourceModel(): DocumentResource
+    {
+        /** @var DocumentResource $resource */
+        $resource = parent::getResource();
+
+        return $resource;
+    }
+
     protected function _construct(): void
     {
         $this->_init(Document::class, DocumentResource::class);

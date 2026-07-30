@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Repository\Chunk;
 
-use DavidBel\AiSearch\Model\ResourceModel\Chunk as ChunkResource;
+use DavidBel\AiSearch\Model\ResourceModel\Chunk\CollectionFactory;
 use Exception;
 use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Model\AbstractModel;
@@ -17,7 +17,7 @@ readonly class DeleteById
 {
     public function __construct(
         private Get $get,
-        private ChunkResource $chunkResource
+        private CollectionFactory $collectionFactory
     ) {
     }
 
@@ -30,7 +30,7 @@ readonly class DeleteById
         }
 
         try {
-            $this->chunkResource->delete($chunk);
+            $this->collectionFactory->create()->getResourceModel()->delete($chunk);
         } catch (Exception $exception) {
             throw new CouldNotDeleteException(__('Could not delete the AI search chunk.'), $exception);
         }

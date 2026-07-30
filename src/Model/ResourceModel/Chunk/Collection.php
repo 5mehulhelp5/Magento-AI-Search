@@ -14,6 +14,14 @@ use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
 
 class Collection extends AbstractCollection
 {
+    public function getResourceModel(): ChunkResource
+    {
+        /** @var ChunkResource $resource */
+        $resource = parent::getResource();
+
+        return $resource;
+    }
+
     protected function _construct(): void
     {
         $this->_init(Chunk::class, ChunkResource::class);

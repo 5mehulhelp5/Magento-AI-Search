@@ -14,6 +14,14 @@ use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
 
 class Collection extends AbstractCollection
 {
+    public function getResourceModel(): EmbeddingBacklogResource
+    {
+        /** @var EmbeddingBacklogResource $resource */
+        $resource = parent::getResource();
+
+        return $resource;
+    }
+
     protected function _construct(): void
     {
         $this->_init(EmbeddingBacklog::class, EmbeddingBacklogResource::class);

@@ -10,21 +10,21 @@ namespace DavidBel\AiSearch\Repository\Chunk;
 
 use DavidBel\AiSearch\Api\Data\ChunkInterface;
 use DavidBel\AiSearch\Model\ChunkFactory;
-use DavidBel\AiSearch\Model\ResourceModel\Chunk as ChunkResource;
+use DavidBel\AiSearch\Model\ResourceModel\Chunk\CollectionFactory;
 use Magento\Framework\Exception\NoSuchEntityException;
 
 readonly class Get
 {
     public function __construct(
         private ChunkFactory $chunkFactory,
-        private ChunkResource $chunkResource
+        private CollectionFactory $collectionFactory
     ) {
     }
 
     public function execute(int $chunkId): ChunkInterface
     {
         $chunk = $this->chunkFactory->create();
-        $this->chunkResource->load($chunk, $chunkId);
+        $this->collectionFactory->create()->getResourceModel()->load($chunk, $chunkId);
 
         if ($chunk->getChunkId() === null) {
             throw NoSuchEntityException::singleField(ChunkInterface::CHUNK_ID, $chunkId);

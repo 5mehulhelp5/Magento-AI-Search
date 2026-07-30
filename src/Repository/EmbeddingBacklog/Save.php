@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Repository\EmbeddingBacklog;
 
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
-use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use Exception;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Model\AbstractModel;
@@ -17,7 +17,7 @@ use Magento\Framework\Model\AbstractModel;
 readonly class Save
 {
     public function __construct(
-        private EmbeddingBacklogResource $embeddingBacklogResource
+        private CollectionFactory $collectionFactory
     ) {
     }
 
@@ -30,7 +30,7 @@ readonly class Save
         }
 
         try {
-            $this->embeddingBacklogResource->save($embeddingBacklog);
+            $this->collectionFactory->create()->getResourceModel()->save($embeddingBacklog);
         } catch (Exception $exception) {
             throw new CouldNotSaveException(
                 __('Could not save the AI search embedding backlog entry.'),
