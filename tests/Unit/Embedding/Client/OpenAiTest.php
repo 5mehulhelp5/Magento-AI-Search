@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Embedding\Client;
 
 use DavidBel\AiSearch\Embedding\Client\OpenAi;
+use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use Magento\Framework\HTTP\Client\Curl;
 use Magento\Framework\HTTP\Client\CurlFactory;
 use Magento\Framework\Serialize\SerializerInterface;
@@ -17,9 +18,6 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use UnexpectedValueException;
 
-use function class_alias;
-use function class_exists;
-
 class OpenAiTest extends TestCase
 {
     private const string MODEL = 'text-embedding-embeddinggemma-300m-qat';
@@ -27,11 +25,7 @@ class OpenAiTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        if (class_exists(CurlFactory::class, false)) {
-            return;
-        }
-
-        class_alias(CurlFactoryTestDouble::class, CurlFactory::class);
+        GeneratedFactoryStub::register(CurlFactory::class);
     }
 
     public function testReturnsImmediatelyForEmptyInputs(): void

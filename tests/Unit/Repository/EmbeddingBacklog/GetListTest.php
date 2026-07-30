@@ -14,31 +14,21 @@ use DavidBel\AiSearch\Model\EmbeddingBacklogSearchResultsFactory;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use DavidBel\AiSearch\Repository\EmbeddingBacklog\GetList;
+use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface;
 use Magento\Framework\Api\SearchCriteriaInterface;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use UnexpectedValueException;
 
-use function class_alias;
-use function class_exists;
-
 class GetListTest extends TestCase
 {
     public static function setUpBeforeClass(): void
     {
-        $factories = [
+        GeneratedFactoryStub::register(
             CollectionFactory::class,
-            EmbeddingBacklogSearchResultsFactory::class,
-        ];
-
-        foreach ($factories as $factory) {
-            if (class_exists($factory, false)) {
-                continue;
-            }
-
-            class_alias(GeneratedFactoryTestDouble::class, $factory);
-        }
+            EmbeddingBacklogSearchResultsFactory::class
+        );
     }
 
     public function testBuildsSearchResultsFromTheProcessedCollection(): void

@@ -11,23 +11,22 @@ namespace DavidBel\AiSearch\Tests\Unit\Repository\EmbeddingBacklog;
 use DavidBel\AiSearch\Model\EmbeddingBacklog;
 use DavidBel\AiSearch\Model\EmbeddingBacklogFactory;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use DavidBel\AiSearch\Repository\EmbeddingBacklog\Get;
+use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use Magento\Framework\Exception\NoSuchEntityException;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-
-use function class_alias;
-use function class_exists;
 
 class GetTest extends TestCase
 {
     public static function setUpBeforeClass(): void
     {
-        if (class_exists(EmbeddingBacklogFactory::class, false)) {
-            return;
-        }
-
-        class_alias(GeneratedFactoryTestDouble::class, EmbeddingBacklogFactory::class);
+        GeneratedFactoryStub::register(
+            EmbeddingBacklogFactory::class,
+            CollectionFactory::class
+        );
     }
 
     public function testLoadsAnEmbeddingBacklogById(): void
@@ -50,10 +49,11 @@ class GetTest extends TestCase
                     return $resource;
                 }
             );
+        $collectionFactory = $this->createCollectionFactory($resource);
 
         self::assertSame(
             $embeddingBacklog,
-            (new Get($factory, $resource))->execute(12)
+            (new Get($factory, $collectionFactory))->execute(12)
         );
     }
 
@@ -68,10 +68,26 @@ class GetTest extends TestCase
         $resource->expects(self::once())
             ->method('load')
             ->with($embeddingBacklog, 404);
+        $collectionFactory = $this->createCollectionFactory($resource);
 
         $this->expectException(NoSuchEntityException::class);
 
-        (new Get($factory, $resource))->execute(404);
+        (new Get($factory, $collectionFactory))->execute(404);
+    }
+
+    private function createCollectionFactory(
+        EmbeddingBacklogResource $resource
+    ): CollectionFactory {
+        $collection = $this->createMock(Collection::class);
+        $collection->expects(self::once())
+            ->method('getResourceModel')
+            ->willReturn($resource);
+        $collectionFactory = $this->createMock(CollectionFactory::class);
+        $collectionFactory->expects(self::once())
+            ->method('create')
+            ->willReturn($collection);
+
+        return $collectionFactory;
     }
 
     private function createEmbeddingBacklog(): EmbeddingBacklog

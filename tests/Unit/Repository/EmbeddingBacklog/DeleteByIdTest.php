@@ -11,8 +11,11 @@ namespace DavidBel\AiSearch\Tests\Unit\Repository\EmbeddingBacklog;
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
 use DavidBel\AiSearch\Model\EmbeddingBacklog;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use DavidBel\AiSearch\Repository\EmbeddingBacklog\DeleteById;
 use DavidBel\AiSearch\Repository\EmbeddingBacklog\Get;
+use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use Exception;
 use Magento\Framework\Exception\CouldNotDeleteException;
 use PHPUnit\Framework\TestCase;
@@ -20,6 +23,11 @@ use ReflectionClass;
 
 class DeleteByIdTest extends TestCase
 {
+    public static function setUpBeforeClass(): void
+    {
+        GeneratedFactoryStub::register(CollectionFactory::class);
+    }
+
     public function testDeletesAnEmbeddingBacklogById(): void
     {
         $embeddingBacklog = $this->createEmbeddingBacklog();
@@ -32,8 +40,9 @@ class DeleteByIdTest extends TestCase
         $resource->expects(self::once())
             ->method('delete')
             ->with($embeddingBacklog);
+        $collectionFactory = $this->createCollectionFactory($resource);
 
-        self::assertTrue((new DeleteById($get, $resource))->execute(12));
+        self::assertTrue((new DeleteById($get, $collectionFactory))->execute(12));
     }
 
     public function testRejectsAnUndeletableImplementation(): void
@@ -43,16 +52,16 @@ class DeleteByIdTest extends TestCase
             ->method('execute')
             ->with(12)
             ->willReturn(self::createStub(EmbeddingBacklogInterface::class));
-        $resource = $this->createMock(EmbeddingBacklogResource::class);
-        $resource->expects(self::never())
-            ->method('delete');
+        $collectionFactory = $this->createMock(CollectionFactory::class);
+        $collectionFactory->expects(self::never())
+            ->method('create');
 
         $this->expectException(CouldNotDeleteException::class);
         $this->expectExceptionMessage(
             'The embedding backlog implementation cannot be deleted.'
         );
 
-        (new DeleteById($get, $resource))->execute(12);
+        (new DeleteById($get, $collectionFactory))->execute(12);
     }
 
     public function testWrapsAStorageFailure(): void
@@ -68,9 +77,10 @@ class DeleteByIdTest extends TestCase
         $resource->expects(self::once())
             ->method('delete')
             ->willThrowException($storageFailure);
+        $collectionFactory = $this->createCollectionFactory($resource);
 
         try {
-            (new DeleteById($get, $resource))->execute(12);
+            (new DeleteById($get, $collectionFactory))->execute(12);
             self::fail('A storage failure must be wrapped.');
         } catch (CouldNotDeleteException $exception) {
             self::assertSame(
@@ -79,6 +89,21 @@ class DeleteByIdTest extends TestCase
             );
             self::assertSame($storageFailure, $exception->getPrevious());
         }
+    }
+
+    private function createCollectionFactory(
+        EmbeddingBacklogResource $resource
+    ): CollectionFactory {
+        $collection = $this->createMock(Collection::class);
+        $collection->expects(self::once())
+            ->method('getResourceModel')
+            ->willReturn($resource);
+        $collectionFactory = $this->createMock(CollectionFactory::class);
+        $collectionFactory->expects(self::once())
+            ->method('create')
+            ->willReturn($collection);
+
+        return $collectionFactory;
     }
 
     private function createEmbeddingBacklog(): EmbeddingBacklog
