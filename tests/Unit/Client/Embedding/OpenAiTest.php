@@ -6,9 +6,9 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Tests\Unit\Embedding\Client;
+namespace DavidBel\AiSearch\Tests\Unit\Client\Embedding;
 
-use DavidBel\AiSearch\Embedding\Client\OpenAi;
+use DavidBel\AiSearch\Client\Embedding\OpenAi;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\RequestOptions;

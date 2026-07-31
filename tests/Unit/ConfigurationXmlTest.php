@@ -90,7 +90,17 @@ class ConfigurationXmlTest extends TestCase
         );
     }
 
-    public function testDeclaresMagentoCronModuleDependency(): void
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function moduleDependencies(): iterable
+    {
+        yield 'cron' => ['Magento_Cron'];
+        yield 'OpenSearch' => ['Magento_OpenSearch'];
+    }
+
+    #[DataProvider('moduleDependencies')]
+    public function testDeclaresMagentoModuleDependency(string $moduleName): void
     {
         $module = new DOMDocument();
 
@@ -104,7 +114,7 @@ class ConfigurationXmlTest extends TestCase
             1.0,
             $moduleXPath->evaluate(
                 'count(/config/module[@name="DavidBel_AiSearch"]'
-                . '/sequence/module[@name="Magento_Cron"])'
+                . sprintf('/sequence/module[@name="%s"])', $moduleName)
             )
         );
     }
@@ -124,7 +134,24 @@ class ConfigurationXmlTest extends TestCase
             $dependencyInjectionXPath->evaluate(
                 'count(/config/preference'
                 . '[@for="DavidBel\AiSearch\Api\EmbedderClientInterface"]'
-                . '[@type="DavidBel\AiSearch\Embedding\Client\OpenAi"])'
+                . '[@type="DavidBel\AiSearch\Client\Embedding\OpenAi"])'
+            )
+        );
+        self::assertSame(
+            1.0,
+            $dependencyInjectionXPath->evaluate(
+                'count(/config/virtualType'
+                . '[@name="DavidBel\AiSearch\Client\Embedding\HttpClient"]'
+                . '[@type="GuzzleHttp\Client"])'
+            )
+        );
+        self::assertSame(
+            1.0,
+            $dependencyInjectionXPath->evaluate(
+                'count(/config/type'
+                . '[@name="DavidBel\AiSearch\Client\Embedding\OpenAi"]'
+                . '/arguments/argument[@name="client"]'
+                . '[text()="DavidBel\AiSearch\Client\Embedding\HttpClient"])'
             )
         );
     }

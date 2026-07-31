@@ -149,7 +149,7 @@ class EmbeddingBacklogTest extends TestCase
         );
     }
 
-    public function testMarksUpsertsAsEmbedded(): void
+    public function testMarksUpsertsAsDone(): void
     {
         $connection = $this->createMock(AdapterInterface::class);
         $connection->expects(self::once())
@@ -157,14 +157,14 @@ class EmbeddingBacklogTest extends TestCase
             ->with(
                 'embedding_backlog',
                 [
-                    EmbeddingBacklogInterface::STATUS => Status::Embedded->value,
+                    EmbeddingBacklogInterface::STATUS => Status::Done->value,
                     EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
                 ],
                 self::updateConditions([10, 20])
             );
         $resource = $this->createUpdateResource($connection);
 
-        $resource->markEmbeddedByIds([10, 20]);
+        $resource->markDoneByIds([10, 20]);
     }
 
     public function testMarksUpsertsAsFailedAndIncrementsAttempts(): void
@@ -207,7 +207,7 @@ class EmbeddingBacklogTest extends TestCase
         $resource->expects(self::never())
             ->method('getConnection');
 
-        $resource->markEmbeddedByIds([]);
+        $resource->markDoneByIds([]);
         $resource->markFailedByIds([], 'embedder');
     }
 

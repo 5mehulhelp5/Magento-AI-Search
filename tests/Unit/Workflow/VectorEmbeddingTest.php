@@ -8,62 +8,57 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Unit\Workflow;
 
-use Closure;
 use DavidBel\AiSearch\Api\Data\ChunkInterface;
 use DavidBel\AiSearch\Api\Data\DocumentInterface;
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
 use DavidBel\AiSearch\Api\EmbedderClientInterface;
-use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog;
-use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
-use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use DavidBel\AiSearch\Workflow\VectorEmbedding;
 use DavidBel\AiSearch\Workflow\VectorEmbedding\EmbeddingBatch;
 use DavidBel\AiSearch\Workflow\VectorEmbedding\EmbeddingBatchFactory;
+use DavidBel\AiSearch\Workflow\VectorEmbedding\EmbeddingExecution;
+use DavidBel\AiSearch\Workflow\VectorEmbedding\EmbeddingExecutionFactory;
 use DavidBel\AiSearch\Workflow\VectorEmbedding\EmbeddingInputMapper;
 use DavidBel\AiSearch\Workflow\VectorEmbedding\EmbeddingPromisePool;
 use Generator;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
-use LogicException;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-use UnexpectedValueException;
 
 class VectorEmbeddingTest extends TestCase
 {
     public static function setUpBeforeClass(): void
     {
         GeneratedFactoryStub::register(
-            CollectionFactory::class,
-            EmbeddingBatchFactory::class
+            EmbeddingBatchFactory::class,
+            EmbeddingExecutionFactory::class
         );
     }
 
-    public function testProcessesPendingRowsInCursorBasedBatches(): void
+    public function testProcessesRowsInCursorBasedBatchesThroughExecution(): void
     {
         $firstRows = [
             self::row(1, '2026-07-31 10:00:00', 'first'),
             self::row(2, '2026-07-31 10:00:00', 'second'),
         ];
-        $secondRows = [
-            self::row(3, '2026-07-31 10:01:00', 'third'),
-        ];
+        $secondRows = [self::row(3, '2026-07-31 10:01:00', 'third')];
         $queryCalls = [];
-        $embeddedIds = [];
-        $embedderInputs = [];
-        $resource = $this->createSuccessfulResource(
+        $addedBatches = [];
+        $fulfillments = [];
+        $execution = $this->createBatchExecution(
             [$firstRows, $secondRows, []],
             $queryCalls,
-            $embeddedIds
+            $addedBatches,
+            $fulfillments
         );
+        $embedderInputs = [];
         $workflow = $this->createWorkflow(
-            $resource,
-            $this->createSuccessfulEmbedder($embedderInputs),
+            $execution,
+            $this->createEmbedder($embedderInputs),
             $this->createBatchFactory(2),
-            $this->createSynchronousPromisePool()
+            $this->createSynchronousPool($execution)
         );
 
         self::assertSame(3, $workflow->execute());
@@ -75,29 +70,92 @@ class VectorEmbeddingTest extends TestCase
             ],
             $queryCalls
         );
+        self::assertSame([0, 1], array_keys($addedBatches));
+        self::assertSame([['first', 'second'], ['third']], $embedderInputs);
+        self::assertSame([[[0.5], [0.5]], 0], $fulfillments[0]);
+        self::assertSame([[[0.5]], 1], $fulfillments[1]);
+    }
+
+    public function testStopsGeneratingWhenExecutionCannotAcceptWork(): void
+    {
+        $execution = $this->createMock(EmbeddingExecution::class);
+        $execution->expects(self::once())
+            ->method('start');
+        $execution->expects(self::once())
+            ->method('canAcceptWork')
+            ->with(600_000_000_000)
+            ->willReturn(false);
+        $execution->expects(self::never())
+            ->method('getPendingUpserts');
+        $execution->expects(self::never())
+            ->method('addBatch');
+        $execution->expects(self::once())
+            ->method('finish')
+            ->willReturn(0);
+        $embedder = $this->createMock(EmbedderClientInterface::class);
+        $embedder->expects(self::never())
+            ->method('embedAsync');
+
         self::assertSame(
-            [
-                ['first', 'second'],
-                ['third'],
-            ],
-            $embedderInputs
+            0,
+            $this->createWorkflow(
+                $execution,
+                $embedder,
+                $this->createBatchFactory(0),
+                $this->createSynchronousPool($execution)
+            )->execute()
         );
-        self::assertSame([[1, 2], [3]], $embeddedIds);
+    }
+
+    public function testStopsExecutionWhenThePromisePoolThrows(): void
+    {
+        $failure = new RuntimeException('pool failed');
+        $execution = $this->createMock(EmbeddingExecution::class);
+        $execution->expects(self::once())
+            ->method('start');
+        $execution->expects(self::once())
+            ->method('stop')
+            ->with($failure);
+        $execution->expects(self::once())
+            ->method('finish')
+            ->willReturn(4);
+        $promisePool = $this->createMock(EmbeddingPromisePool::class);
+        $promisePool->expects(self::once())
+            ->method('run')
+            ->willThrowException($failure);
+
+        self::assertSame(
+            4,
+            $this->createWorkflow(
+                $execution,
+                self::createStub(EmbedderClientInterface::class),
+                self::createStub(EmbeddingBatchFactory::class),
+                $promisePool
+            )->execute()
+        );
     }
 
     /**
      * @param list<list<array<string, mixed>>> $rowsByCall
      * @param list<array{int, ?string, ?int}> $queryCalls
-     * @param list<list<int>> $embeddedIds
+     * @param array<int, EmbeddingBatch> $addedBatches
+     * @param list<array{list<list<float>>, int}> $fulfillments
      */
-    private function createSuccessfulResource(
+    private function createBatchExecution(
         array $rowsByCall,
         array &$queryCalls,
-        array &$embeddedIds
-    ): EmbeddingBacklog&MockObject {
-        $resource = $this->createMock(EmbeddingBacklog::class);
-        $resource->expects(self::exactly(count($rowsByCall)))
-            ->method('getPendingUpsertsForEmbedding')
+        array &$addedBatches,
+        array &$fulfillments
+    ): EmbeddingExecution&MockObject {
+        $execution = $this->createMock(EmbeddingExecution::class);
+        $execution->expects(self::once())
+            ->method('start');
+        $execution->expects(self::exactly(count($rowsByCall)))
+            ->method('canAcceptWork')
+            ->with(600_000_000_000)
+            ->willReturn(true);
+        $execution->expects(self::exactly(count($rowsByCall)))
+            ->method('getPendingUpserts')
             ->willReturnCallback(
                 static function (
                     int $limit,
@@ -112,32 +170,56 @@ class VectorEmbeddingTest extends TestCase
                     return array_shift($rowsByCall) ?? [];
                 }
             );
-        $resource->expects(self::exactly(2))
-            ->method('markEmbeddedByIds')
+        $this->configureBatchCallbacks(
+            $execution,
+            $addedBatches,
+            $fulfillments
+        );
+        $execution->expects(self::never())
+            ->method('rejected');
+        $execution->expects(self::once())
+            ->method('finish')
+            ->willReturn(3);
+
+        return $execution;
+    }
+
+    /**
+     * @param array<int, EmbeddingBatch> $addedBatches
+     * @param list<array{list<list<float>>, int}> $fulfillments
+     */
+    private function configureBatchCallbacks(
+        EmbeddingExecution&MockObject $execution,
+        array &$addedBatches,
+        array &$fulfillments
+    ): void {
+        $execution->expects(self::exactly(2))
+            ->method('addBatch')
             ->willReturnCallback(
-                static function (array $backlogIds) use (&$embeddedIds): void {
-                    $embeddedIds[] = $backlogIds;
+                static function (int $batchId, EmbeddingBatch $batch) use (&$addedBatches): void {
+                    $addedBatches[$batchId] = $batch;
                 }
             );
-        $resource->expects(self::never())
-            ->method('markFailedByIds');
-
-        return $resource;
+        $execution->expects(self::exactly(2))
+            ->method('fulfilled')
+            ->willReturnCallback(
+                static function (array $vectors, int $batchId) use (&$fulfillments): void {
+                    $fulfillments[] = [$vectors, $batchId];
+                }
+            );
     }
 
     /**
      * @param list<list<string>> $embedderInputs
      */
-    private function createSuccessfulEmbedder(
+    private function createEmbedder(
         array &$embedderInputs
     ): EmbedderClientInterface&MockObject {
-        $embedderClient = $this->createMock(EmbedderClientInterface::class);
-        $embedderClient->expects(self::exactly(2))
+        $embedder = $this->createMock(EmbedderClientInterface::class);
+        $embedder->expects(self::exactly(2))
             ->method('embedAsync')
             ->willReturnCallback(
-                static function (
-                    array $contents
-                ) use (&$embedderInputs): PromiseInterface {
+                static function (array $contents) use (&$embedderInputs): PromiseInterface {
                     $embedderInputs[] = $contents;
 
                     return Create::promiseFor(
@@ -146,178 +228,11 @@ class VectorEmbeddingTest extends TestCase
                 }
             );
 
-        return $embedderClient;
+        return $embedder;
     }
 
-    public function testReturnsZeroWhenThereIsNoPendingWork(): void
+    private function createBatchFactory(int $expectedCalls): EmbeddingBatchFactory&MockObject
     {
-        $resource = $this->createMock(EmbeddingBacklog::class);
-        $resource->expects(self::once())
-            ->method('getPendingUpsertsForEmbedding')
-            ->with(100, null, null)
-            ->willReturn([]);
-        $resource->expects(self::never())
-            ->method('markEmbeddedByIds');
-        $resource->expects(self::never())
-            ->method('markFailedByIds');
-        $embedderClient = $this->createMock(EmbedderClientInterface::class);
-        $embedderClient->expects(self::never())
-            ->method('embedAsync');
-
-        $workflow = $this->createWorkflow(
-            $resource,
-            $embedderClient,
-            $this->createBatchFactory(0),
-            $this->createSynchronousPromisePool()
-        );
-
-        self::assertSame(0, $workflow->execute());
-    }
-
-    /**
-     * @return iterable<string, array{mixed, class-string<\Throwable>, string}>
-     */
-    public static function rejectedReasons(): iterable
-    {
-        yield 'exception reason is preserved' => [
-            new LogicException('request failed'),
-            LogicException::class,
-            'request failed',
-        ];
-        yield 'non-exception reason is wrapped' => [
-            'request failed',
-            RuntimeException::class,
-            'The embedding request failed without an exception.',
-        ];
-    }
-
-    /**
-     * @param class-string<\Throwable> $exceptionClass
-     */
-    #[DataProvider('rejectedReasons')]
-    public function testMarksRejectedBatchAsFailedAndStopsLoadingWork(
-        mixed $reason,
-        string $exceptionClass,
-        string $exceptionMessage
-    ): void {
-        $resource = $this->createMock(EmbeddingBacklog::class);
-        $resource->expects(self::once())
-            ->method('getPendingUpsertsForEmbedding')
-            ->with(100, null, null)
-            ->willReturn([
-                self::row(7, '2026-07-31 11:00:00', 'failed content'),
-            ]);
-        $resource->expects(self::never())
-            ->method('markEmbeddedByIds');
-        $resource->expects(self::once())
-            ->method('markFailedByIds')
-            ->with([7], 'embedder');
-        $embedderClient = $this->createMock(EmbedderClientInterface::class);
-        $embedderClient->expects(self::once())
-            ->method('embedAsync')
-            ->with(['failed content'])
-            ->willReturn(Create::promiseFor([[0.5]]));
-        $workflow = $this->createWorkflow(
-            $resource,
-            $embedderClient,
-            $this->createBatchFactory(1),
-            $this->createRejectedPromisePool($reason)
-        );
-
-        $this->expectException($exceptionClass);
-        $this->expectExceptionMessage($exceptionMessage);
-
-        $workflow->execute();
-    }
-
-    private function createRejectedPromisePool(
-        mixed $reason
-    ): EmbeddingPromisePool&MockObject {
-        $promisePool = $this->createMock(EmbeddingPromisePool::class);
-        $promisePool->expects(self::once())
-            ->method('run')
-            ->with(
-                self::isInstanceOf(Generator::class),
-                3,
-                self::isInstanceOf(Closure::class),
-                self::isInstanceOf(Closure::class)
-            )
-            ->willReturnCallback(
-                static function (
-                    iterable $promises,
-                    int $concurrency,
-                    Closure $fulfilled,
-                    Closure $rejected
-                ) use ($reason): void {
-                    foreach ($promises as $batchId => $promise) {
-                        self::assertInstanceOf(PromiseInterface::class, $promise);
-                        $rejected($reason, $batchId);
-                    }
-                }
-            );
-
-        return $promisePool;
-    }
-
-    public function testRejectsAnUnknownCompletedBatch(): void
-    {
-        $resource = $this->createMock(EmbeddingBacklog::class);
-        $resource->expects(self::never())
-            ->method('getPendingUpsertsForEmbedding');
-        $promisePool = $this->createMock(EmbeddingPromisePool::class);
-        $promisePool->expects(self::once())
-            ->method('run')
-            ->willReturnCallback(
-                static function (
-                    iterable $promises,
-                    int $concurrency,
-                    Closure $fulfilled,
-                    Closure $rejected
-                ): void {
-                    $fulfilled([], 99);
-                }
-            );
-
-        $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage(
-            'The completed embedding batch is unknown.'
-        );
-
-        $this->createWorkflow(
-            $resource,
-            self::createStub(EmbedderClientInterface::class),
-            self::createStub(EmbeddingBatchFactory::class),
-            $promisePool
-        )->execute();
-    }
-
-    private function createWorkflow(
-        EmbeddingBacklog $resource,
-        EmbedderClientInterface $embedderClient,
-        EmbeddingBatchFactory $embeddingBatchFactory,
-        EmbeddingPromisePool $embeddingPromisePool
-    ): VectorEmbedding {
-        $collection = $this->createMock(Collection::class);
-        $collection->expects(self::once())
-            ->method('getResourceModel')
-            ->willReturn($resource);
-        $collectionFactory = $this->createMock(CollectionFactory::class);
-        $collectionFactory->expects(self::once())
-            ->method('create')
-            ->willReturn($collection);
-
-        return new VectorEmbedding(
-            $collectionFactory,
-            $embedderClient,
-            new EmbeddingInputMapper(),
-            $embeddingBatchFactory,
-            $embeddingPromisePool
-        );
-    }
-
-    private function createBatchFactory(
-        int $expectedCalls
-    ): EmbeddingBatchFactory&MockObject {
         $factory = $this->createMock(EmbeddingBatchFactory::class);
         $factory->expects(self::exactly($expectedCalls))
             ->method('create')
@@ -334,23 +249,24 @@ class VectorEmbeddingTest extends TestCase
         return $factory;
     }
 
-    private function createSynchronousPromisePool(): EmbeddingPromisePool&MockObject
-    {
-        $promisePool = $this->createMock(EmbeddingPromisePool::class);
-        $promisePool->expects(self::once())
+    private function createSynchronousPool(
+        EmbeddingExecution $execution
+    ): EmbeddingPromisePool&MockObject {
+        $pool = $this->createMock(EmbeddingPromisePool::class);
+        $pool->expects(self::once())
             ->method('run')
             ->with(
                 self::isInstanceOf(Generator::class),
                 3,
-                self::isInstanceOf(Closure::class),
-                self::isInstanceOf(Closure::class)
+                [$execution, 'fulfilled'],
+                [$execution, 'rejected']
             )
             ->willReturnCallback(
                 static function (
                     iterable $promises,
                     int $concurrency,
-                    Closure $fulfilled,
-                    Closure $rejected
+                    callable $fulfilled,
+                    callable $rejected
                 ): void {
                     foreach ($promises as $batchId => $promise) {
                         self::assertInstanceOf(PromiseInterface::class, $promise);
@@ -359,7 +275,27 @@ class VectorEmbeddingTest extends TestCase
                 }
             );
 
-        return $promisePool;
+        return $pool;
+    }
+
+    private function createWorkflow(
+        EmbeddingExecution $execution,
+        EmbedderClientInterface $embedder,
+        EmbeddingBatchFactory $batchFactory,
+        EmbeddingPromisePool $promisePool
+    ): VectorEmbedding {
+        $executionFactory = $this->createMock(EmbeddingExecutionFactory::class);
+        $executionFactory->expects(self::once())
+            ->method('create')
+            ->willReturn($execution);
+
+        return new VectorEmbedding(
+            $embedder,
+            new EmbeddingInputMapper(),
+            $batchFactory,
+            $promisePool,
+            $executionFactory
+        );
     }
 
     /**

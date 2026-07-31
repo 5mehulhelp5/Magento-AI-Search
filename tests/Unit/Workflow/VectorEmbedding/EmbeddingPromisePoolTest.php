@@ -15,11 +15,26 @@ use RuntimeException;
 
 class EmbeddingPromisePoolTest extends TestCase
 {
-    public function testDispatchesFulfilledAndRejectedPromisesWithTheirKeys(): void
+    public function testDispatchesToCallableMethodsWithPromiseKeys(): void
     {
         $failure = new RuntimeException('request failed');
-        $fulfilled = [];
-        $rejected = [];
+        $receiver = new class {
+            /** @var array<int, mixed> */
+            public array $fulfilled = [];
+
+            /** @var array<int, mixed> */
+            public array $rejected = [];
+
+            public function fulfilled(mixed $value, int $key): void
+            {
+                $this->fulfilled[$key] = $value;
+            }
+
+            public function rejected(mixed $reason, int $key): void
+            {
+                $this->rejected[$key] = $reason;
+            }
+        };
 
         (new EmbeddingPromisePool())->run(
             [
@@ -27,15 +42,11 @@ class EmbeddingPromisePoolTest extends TestCase
                 20 => Create::rejectionFor($failure),
             ],
             2,
-            static function (mixed $value, int $key) use (&$fulfilled): void {
-                $fulfilled[$key] = $value;
-            },
-            static function (mixed $reason, int $key) use (&$rejected): void {
-                $rejected[$key] = $reason;
-            }
+            [$receiver, 'fulfilled'],
+            [$receiver, 'rejected']
         );
 
-        self::assertSame([10 => ['vector']], $fulfilled);
-        self::assertSame([20 => $failure], $rejected);
+        self::assertSame([10 => ['vector']], $receiver->fulfilled);
+        self::assertSame([20 => $failure], $receiver->rejected);
     }
 }

@@ -34,6 +34,7 @@ class EmbeddingBatchTest extends TestCase
         self::assertSame([10, 20], $batch->getBacklogIds());
         self::assertSame(['first', 'last'], $batch->getContents());
         self::assertSame($last, $batch->getLastInput());
+        self::assertSame([$first, $last], $batch->getInputs());
     }
 
     private static function input(int $backlogId, string $content): EmbeddingInput
