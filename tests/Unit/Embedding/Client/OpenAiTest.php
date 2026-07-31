@@ -9,12 +9,15 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Embedding\Client;
 
 use DavidBel\AiSearch\Embedding\Client\OpenAi;
-use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
-use Magento\Framework\HTTP\Client\Curl;
-use Magento\Framework\HTTP\Client\CurlFactory;
+use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Promise\Create;
+use GuzzleHttp\RequestOptions;
+use GuzzleHttp\Psr7\Response;
 use Magento\Framework\Serialize\SerializerInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use UnexpectedValueException;
 
@@ -23,26 +26,41 @@ class OpenAiTest extends TestCase
     private const string MODEL = 'text-embedding-embeddinggemma-300m-qat';
     private const int VECTOR_DIMENSIONS = 768;
 
-    public static function setUpBeforeClass(): void
+    public function testReturnsAResolvedPromiseForEmptyInputs(): void
     {
-        GeneratedFactoryStub::register(CurlFactory::class);
-    }
-
-    public function testReturnsImmediatelyForEmptyInputs(): void
-    {
-        $curlFactory = $this->createMock(CurlFactory::class);
-        $curlFactory->expects(self::never())
-            ->method('create');
+        $httpClient = $this->createMock(ClientInterface::class);
+        $httpClient->expects(self::never())
+            ->method('requestAsync');
         $serializer = $this->createMock(SerializerInterface::class);
         $serializer->expects(self::never())
             ->method('serialize');
 
-        self::assertSame([], (new OpenAi($curlFactory, $serializer))->embed([]));
+        $promise = (new OpenAi($httpClient, $serializer))->embedAsync([]);
+
+        self::assertSame([], $promise->wait());
     }
 
-    public function testRequestsEmbeddingsAndMapsThemToInputOrder(): void
+    public function testRequestsEmbeddingsAsynchronouslyAndMapsThemToInputOrder(): void
     {
-        $curl = $this->createSuccessfulCurl();
+        $promise = (
+            new OpenAi(
+                $this->createSuccessfulHttpClient(),
+                $this->createSuccessfulSerializer()
+            )
+        )
+            ->embedAsync(['first input', 'second input']);
+
+        self::assertSame(
+            [
+                self::vector(1.0),
+                self::vector(2.5),
+            ],
+            $promise->wait()
+        );
+    }
+
+    private function createSuccessfulSerializer(): SerializerInterface&MockObject
+    {
         $serializer = $this->createMock(SerializerInterface::class);
         $serializer->expects(self::once())
             ->method('serialize')
@@ -69,22 +87,41 @@ class OpenAiTest extends TestCase
                 ],
             ]);
 
-        $client = $this->createClient($curl, $serializer);
-
-        self::assertSame(
-            [
-                self::vector(1.0),
-                self::vector(2.5),
-            ],
-            $client->embed(['first input', 'second input'])
-        );
+        return $serializer;
     }
 
-    public function testRejectsAnUnserializableRequest(): void
+    private function createSuccessfulHttpClient(): ClientInterface&MockObject
     {
-        $curl = $this->createMock(Curl::class);
-        $curl->expects(self::never())
-            ->method('post');
+        $httpClient = $this->createMock(ClientInterface::class);
+        $httpClient->expects(self::once())
+            ->method('requestAsync')
+            ->with(
+                'POST',
+                'http://host.docker.internal:1234/v1/embeddings',
+                [
+                    RequestOptions::BODY => 'serialized request',
+                    RequestOptions::HEADERS => [
+                        'Accept' => 'application/json',
+                        'Content-Type' => 'application/json',
+                    ],
+                    RequestOptions::HTTP_ERRORS => false,
+                    RequestOptions::TIMEOUT => 60,
+                ]
+            )
+            ->willReturn(
+                Create::promiseFor(
+                    new Response(200, [], 'serialized response')
+                )
+            );
+
+        return $httpClient;
+    }
+
+    public function testRejectsAnUnserializableRequestBeforeSendingIt(): void
+    {
+        $httpClient = $this->createMock(ClientInterface::class);
+        $httpClient->expects(self::never())
+            ->method('requestAsync');
         $serializer = self::createStub(SerializerInterface::class);
         $serializer->method('serialize')
             ->willReturn(false);
@@ -92,7 +129,7 @@ class OpenAiTest extends TestCase
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('Embedding request could not be serialized.');
 
-        $this->createClient($curl, $serializer)->embed(['input']);
+        (new OpenAi($httpClient, $serializer))->embedAsync(['input']);
     }
 
     /**
@@ -107,23 +144,23 @@ class OpenAiTest extends TestCase
     #[DataProvider('unsuccessfulHttpStatuses')]
     public function testRejectsAnUnsuccessfulHttpStatus(int $status): void
     {
-        $curl = $this->createMock(Curl::class);
-        $curl->method('getStatus')
-            ->willReturn($status);
-        $curl->expects(self::never())
-            ->method('getBody');
         $serializer = $this->createMock(SerializerInterface::class);
         $serializer->method('serialize')
             ->willReturn('serialized request');
         $serializer->expects(self::never())
             ->method('unserialize');
+        $httpClient = $this->createHttpClientForResponse(
+            new Response($status)
+        );
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
             sprintf('Embedding request failed with HTTP status %d.', $status)
         );
 
-        $this->createClient($curl, $serializer)->embed(['input']);
+        (new OpenAi($httpClient, $serializer))
+            ->embedAsync(['input'])
+            ->wait();
     }
 
     /**
@@ -250,54 +287,32 @@ class OpenAiTest extends TestCase
         mixed $response,
         string $exceptionMessage
     ): void {
-        $curl = self::createStub(Curl::class);
-        $curl->method('getStatus')
-            ->willReturn(200);
-        $curl->method('getBody')
-            ->willReturn('serialized response');
         $serializer = self::createStub(SerializerInterface::class);
         $serializer->method('serialize')
             ->willReturn('serialized request');
         $serializer->method('unserialize')
             ->willReturn($response);
+        $httpClient = $this->createHttpClientForResponse(
+            new Response(200, [], 'serialized response')
+        );
 
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage($exceptionMessage);
 
-        $this->createClient($curl, $serializer)->embed($inputs);
+        (new OpenAi($httpClient, $serializer))
+            ->embedAsync($inputs)
+            ->wait();
     }
 
-    private function createSuccessfulCurl(): Curl
-    {
-        $curl = $this->createMock(Curl::class);
-        $curl->expects(self::once())
-            ->method('setHeaders')
-            ->with([
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-            ]);
-        $curl->expects(self::once())
-            ->method('setTimeout')
-            ->with(60);
-        $curl->expects(self::once())
-            ->method('post')
-            ->with('http://127.0.0.1:1234/v1/embeddings', 'serialized request');
-        $curl->method('getStatus')
-            ->willReturn(200);
-        $curl->method('getBody')
-            ->willReturn('serialized response');
+    private function createHttpClientForResponse(
+        ResponseInterface $response
+    ): ClientInterface&MockObject {
+        $httpClient = $this->createMock(ClientInterface::class);
+        $httpClient->expects(self::once())
+            ->method('requestAsync')
+            ->willReturn(Create::promiseFor($response));
 
-        return $curl;
-    }
-
-    private function createClient(Curl $curl, SerializerInterface $serializer): OpenAi
-    {
-        $curlFactory = $this->createMock(CurlFactory::class);
-        $curlFactory->expects(self::once())
-            ->method('create')
-            ->willReturn($curl);
-
-        return new OpenAi($curlFactory, $serializer);
+        return $httpClient;
     }
 
     /**
