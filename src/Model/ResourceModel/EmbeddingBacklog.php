@@ -69,7 +69,7 @@ class EmbeddingBacklog extends AbstractDb
     /**
      * @param list<int> $backlogIds
      */
-    public function markEmbeddedByIds(array $backlogIds): void
+    public function markDoneByIds(array $backlogIds): void
     {
         if ($backlogIds === []) {
             return;
@@ -78,7 +78,7 @@ class EmbeddingBacklog extends AbstractDb
         $this->updateUpserts(
             $backlogIds,
             [
-                EmbeddingBacklogInterface::STATUS => Status::Embedded->value,
+                EmbeddingBacklogInterface::STATUS => Status::Done->value,
                 EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
             ]
         );

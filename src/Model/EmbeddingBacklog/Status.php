@@ -11,7 +11,6 @@ namespace DavidBel\AiSearch\Model\EmbeddingBacklog;
 enum Status: string
 {
     case Pending = 'pending';
-    case Embedded = 'embedded';
     case Done = 'done';
     case Failed = 'failed';
 }

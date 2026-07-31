@@ -6,7 +6,7 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Embedding\Client;
+namespace DavidBel\AiSearch\Client\Embedding;
 
 use DavidBel\AiSearch\Api\EmbedderClientInterface;
 use GuzzleHttp\ClientInterface;

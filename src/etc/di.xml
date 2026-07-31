@@ -25,13 +25,13 @@
     <preference for="DavidBel\AiSearch\Api\EmbeddingBacklogRepositoryInterface"
                 type="DavidBel\AiSearch\Repository\EmbeddingBacklogRepository"/>
     <preference for="DavidBel\AiSearch\Api\EmbedderClientInterface"
-                type="DavidBel\AiSearch\Embedding\Client\OpenAi"/>
-    <virtualType name="DavidBel\AiSearch\Embedding\HttpClient"
+                type="DavidBel\AiSearch\Client\Embedding\OpenAi"/>
+    <virtualType name="DavidBel\AiSearch\Client\Embedding\HttpClient"
                  type="GuzzleHttp\Client"/>
-    <type name="DavidBel\AiSearch\Embedding\Client\OpenAi">
+    <type name="DavidBel\AiSearch\Client\Embedding\OpenAi">
         <arguments>
             <argument name="client"
-                      xsi:type="object">DavidBel\AiSearch\Embedding\HttpClient</argument>
+                      xsi:type="object">DavidBel\AiSearch\Client\Embedding\HttpClient</argument>
         </arguments>
     </type>
     <type name="DavidBel\AiSearch\Workflow\DocumentProcessing\Chunking">

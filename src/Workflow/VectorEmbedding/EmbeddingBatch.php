@@ -55,4 +55,12 @@ class EmbeddingBatch
     {
         return $this->inputs[array_key_last($this->inputs)];
     }
+
+    /**
+     * @return non-empty-list<EmbeddingInput>
+     */
+    public function getInputs(): array
+    {
+        return $this->inputs;
+    }
 }

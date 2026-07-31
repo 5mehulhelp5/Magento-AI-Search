@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Workflow\VectorEmbedding;
 
-use Closure;
 use GuzzleHttp\Promise\EachPromise;
 
 class EmbeddingPromisePool
@@ -19,8 +18,8 @@ class EmbeddingPromisePool
     public function run(
         iterable $promises,
         int $concurrency,
-        Closure $fulfilled,
-        Closure $rejected
+        callable $fulfilled,
+        callable $rejected
     ): void {
         $pool = new EachPromise(
             $promises,
