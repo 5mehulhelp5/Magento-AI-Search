@@ -9,8 +9,12 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Embedding\Client;
 
 use DavidBel\AiSearch\Api\EmbedderClientInterface;
-use Magento\Framework\HTTP\Client\CurlFactory;
+use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Promise\Create;
+use GuzzleHttp\Promise\PromiseInterface;
+use GuzzleHttp\RequestOptions;
 use Magento\Framework\Serialize\SerializerInterface;
+use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use UnexpectedValueException;
 
@@ -24,27 +28,20 @@ class OpenAi implements EmbedderClientInterface
     private const REQUEST_TIMEOUT_SECONDS = 60;
 
     public function __construct(
-        private readonly CurlFactory $curlFactory,
+        private readonly ClientInterface $client,
         private readonly SerializerInterface $serializer
     ) {
     }
 
     /**
      * @param list<string> $inputs
-     * @return list<list<float>>
      */
-    public function embed(array $inputs): array
+    public function embedAsync(array $inputs): PromiseInterface
     {
         if ($inputs === []) {
-            return [];
+            return Create::promiseFor([]);
         }
 
-        $client = $this->curlFactory->create();
-        $client->setHeaders([
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json',
-        ]);
-        $client->setTimeout(self::REQUEST_TIMEOUT_SECONDS);
         $payload = $this->serializer->serialize([
             'model' => self::MODEL,
             'input' => $inputs,
@@ -55,15 +52,38 @@ class OpenAi implements EmbedderClientInterface
             throw new UnexpectedValueException('Embedding request could not be serialized.');
         }
 
-        $client->post(self::BASE_URL . '/v1/embeddings', $payload);
+        return $this->client->requestAsync(
+            'POST',
+            self::BASE_URL . '/v1/embeddings',
+            [
+                RequestOptions::BODY => $payload,
+                RequestOptions::HEADERS => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                RequestOptions::HTTP_ERRORS => false,
+                RequestOptions::TIMEOUT => self::REQUEST_TIMEOUT_SECONDS,
+            ]
+        )->then(
+            fn (ResponseInterface $response): array => $this->decodeHttpResponse(
+                $response,
+                count($inputs)
+            )
+        );
+    }
 
-        $status = $client->getStatus();
+    /**
+     * @return list<list<float>>
+     */
+    private function decodeHttpResponse(ResponseInterface $response, int $inputCount): array
+    {
+        $status = $response->getStatusCode();
 
         if ($status < 200 || $status >= 300) {
             throw new RuntimeException(sprintf('Embedding request failed with HTTP status %d.', $status));
         }
 
-        return $this->decodeResponse($client->getBody(), count($inputs));
+        return $this->decodeResponse((string) $response->getBody(), $inputCount);
     }
 
     /**

@@ -12,6 +12,7 @@ readonly class EmbeddingInput
 {
     public function __construct(
         public int $backlogId,
+        public string $backlogUpdatedAt,
         public int $chunkId,
         public string $sourceEntityType,
         public int $sourceEntityId,

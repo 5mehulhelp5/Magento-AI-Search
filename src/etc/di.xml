@@ -26,6 +26,14 @@
                 type="DavidBel\AiSearch\Repository\EmbeddingBacklogRepository"/>
     <preference for="DavidBel\AiSearch\Api\EmbedderClientInterface"
                 type="DavidBel\AiSearch\Embedding\Client\OpenAi"/>
+    <virtualType name="DavidBel\AiSearch\Embedding\HttpClient"
+                 type="GuzzleHttp\Client"/>
+    <type name="DavidBel\AiSearch\Embedding\Client\OpenAi">
+        <arguments>
+            <argument name="client"
+                      xsi:type="object">DavidBel\AiSearch\Embedding\HttpClient</argument>
+        </arguments>
+    </type>
     <type name="DavidBel\AiSearch\Workflow\DocumentProcessing\Chunking">
         <arguments>
             <argument name="chunkingStrategies" xsi:type="array">

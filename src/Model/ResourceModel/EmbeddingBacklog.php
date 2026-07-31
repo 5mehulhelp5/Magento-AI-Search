@@ -34,16 +34,34 @@ class EmbeddingBacklog extends AbstractDb
     /**
      * @return list<array<string, mixed>>
      */
-    public function getUpsertsForEmbedding(int $limit): array
-    {
+    public function getPendingUpsertsForEmbedding(
+        int $limit,
+        ?string $cursorUpdatedAt = null,
+        ?int $cursorBacklogId = null
+    ): array {
         if ($limit < 1) {
             throw new InvalidArgumentException('The embedding backlog batch limit must be positive.');
+        }
+
+        if (($cursorUpdatedAt === null) !== ($cursorBacklogId === null)) {
+            throw new InvalidArgumentException('Both embedding backlog cursor values must be provided together.');
+        }
+
+        if ($cursorBacklogId !== null && $cursorBacklogId < 0) {
+            throw new InvalidArgumentException('The embedding backlog cursor ID must be non-negative.');
         }
 
         /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
         /** @var list<array<string, mixed>> $rows */
-        $rows = $connection->fetchAll($this->createUpsertSelect($connection, $limit));
+        $rows = $connection->fetchAll(
+            $this->createUpsertSelect(
+                $connection,
+                $limit,
+                $cursorUpdatedAt,
+                $cursorBacklogId
+            )
+        );
 
         return $rows;
     }
@@ -92,7 +110,35 @@ class EmbeddingBacklog extends AbstractDb
         $this->_init('davidbel_ai_search_embedding_backlog', 'backlog_id');
     }
 
-    private function createUpsertSelect(AdapterInterface $connection, int $limit): Select
+    private function createUpsertSelect(
+        AdapterInterface $connection,
+        int $limit,
+        ?string $cursorUpdatedAt,
+        ?int $cursorBacklogId
+    ): Select {
+        $select = $this->createEmbeddingSelect($connection)
+            ->where('backlog.operation = ?', Operation::Upsert->value)
+            ->where('backlog.status = ?', Status::Pending->value)
+            ->order([
+                'backlog.updated_at ASC',
+                'backlog.backlog_id ASC',
+            ])
+            ->limit($limit);
+
+        if ($cursorUpdatedAt !== null && $cursorBacklogId !== null) {
+            $select->where(
+                $this->createCursorCondition(
+                    $connection,
+                    $cursorUpdatedAt,
+                    $cursorBacklogId
+                )
+            );
+        }
+
+        return $select;
+    }
+
+    private function createEmbeddingSelect(AdapterInterface $connection): Select
     {
         return $connection->select()
             ->from(
@@ -100,6 +146,7 @@ class EmbeddingBacklog extends AbstractDb
                 [
                     EmbeddingBacklogInterface::BACKLOG_ID,
                     EmbeddingBacklogInterface::CHUNK_ID,
+                    EmbeddingBacklogInterface::UPDATED_AT,
                 ]
             )
             ->join(
@@ -120,17 +167,19 @@ class EmbeddingBacklog extends AbstractDb
                     DocumentInterface::STORE_ID,
                     DocumentInterface::SOURCE_CODE,
                 ]
-            )
-            ->where('backlog.operation = ?', Operation::Upsert->value)
-            ->where(
-                'backlog.status IN (?)',
-                [Status::Pending->value, Status::Failed->value]
-            )
-            ->order([
-                'backlog.updated_at ASC',
-                'backlog.backlog_id ASC',
-            ])
-            ->limit($limit);
+            );
+    }
+
+    private function createCursorCondition(
+        AdapterInterface $connection,
+        string $cursorUpdatedAt,
+        int $cursorBacklogId
+    ): string {
+        $afterTimestamp = $connection->quoteInto('backlog.updated_at > ?', $cursorUpdatedAt);
+        $atTimestamp = $connection->quoteInto('backlog.updated_at = ?', $cursorUpdatedAt);
+        $afterId = $connection->quoteInto('backlog.backlog_id > ?', $cursorBacklogId);
+
+        return sprintf('(%s OR (%s AND %s))', $afterTimestamp, $atTimestamp, $afterId);
     }
 
     private function upsert(int $chunkId, Operation $operation): void

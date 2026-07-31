@@ -8,13 +8,15 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Api;
 
+use GuzzleHttp\Promise\PromiseInterface;
+
 interface EmbedderClientInterface
 {
     /**
-     * Generate an embedding vector for every input text.
+     * Start generating an embedding vector for every input text.
      *
      * @param list<string> $inputs
-     * @return list<list<float>>
+     * @return \GuzzleHttp\Promise\PromiseInterface
      */
-    public function embed(array $inputs): array;
+    public function embedAsync(array $inputs): PromiseInterface;
 }
