@@ -175,6 +175,49 @@ class EmbeddingBacklog extends AbstractDb
         );
     }
 
+    public function deleteFailedAtThresholdOrDoneBefore(
+        int $attemptThreshold,
+        string $doneBefore
+    ): int {
+        if ($attemptThreshold < 1) {
+            throw new InvalidArgumentException('The cleanup attempt threshold must be positive.');
+        }
+
+        if ($doneBefore === '') {
+            throw new InvalidArgumentException('The completed backlog cutoff must not be empty.');
+        }
+
+        /** @var AdapterInterface $connection */
+        $connection = $this->getConnection();
+        $failedStatus = $connection->quoteInto(
+            EmbeddingBacklogInterface::STATUS . ' = ?',
+            Status::Failed->value
+        );
+        $attemptLimit = $connection->quoteInto(
+            EmbeddingBacklogInterface::ATTEMPT_COUNT . ' >= ?',
+            $attemptThreshold
+        );
+        $doneStatus = $connection->quoteInto(
+            EmbeddingBacklogInterface::STATUS . ' = ?',
+            Status::Done->value
+        );
+        $doneCutoff = $connection->quoteInto(
+            EmbeddingBacklogInterface::UPDATED_AT . ' < ?',
+            $doneBefore
+        );
+
+        return $connection->delete(
+            $this->getMainTable(),
+            sprintf(
+                '((%s AND %s) OR (%s AND %s))',
+                $failedStatus,
+                $attemptLimit,
+                $doneStatus,
+                $doneCutoff
+            )
+        );
+    }
+
     protected function _construct(): void
     {
         $this->_init('davidbel_ai_search_embedding_backlog', 'backlog_id');

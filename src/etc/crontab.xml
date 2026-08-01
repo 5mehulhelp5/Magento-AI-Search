@@ -17,5 +17,10 @@
              method="execute">
             <schedule>*/5 * * * *</schedule>
         </job>
+        <job name="davidbel_ai_search_chunk_processing_cleanup"
+             instance="DavidBel\AiSearch\Cron\ChunkProcessingCleanup"
+             method="execute">
+            <schedule>0 0 * * *</schedule>
+        </job>
     </group>
 </config>
