@@ -15,8 +15,8 @@ use DavidBel\AiSearch\Workflow\ChunkProcessing\ProcessingBatchFactory;
 use DavidBel\AiSearch\Workflow\ChunkProcessing\ProcessingItemMapper;
 use DavidBel\AiSearch\Workflow\ChunkProcessing\ProcessingResultHandler;
 use DavidBel\AiSearch\Workflow\ChunkProcessing\ProcessingResultHandlerFactory;
-use DavidBel\AiSearch\Workflow\ChunkProcessing\ProcessingRun;
-use DavidBel\AiSearch\Workflow\ChunkProcessing\ProcessingRunFactory;
+use DavidBel\AiSearch\Workflow\ChunkProcessing\ProcessingState;
+use DavidBel\AiSearch\Workflow\ChunkProcessing\ProcessingStateFactory;
 use DavidBel\AiSearch\Workflow\ChunkProcessing\VectorEmbedding;
 use DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync;
 use DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync\Delete\BatchFactory as DeleteBatchFactory;
@@ -40,7 +40,7 @@ class ChunkProcessing
         private readonly DeleteBatchFactory $deleteBatchFactory,
         private readonly ProcessingItemMapper $processingItemMapper,
         private readonly ProcessingBatchFactory $processingBatchFactory,
-        private readonly ProcessingRunFactory $processingRunFactory,
+        private readonly ProcessingStateFactory $processingStateFactory,
         private readonly ProcessingResultHandlerFactory $processingResultHandlerFactory,
         private readonly VectorEmbedding $vectorEmbedding,
         private readonly VectorSync $vectorSync,
@@ -50,42 +50,35 @@ class ChunkProcessing
 
     public function execute(): int
     {
-        $processingRun = $this->processingRunFactory->create();
+        $processingState = $this->processingStateFactory->create();
         $resultHandler = $this->processingResultHandlerFactory->create([
-            'processingRun' => $processingRun,
+            'processingState' => $processingState,
         ]);
 
         $this->cacheClean->start();
-        $this->runDeletion($processingRun, $resultHandler);
-        $this->runVectorEmbedding($processingRun, $resultHandler);
+        $this->runDeletion($resultHandler);
+        $this->runVectorEmbedding($processingState, $resultHandler);
 
         return $this->finish($resultHandler);
     }
 
     private function runDeletion(
-        ProcessingRun $processingRun,
         ProcessingResultHandler $resultHandler
     ): void {
-        try {
-            $rows = $this->getResource()->getItemsForDeletion(self::DELETION_BATCH_SIZE);
+        $rows = $this->getResource()->getItemsForDeletion(self::DELETION_BATCH_SIZE);
 
-            if ($rows === []) {
-                return;
-            }
-
-            $batch = $this->deleteBatchFactory->create([
-                'items' => $this->deleteItemMapper->mapRows($rows),
-            ]);
-        } catch (Throwable $throwable) {
-            $processingRun->stop($throwable);
-
+        if ($rows === []) {
             return;
         }
 
+        $batch = $this->deleteBatchFactory->create([
+            'items' => $this->deleteItemMapper->mapRows($rows),
+        ]);
+
         try {
             $result = $this->vectorSync->delete($batch);
-        } catch (Throwable $throwable) {
-            $resultHandler->openSearchFailed($batch->getBacklogIds(), $throwable);
+        } catch (Throwable) {
+            $resultHandler->openSearchFailed($batch->getBacklogIds());
 
             return;
         }
@@ -94,32 +87,28 @@ class ChunkProcessing
     }
 
     private function runVectorEmbedding(
-        ProcessingRun $processingRun,
+        ProcessingState $processingState,
         ProcessingResultHandler $resultHandler
     ): void {
-        try {
-            $this->vectorEmbedding->execute(
-                $this->createProcessingBatches($processingRun),
-                self::CONCURRENT_EMBEDDING_REQUESTS,
-                [$resultHandler, 'completed'],
-                [$resultHandler, 'failed']
-            );
-        } catch (Throwable $throwable) {
-            $processingRun->stop($throwable);
-        }
+        $this->vectorEmbedding->execute(
+            $this->createProcessingBatches($processingState),
+            self::CONCURRENT_EMBEDDING_REQUESTS,
+            [$resultHandler, 'completed'],
+            [$resultHandler, 'failed']
+        );
     }
 
     /**
      * @return Generator<int, \DavidBel\AiSearch\Workflow\ChunkProcessing\ProcessingBatch>
      */
-    private function createProcessingBatches(ProcessingRun $processingRun): Generator
+    private function createProcessingBatches(ProcessingState $processingState): Generator
     {
         $cursorUpdatedAt = null;
         $cursorBacklogId = null;
         $batchId = 0;
         $maxRuntimeNanoseconds = self::MAX_RUNTIME_SECONDS * self::NANOSECONDS_PER_SECOND;
 
-        while ($processingRun->canAcceptWork($maxRuntimeNanoseconds)) {
+        while ($processingState->isWithinRuntime($maxRuntimeNanoseconds)) {
             $rows = $this->getResource()->getPendingUpsertsForEmbedding(
                 self::EMBEDDING_BATCH_SIZE,
                 $cursorUpdatedAt,
@@ -136,7 +125,7 @@ class ChunkProcessing
             $lastItem = $batch->getLastItem();
             $cursorUpdatedAt = $lastItem->backlogUpdatedAt;
             $cursorBacklogId = $lastItem->backlogId;
-            $processingRun->addBatch($batchId, $batch);
+            $processingState->addBatch($batchId, $batch);
 
             yield $batchId => $batch;
 

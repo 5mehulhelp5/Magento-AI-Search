@@ -11,7 +11,6 @@ namespace DavidBel\AiSearch\Workflow\ChunkProcessing;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync\Result;
-use RuntimeException;
 use Throwable;
 
 class ProcessingResultHandler
@@ -26,7 +25,7 @@ class ProcessingResultHandler
         private readonly CollectionFactory $collectionFactory,
         private readonly VectorSync $vectorSync,
         private readonly CacheClean $cacheClean,
-        private readonly ProcessingRun $processingRun
+        private readonly ProcessingState $processingState
     ) {
     }
 
@@ -36,21 +35,19 @@ class ProcessingResultHandler
     public function completed(array $vectors, int $batchId): void
     {
         try {
-            $batch = $this->processingRun->getBatch($batchId);
+            $batch = $this->processingState->getBatch($batchId);
 
             try {
                 $result = $this->vectorSync->upsert($batch, $vectors);
-            } catch (Throwable $throwable) {
-                $this->openSearchFailed($batch->getBacklogIds(), $throwable);
+            } catch (Throwable) {
+                $this->openSearchFailed($batch->getBacklogIds());
 
                 return;
             }
 
-            $this->completeUpsert($result);
-        } catch (Throwable $throwable) {
-            $this->processingRun->stop($throwable);
+            $this->handleVectorSyncResult($result);
         } finally {
-            $this->processingRun->removeBatch($batchId);
+            $this->processingState->removeBatch($batchId);
         }
     }
 
@@ -58,49 +55,33 @@ class ProcessingResultHandler
     {
         try {
             $this->getResource()->markFailedByIds(
-                $this->processingRun->getBatch($batchId)->getBacklogIds(),
+                $this->processingState->getBatch($batchId)->getBacklogIds(),
                 self::EMBEDDER_ERROR_CATEGORY
             );
-            $this->processingRun->stop($this->toThrowable($reason));
-        } catch (Throwable $throwable) {
-            $this->processingRun->stop($throwable);
         } finally {
-            $this->processingRun->removeBatch($batchId);
+            $this->processingState->removeBatch($batchId);
         }
     }
 
     public function completeDeletion(Result $result): void
     {
-        try {
-            if ($this->handleVectorSyncResult($result)) {
-                $this->processingRun->stop(
-                    new RuntimeException('OpenSearch rejected one or more chunk deletions.')
-                );
-            }
-        } catch (Throwable $throwable) {
-            $this->processingRun->stop($throwable);
-        }
+        $this->handleVectorSyncResult($result);
     }
 
     /**
      * @param list<int> $backlogIds
      */
-    public function openSearchFailed(array $backlogIds, Throwable $failure): void
+    public function openSearchFailed(array $backlogIds): void
     {
-        try {
-            $this->getResource()->markFailedByIds(
-                $backlogIds,
-                self::OPENSEARCH_ERROR_CATEGORY
-            );
-            $this->processingRun->stop($failure);
-        } catch (Throwable $throwable) {
-            $this->processingRun->stop($throwable);
-        }
+        $this->getResource()->markFailedByIds(
+            $backlogIds,
+            self::OPENSEARCH_ERROR_CATEGORY
+        );
     }
 
     public function finish(): int
     {
-        $successfulBacklogIds = $this->processingRun->getSuccessfulBacklogIds();
+        $successfulBacklogIds = $this->processingState->getSuccessfulBacklogIds();
 
         try {
             $this->cacheClean->flush();
@@ -109,30 +90,16 @@ class ProcessingResultHandler
                 $successfulBacklogIds,
                 self::CACHE_ERROR_CATEGORY
             );
-            $this->processingRun->stop($throwable);
 
-            return $this->processingRun->getResult();
+            throw $throwable;
         }
 
         $this->getResource()->markDoneByIds($successfulBacklogIds);
 
-        return $this->processingRun->getResult();
+        return $this->processingState->getProcessedCount();
     }
 
-    private function completeUpsert(Result $result): void
-    {
-        try {
-            if ($this->handleVectorSyncResult($result)) {
-                $this->processingRun->stop(
-                    new RuntimeException('OpenSearch rejected one or more chunk documents.')
-                );
-            }
-        } catch (Throwable $throwable) {
-            $this->processingRun->stop($throwable);
-        }
-    }
-
-    private function handleVectorSyncResult(Result $result): bool
+    private function handleVectorSyncResult(Result $result): void
     {
         $failedBacklogIds = $result->getFailedBacklogIds();
         $successfulBacklogIds = $result->getSuccessfulBacklogIds();
@@ -155,9 +122,7 @@ class ProcessingResultHandler
             throw $throwable;
         }
 
-        $this->processingRun->recordSuccesses($successfulBacklogIds);
-
-        return $failedBacklogIds !== [];
+        $this->processingState->recordSuccesses($successfulBacklogIds);
     }
 
     private function getResource(): EmbeddingBacklogResource
@@ -165,14 +130,5 @@ class ProcessingResultHandler
         $this->resource ??= $this->collectionFactory->create()->getResourceModel();
 
         return $this->resource;
-    }
-
-    private function toThrowable(mixed $reason): Throwable
-    {
-        if ($reason instanceof Throwable) {
-            return $reason;
-        }
-
-        return new RuntimeException('The embedding request failed without an exception.');
     }
 }

@@ -8,10 +8,9 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Workflow\ChunkProcessing;
 
-use Throwable;
 use UnexpectedValueException;
 
-class ProcessingRun
+class ProcessingState
 {
     /**
      * @var array<int, ProcessingBatch>
@@ -23,9 +22,7 @@ class ProcessingRun
      */
     private array $successfulBacklogIds = [];
 
-    private bool $acceptNewWork = true;
     private int $processedCount = 0;
-    private ?Throwable $failure = null;
     private readonly int $startedAt;
 
     public function __construct()
@@ -33,10 +30,9 @@ class ProcessingRun
         $this->startedAt = hrtime(true);
     }
 
-    public function canAcceptWork(int $maxRuntimeNanoseconds): bool
+    public function isWithinRuntime(int $maxRuntimeNanoseconds): bool
     {
-        return $this->acceptNewWork
-            && hrtime(true) - $this->startedAt < $maxRuntimeNanoseconds;
+        return hrtime(true) - $this->startedAt < $maxRuntimeNanoseconds;
     }
 
     public function addBatch(int $batchId, ProcessingBatch $batch): void
@@ -78,18 +74,8 @@ class ProcessingRun
         return $this->successfulBacklogIds;
     }
 
-    public function stop(Throwable $failure): void
+    public function getProcessedCount(): int
     {
-        $this->acceptNewWork = false;
-        $this->failure ??= $failure;
-    }
-
-    public function getResult(): int
-    {
-        if ($this->failure instanceof Throwable) {
-            throw $this->failure;
-        }
-
         return $this->processedCount;
     }
 }
