@@ -12,5 +12,10 @@
              method="execute">
             <schedule>* * * * *</schedule>
         </job>
+        <job name="davidbel_ai_search_chunk_processing_retry"
+             instance="DavidBel\AiSearch\Cron\ChunkProcessingRetry"
+             method="execute">
+            <schedule>*/5 * * * *</schedule>
+        </job>
     </group>
 </config>

@@ -156,6 +156,25 @@ class EmbeddingBacklog extends AbstractDb
         );
     }
 
+    public function markFailedAsPending(int $attemptThreshold): int
+    {
+        if ($attemptThreshold < 1) {
+            throw new InvalidArgumentException('The retry attempt threshold must be positive.');
+        }
+
+        /** @var AdapterInterface $connection */
+        $connection = $this->getConnection();
+
+        return $connection->update(
+            $this->getMainTable(),
+            [EmbeddingBacklogInterface::STATUS => Status::Pending->value],
+            [
+                EmbeddingBacklogInterface::STATUS . ' = ?' => Status::Failed->value,
+                EmbeddingBacklogInterface::ATTEMPT_COUNT . ' < ?' => $attemptThreshold,
+            ]
+        );
+    }
+
     protected function _construct(): void
     {
         $this->_init('davidbel_ai_search_embedding_backlog', 'backlog_id');
