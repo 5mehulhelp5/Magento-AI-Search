@@ -6,18 +6,20 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Workflow\VectorEmbedding\OpenSearchUpdater;
+namespace DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync\Upsert;
 
-readonly class ChunkDocument
+use DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync\Item;
+
+readonly class Document extends Item
 {
     /**
      * @param list<float> $vector
      */
     public function __construct(
-        public int $backlogId,
-        public int $chunkId,
-        public string $sourceEntityType,
-        public int $sourceEntityId,
+        int $backlogId,
+        int $chunkId,
+        string $sourceEntityType,
+        int $sourceEntityId,
         public int $storeId,
         public string $sourceCode,
         public int $chunkIndex,
@@ -25,5 +27,11 @@ readonly class ChunkDocument
         public string $contentHash,
         public array $vector
     ) {
+        parent::__construct(
+            $backlogId,
+            $chunkId,
+            $sourceEntityType,
+            $sourceEntityId
+        );
     }
 }

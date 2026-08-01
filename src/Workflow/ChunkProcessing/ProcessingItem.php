@@ -6,9 +6,9 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Workflow\VectorEmbedding;
+namespace DavidBel\AiSearch\Workflow\ChunkProcessing;
 
-readonly class EmbeddingInput
+readonly class ProcessingItem
 {
     public function __construct(
         public int $backlogId,

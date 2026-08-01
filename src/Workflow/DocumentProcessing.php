@@ -98,7 +98,11 @@ class DocumentProcessing
 
         try {
             $updateResult = $this->updateProduct($productId, $sources, $updateMode);
-            $this->saveBacklog($updateResult, $embeddingBacklogResource);
+            $this->saveBacklog(
+                $updateResult,
+                $embeddingBacklogResource,
+                $productId
+            );
             $connection->commit();
         } catch (Throwable $throwable) {
             $connection->rollBack();
@@ -133,18 +137,27 @@ class DocumentProcessing
 
     private function saveBacklog(
         DocumentUpdateResult $updateResult,
-        EmbeddingBacklogResource $embeddingBacklogResource
+        EmbeddingBacklogResource $embeddingBacklogResource,
+        int $productId
     ): void {
         if ($updateResult->upsertChunkIds === [] && $updateResult->deletionChunkIds === []) {
             return;
         }
 
         foreach ($updateResult->upsertChunkIds as $chunkId) {
-            $embeddingBacklogResource->saveByChunkId($chunkId);
+            $embeddingBacklogResource->saveByChunkId(
+                $chunkId,
+                self::SOURCE_ENTITY_TYPE,
+                $productId
+            );
         }
 
         foreach ($updateResult->deletionChunkIds as $chunkId) {
-            $embeddingBacklogResource->deleteByChunkId($chunkId);
+            $embeddingBacklogResource->deleteByChunkId(
+                $chunkId,
+                self::SOURCE_ENTITY_TYPE,
+                $productId
+            );
         }
     }
 }

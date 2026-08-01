@@ -21,14 +21,30 @@ use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
 
 class EmbeddingBacklog extends AbstractDb
 {
-    public function saveByChunkId(int $chunkId): void
-    {
-        $this->upsert($chunkId, Operation::Upsert);
+    public function saveByChunkId(
+        int $chunkId,
+        string $sourceEntityType,
+        int $sourceEntityId
+    ): void {
+        $this->upsert(
+            $chunkId,
+            $sourceEntityType,
+            $sourceEntityId,
+            Operation::Upsert
+        );
     }
 
-    public function deleteByChunkId(int $chunkId): void
-    {
-        $this->upsert($chunkId, Operation::Deletion);
+    public function deleteByChunkId(
+        int $chunkId,
+        string $sourceEntityType,
+        int $sourceEntityId
+    ): void {
+        $this->upsert(
+            $chunkId,
+            $sourceEntityType,
+            $sourceEntityId,
+            Operation::Deletion
+        );
     }
 
     /**
@@ -67,6 +83,41 @@ class EmbeddingBacklog extends AbstractDb
     }
 
     /**
+     * @return list<array<string, mixed>>
+     */
+    public function getItemsForDeletion(int $limit): array
+    {
+        if ($limit < 1) {
+            throw new InvalidArgumentException('The deletion backlog batch limit must be positive.');
+        }
+
+        /** @var AdapterInterface $connection */
+        $connection = $this->getConnection();
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $connection->fetchAll(
+            $connection->select()
+                ->from(
+                    ['backlog' => $this->getMainTable()],
+                    [
+                        EmbeddingBacklogInterface::BACKLOG_ID,
+                        EmbeddingBacklogInterface::CHUNK_ID,
+                        EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE,
+                        EmbeddingBacklogInterface::SOURCE_ENTITY_ID,
+                    ]
+                )
+                ->where('backlog.operation = ?', Operation::Deletion->value)
+                ->where('backlog.status = ?', Status::Pending->value)
+                ->order([
+                    'backlog.updated_at ASC',
+                    'backlog.backlog_id ASC',
+                ])
+                ->limit($limit)
+        );
+
+        return $rows;
+    }
+
+    /**
      * @param list<int> $backlogIds
      */
     public function markDoneByIds(array $backlogIds): void
@@ -75,7 +126,7 @@ class EmbeddingBacklog extends AbstractDb
             return;
         }
 
-        $this->updateUpserts(
+        $this->updateItems(
             $backlogIds,
             [
                 EmbeddingBacklogInterface::STATUS => Status::Done->value,
@@ -93,7 +144,7 @@ class EmbeddingBacklog extends AbstractDb
             return;
         }
 
-        $this->updateUpserts(
+        $this->updateItems(
             $backlogIds,
             [
                 EmbeddingBacklogInterface::STATUS => Status::Failed->value,
@@ -182,8 +233,12 @@ class EmbeddingBacklog extends AbstractDb
         return sprintf('(%s OR (%s AND %s))', $afterTimestamp, $atTimestamp, $afterId);
     }
 
-    private function upsert(int $chunkId, Operation $operation): void
-    {
+    private function upsert(
+        int $chunkId,
+        string $sourceEntityType,
+        int $sourceEntityId,
+        Operation $operation
+    ): void {
         /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
 
@@ -191,12 +246,16 @@ class EmbeddingBacklog extends AbstractDb
             $this->getMainTable(),
             [
                 EmbeddingBacklogInterface::CHUNK_ID => $chunkId,
+                EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE => $sourceEntityType,
+                EmbeddingBacklogInterface::SOURCE_ENTITY_ID => $sourceEntityId,
                 EmbeddingBacklogInterface::OPERATION => $operation->value,
                 EmbeddingBacklogInterface::STATUS => Status::Pending->value,
                 EmbeddingBacklogInterface::ATTEMPT_COUNT => 0,
                 EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
             ],
             [
+                EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE,
+                EmbeddingBacklogInterface::SOURCE_ENTITY_ID,
                 EmbeddingBacklogInterface::OPERATION,
                 EmbeddingBacklogInterface::STATUS,
                 EmbeddingBacklogInterface::ATTEMPT_COUNT,
@@ -209,7 +268,7 @@ class EmbeddingBacklog extends AbstractDb
      * @param list<int> $backlogIds
      * @param array<string, mixed> $values
      */
-    private function updateUpserts(array $backlogIds, array $values): void
+    private function updateItems(array $backlogIds, array $values): void
     {
         /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
@@ -218,7 +277,6 @@ class EmbeddingBacklog extends AbstractDb
             $values,
             [
                 EmbeddingBacklogInterface::BACKLOG_ID . ' IN (?)' => $backlogIds,
-                EmbeddingBacklogInterface::OPERATION . ' = ?' => Operation::Upsert->value,
                 EmbeddingBacklogInterface::STATUS . ' IN (?)' => [
                     Status::Pending->value,
                     Status::Failed->value,

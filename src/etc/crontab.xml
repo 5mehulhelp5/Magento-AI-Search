@@ -7,8 +7,8 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
     <group id="davidbel_ai_search">
-        <job name="davidbel_ai_search_vector_embedding"
-             instance="DavidBel\AiSearch\Cron\VectorEmbedding"
+        <job name="davidbel_ai_search_chunk_processing"
+             instance="DavidBel\AiSearch\Cron\ChunkProcessing"
              method="execute">
             <schedule>* * * * *</schedule>
         </job>

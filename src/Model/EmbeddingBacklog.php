@@ -42,6 +42,26 @@ class EmbeddingBacklog extends AbstractExtensibleModel implements EmbeddingBackl
         return $this->setData(self::CHUNK_ID, $chunkId);
     }
 
+    public function getSourceEntityType(): ?string
+    {
+        return $this->getNullableString(self::SOURCE_ENTITY_TYPE);
+    }
+
+    public function setSourceEntityType(string $sourceEntityType): EmbeddingBacklogInterface
+    {
+        return $this->setData(self::SOURCE_ENTITY_TYPE, $sourceEntityType);
+    }
+
+    public function getSourceEntityId(): ?int
+    {
+        return $this->getNullableInteger(self::SOURCE_ENTITY_ID);
+    }
+
+    public function setSourceEntityId(int $sourceEntityId): EmbeddingBacklogInterface
+    {
+        return $this->setData(self::SOURCE_ENTITY_ID, $sourceEntityId);
+    }
+
     public function getOperation(): Operation
     {
         $value = $this->getData(self::OPERATION);

@@ -6,11 +6,11 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Workflow\VectorEmbedding;
+namespace DavidBel\AiSearch\Workflow\ChunkProcessing\VectorEmbedding;
 
 use GuzzleHttp\Promise\EachPromise;
 
-class EmbeddingPromisePool
+class PromisePool
 {
     /**
      * @param iterable<int, \GuzzleHttp\Promise\PromiseInterface> $promises
@@ -18,15 +18,15 @@ class EmbeddingPromisePool
     public function run(
         iterable $promises,
         int $concurrency,
-        callable $fulfilled,
-        callable $rejected
+        callable $completed,
+        callable $failed
     ): void {
         $pool = new EachPromise(
             $promises,
             [
                 'concurrency' => $concurrency,
-                'fulfilled' => $fulfilled,
-                'rejected' => $rejected,
+                'fulfilled' => $completed,
+                'rejected' => $failed,
             ]
         );
         $pool->promise()->wait();

@@ -141,6 +141,16 @@
                 nullable="false"
                 comment="Target Chunk ID"/>
         <column xsi:type="varchar"
+                name="source_entity_type"
+                nullable="true"
+                length="64"
+                comment="Source Entity Type Tombstone"/>
+        <column xsi:type="bigint"
+                name="source_entity_id"
+                unsigned="true"
+                nullable="true"
+                comment="Source Entity ID Tombstone"/>
+        <column xsi:type="varchar"
                 name="operation"
                 nullable="false"
                 default="upsert"
@@ -184,6 +194,12 @@
         </constraint>
         <index referenceId="DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_STATUS" indexType="btree">
             <column name="status"/>
+        </index>
+        <index referenceId="DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_OPERATION_STATUS" indexType="btree">
+            <column name="operation"/>
+            <column name="status"/>
+            <column name="updated_at"/>
+            <column name="backlog_id"/>
         </index>
     </table>
 </schema>

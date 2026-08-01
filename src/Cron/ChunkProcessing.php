@@ -8,17 +8,17 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Cron;
 
-use DavidBel\AiSearch\Workflow\VectorEmbedding as VectorEmbeddingWorkflow;
+use DavidBel\AiSearch\Workflow\ChunkProcessingFactory;
 
-class VectorEmbedding
+class ChunkProcessing
 {
     public function __construct(
-        private readonly VectorEmbeddingWorkflow $vectorEmbedding
+        private readonly ChunkProcessingFactory $chunkProcessingFactory
     ) {
     }
 
     public function execute(): void
     {
-        $this->vectorEmbedding->execute();
+        $this->chunkProcessingFactory->create()->execute();
     }
 }

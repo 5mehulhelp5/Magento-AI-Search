@@ -21,6 +21,8 @@ interface EmbeddingBacklogInterface extends ExtensibleDataInterface
 {
     public const string BACKLOG_ID = 'backlog_id';
     public const string CHUNK_ID = 'chunk_id';
+    public const string SOURCE_ENTITY_TYPE = 'source_entity_type';
+    public const string SOURCE_ENTITY_ID = 'source_entity_id';
     public const string OPERATION = 'operation';
     public const string STATUS = 'status';
     public const string ATTEMPT_COUNT = 'attempt_count';
@@ -57,6 +59,36 @@ interface EmbeddingBacklogInterface extends ExtensibleDataInterface
      * @return \DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface
      */
     public function setChunkId(int $chunkId): EmbeddingBacklogInterface;
+
+    /**
+     * Get the source entity type tombstone.
+     *
+     * @return string|null
+     */
+    public function getSourceEntityType(): ?string;
+
+    /**
+     * Set the source entity type tombstone.
+     *
+     * @param string $sourceEntityType
+     * @return \DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface
+     */
+    public function setSourceEntityType(string $sourceEntityType): EmbeddingBacklogInterface;
+
+    /**
+     * Get the source entity ID tombstone.
+     *
+     * @return int|null
+     */
+    public function getSourceEntityId(): ?int;
+
+    /**
+     * Set the source entity ID tombstone.
+     *
+     * @param int $sourceEntityId
+     * @return \DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface
+     */
+    public function setSourceEntityId(int $sourceEntityId): EmbeddingBacklogInterface;
 
     /**
      * Get the backlog operation.

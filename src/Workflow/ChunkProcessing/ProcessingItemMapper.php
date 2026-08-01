@@ -6,25 +6,25 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Workflow\VectorEmbedding;
+namespace DavidBel\AiSearch\Workflow\ChunkProcessing;
 
 use DavidBel\AiSearch\Api\Data\ChunkInterface;
 use DavidBel\AiSearch\Api\Data\DocumentInterface;
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
 use UnexpectedValueException;
 
-class EmbeddingInputMapper
+class ProcessingItemMapper
 {
     /**
      * @param list<array<string, mixed>> $rows
-     * @return list<EmbeddingInput>
+     * @return list<ProcessingItem>
      */
     public function mapRows(array $rows): array
     {
-        $inputs = [];
+        $items = [];
 
         foreach ($rows as $row) {
-            $inputs[] = new EmbeddingInput(
+            $items[] = new ProcessingItem(
                 $this->toInteger($row[EmbeddingBacklogInterface::BACKLOG_ID] ?? null, 'backlog_id'),
                 $this->toString($row[EmbeddingBacklogInterface::UPDATED_AT] ?? null, 'updated_at'),
                 $this->toInteger($row[EmbeddingBacklogInterface::CHUNK_ID] ?? null, 'chunk_id'),
@@ -38,7 +38,7 @@ class EmbeddingInputMapper
             );
         }
 
-        return $inputs;
+        return $items;
     }
 
     private function toInteger(mixed $value, string $field): int
