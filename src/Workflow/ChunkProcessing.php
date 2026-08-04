@@ -47,6 +47,7 @@ class ChunkProcessing
             'processingState' => $processingState,
         ]);
 
+        $this->getResource()->markMissingChunkUpsertsOutdated();
         $this->cacheClean->start();
         $this->runVectorEmbedding($processingState, $resultHandler);
 

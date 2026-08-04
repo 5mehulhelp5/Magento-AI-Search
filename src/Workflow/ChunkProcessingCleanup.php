@@ -14,7 +14,7 @@ use Magento\Framework\Stdlib\DateTime\DateTime;
 class ChunkProcessingCleanup
 {
     private const int ATTEMPT_THRESHOLD = 3;
-    private const string DONE_RETENTION = '-24 hours';
+    private const string RESULT_RETENTION = '-24 hours';
 
     public function __construct(
         private readonly CollectionFactory $collectionFactory,
@@ -24,14 +24,14 @@ class ChunkProcessingCleanup
 
     public function execute(): int
     {
-        $doneBefore = $this->dateTime->gmtDate(null, self::DONE_RETENTION);
+        $expiredBefore = $this->dateTime->gmtDate(null, self::RESULT_RETENTION);
 
         return $this->collectionFactory
             ->create()
             ->getResourceModel()
-            ->deleteExhaustedUpsertsOrDoneBefore(
+            ->deleteExhaustedUpsertsOrExpiredResults(
                 self::ATTEMPT_THRESHOLD,
-                $doneBefore
+                $expiredBefore
             );
     }
 }

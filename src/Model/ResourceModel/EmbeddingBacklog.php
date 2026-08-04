@@ -181,20 +181,68 @@ class EmbeddingBacklog extends AbstractDb
         );
     }
 
-    public function deleteExhaustedUpsertsOrDoneBefore(
+    public function markMissingChunkUpsertsOutdated(): int
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->getConnection();
+        $select = $connection->select()
+            ->joinLeft(
+                ['chunk' => $this->getTable('davidbel_ai_search_chunk')],
+                'chunk.chunk_id = backlog.chunk_id',
+                []
+            )
+            ->columns([
+                EmbeddingBacklogInterface::STATUS => new Expression(
+                    $connection->quoteInto('?', Status::Outdated->value)
+                ),
+                EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => new Expression('NULL'),
+            ])
+            ->where('backlog.operation = ?', Operation::Upsert->value)
+            ->where('backlog.status = ?', Status::Pending->value)
+            ->where('chunk.chunk_id IS NULL');
+        $query = $connection->updateFromSelect(
+            $select,
+            ['backlog' => $this->getMainTable()]
+        );
+
+        return $connection->query($query)->rowCount();
+    }
+
+    public function deleteExhaustedUpsertsOrExpiredResults(
         int $attemptThreshold,
-        string $doneBefore
+        string $expiredBefore
     ): int {
         if ($attemptThreshold < 1) {
             throw new InvalidArgumentException('The cleanup attempt threshold must be positive.');
         }
 
-        if ($doneBefore === '') {
-            throw new InvalidArgumentException('The completed backlog cutoff must not be empty.');
+        if ($expiredBefore === '') {
+            throw new InvalidArgumentException('The backlog expiration cutoff must not be empty.');
         }
 
         /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
+
+        return $connection->delete(
+            $this->getMainTable(),
+            $this->createCleanupCondition(
+                $connection,
+                $attemptThreshold,
+                $expiredBefore
+            )
+        );
+    }
+
+    protected function _construct(): void
+    {
+        $this->_init('davidbel_ai_search_embedding_backlog', 'backlog_id');
+    }
+
+    private function createCleanupCondition(
+        AdapterInterface $connection,
+        int $attemptThreshold,
+        string $expiredBefore
+    ): string {
         $failedStatus = $connection->quoteInto(
             EmbeddingBacklogInterface::STATUS . ' = ?',
             Status::Failed->value
@@ -207,31 +255,26 @@ class EmbeddingBacklog extends AbstractDb
             EmbeddingBacklogInterface::OPERATION . ' = ?',
             Operation::Upsert->value
         );
-        $doneStatus = $connection->quoteInto(
-            EmbeddingBacklogInterface::STATUS . ' = ?',
-            Status::Done->value
+        $resultStatus = $connection->quoteInto(
+            EmbeddingBacklogInterface::STATUS . ' IN (?)',
+            [
+                Status::Done->value,
+                Status::Outdated->value,
+            ]
         );
-        $doneCutoff = $connection->quoteInto(
+        $expirationCutoff = $connection->quoteInto(
             EmbeddingBacklogInterface::UPDATED_AT . ' < ?',
-            $doneBefore
+            $expiredBefore
         );
 
-        return $connection->delete(
-            $this->getMainTable(),
-            sprintf(
-                '((%s AND %s AND %s) OR (%s AND %s))',
-                $upsertOperation,
-                $failedStatus,
-                $attemptLimit,
-                $doneStatus,
-                $doneCutoff
-            )
+        return sprintf(
+            '((%s AND %s AND %s) OR (%s AND %s))',
+            $upsertOperation,
+            $failedStatus,
+            $attemptLimit,
+            $resultStatus,
+            $expirationCutoff
         );
-    }
-
-    protected function _construct(): void
-    {
-        $this->_init('davidbel_ai_search_embedding_backlog', 'backlog_id');
     }
 
     private function createUpsertSelect(
