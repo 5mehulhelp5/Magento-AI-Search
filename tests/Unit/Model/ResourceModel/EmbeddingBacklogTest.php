@@ -152,6 +152,7 @@ class EmbeddingBacklogTest extends TestCase
     public function testMarksUpsertsAsDone(): void
     {
         $connection = $this->createMock(AdapterInterface::class);
+        $this->configureQuotedIdentifiers($connection);
         $connection->expects(self::once())
             ->method('update')
             ->with(
@@ -160,16 +161,17 @@ class EmbeddingBacklogTest extends TestCase
                     EmbeddingBacklogInterface::STATUS => Status::Done->value,
                     EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
                 ],
-                self::updateConditions([10, 20])
+                self::versionUpdateConditions([10 => 2, 20 => 3])
             );
         $resource = $this->createUpdateResource($connection);
 
-        $resource->markDoneByIds([10, 20]);
+        $resource->markDoneByVersions([10 => 2, 20 => 3]);
     }
 
     public function testMarksUpsertsAsFailedAndIncrementsAttempts(): void
     {
         $connection = $this->createMock(AdapterInterface::class);
+        $this->configureQuotedIdentifiers($connection);
         $connection->expects(self::once())
             ->method('update')
             ->with(
@@ -191,11 +193,11 @@ class EmbeddingBacklogTest extends TestCase
                         return true;
                     }
                 ),
-                self::updateConditions([30])
+                self::versionUpdateConditions([30 => 4])
             );
         $resource = $this->createUpdateResource($connection);
 
-        $resource->markFailedByIds([30], 'embedder');
+        $resource->markFailedByVersions([30 => 4], 'embedder');
     }
 
     public function testDoesNotUpdateAnEmptyIdSet(): void
@@ -207,8 +209,86 @@ class EmbeddingBacklogTest extends TestCase
         $resource->expects(self::never())
             ->method('getConnection');
 
-        $resource->markDoneByIds([]);
-        $resource->markFailedByIds([], 'embedder');
+        $resource->markDoneByVersions([]);
+        $resource->markFailedByVersions([], 'embedder');
+    }
+
+    public function testRetriesFailedRowsBelowTheAttemptThreshold(): void
+    {
+        $connection = $this->createMock(AdapterInterface::class);
+        $connection->expects(self::once())
+            ->method('update')
+            ->with(
+                'embedding_backlog',
+                [EmbeddingBacklogInterface::STATUS => Status::Pending->value],
+                [
+                    EmbeddingBacklogInterface::STATUS . ' = ?' => Status::Failed->value,
+                    EmbeddingBacklogInterface::ATTEMPT_COUNT . ' < ?' => 3,
+                ]
+            )
+            ->willReturn(4);
+
+        self::assertSame(
+            4,
+            $this->createUpdateResource($connection)->markFailedAsPending(3)
+        );
+    }
+
+    public function testRejectsANonPositiveRetryThreshold(): void
+    {
+        $resource = $this->getMockBuilder(EmbeddingBacklog::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getConnection'])
+            ->getMock();
+        $resource->expects(self::never())->method('getConnection');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The retry attempt threshold must be positive.');
+
+        $resource->markFailedAsPending(0);
+    }
+
+    public function testDeletesExhaustedUpsertsAndExpiredResults(): void
+    {
+        $connection = $this->createMock(AdapterInterface::class);
+        $connection->expects(self::exactly(5))
+            ->method('quoteInto')
+            ->willReturnOnConsecutiveCalls(
+                'failed_status',
+                'attempt_limit',
+                'upsert_operation',
+                'result_status',
+                'expiration_cutoff'
+            );
+        $connection->expects(self::once())
+            ->method('delete')
+            ->with(
+                'embedding_backlog',
+                '((upsert_operation AND failed_status AND attempt_limit)'
+                . ' OR (result_status AND expiration_cutoff))'
+            )
+            ->willReturn(6);
+
+        self::assertSame(
+            6,
+            $this->createUpdateResource($connection)
+                ->deleteExhaustedUpsertsOrExpiredResults(
+                    3,
+                    '2026-08-03 10:00:00'
+                )
+        );
+    }
+
+    public function testRejectsAnEmptyCleanupCutoff(): void
+    {
+        $resource = $this->getMockBuilder(EmbeddingBacklog::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getConnection'])
+            ->getMock();
+        $resource->expects(self::never())->method('getConnection');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The backlog expiration cutoff must not be empty.');
+
+        $resource->deleteExhaustedUpsertsOrExpiredResults(3, '');
     }
 
     private function assertQueuesOperation(Operation $operation): void
@@ -220,27 +300,53 @@ class EmbeddingBacklogTest extends TestCase
                 'embedding_backlog',
                 [
                     EmbeddingBacklogInterface::CHUNK_ID => 42,
+                    EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE => 'product',
+                    EmbeddingBacklogInterface::SOURCE_ENTITY_ID => 99,
                     EmbeddingBacklogInterface::OPERATION => $operation->value,
                     EmbeddingBacklogInterface::STATUS => Status::Pending->value,
+                    EmbeddingBacklogInterface::VERSION => 1,
                     EmbeddingBacklogInterface::ATTEMPT_COUNT => 0,
                     EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
                 ],
-                [
-                    EmbeddingBacklogInterface::OPERATION,
-                    EmbeddingBacklogInterface::STATUS,
-                    EmbeddingBacklogInterface::ATTEMPT_COUNT,
-                    EmbeddingBacklogInterface::LAST_ERROR_CATEGORY,
-                ]
+                self::callback(self::duplicateFieldsAreVersioned(...))
             );
         $resource = $this->createUpdateResource($connection);
 
         if ($operation === Operation::Upsert) {
-            $resource->saveByChunkId(42);
+            $resource->saveByChunkId(42, 'product', 99);
 
             return;
         }
 
-        $resource->deleteByChunkId(42);
+        $resource->deleteByChunkId(42, 'product', 99);
+    }
+
+    /**
+     * @param array<int|string, mixed> $fields
+     */
+    private static function duplicateFieldsAreVersioned(array $fields): bool
+    {
+        self::assertSame(
+            [
+                EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE,
+                EmbeddingBacklogInterface::SOURCE_ENTITY_ID,
+                EmbeddingBacklogInterface::OPERATION,
+                EmbeddingBacklogInterface::STATUS,
+            ],
+            array_slice($fields, 0, 4)
+        );
+        $version = $fields[EmbeddingBacklogInterface::VERSION];
+        self::assertInstanceOf(Expression::class, $version);
+        self::assertSame('version + 1', (string) $version);
+        self::assertSame(
+            [
+                EmbeddingBacklogInterface::ATTEMPT_COUNT,
+                EmbeddingBacklogInterface::LAST_ERROR_CATEGORY,
+            ],
+            array_slice($fields, 5)
+        );
+
+        return true;
     }
 
     /**
@@ -282,6 +388,7 @@ class EmbeddingBacklogTest extends TestCase
                     ['backlog' => 'embedding_backlog'],
                     [
                         EmbeddingBacklogInterface::BACKLOG_ID,
+                        EmbeddingBacklogInterface::VERSION,
                         EmbeddingBacklogInterface::CHUNK_ID,
                         EmbeddingBacklogInterface::UPDATED_AT,
                     ],
@@ -453,18 +560,36 @@ class EmbeddingBacklogTest extends TestCase
     }
 
     /**
-     * @param list<int> $backlogIds
-     * @return array<string, mixed>
+     * @param array<int, int> $backlogVersions
+     * @return array<int|string, mixed>
      */
-    private static function updateConditions(array $backlogIds): array
+    private static function versionUpdateConditions(array $backlogVersions): array
     {
+        $pairs = [];
+
+        foreach ($backlogVersions as $backlogId => $version) {
+            $pairs[] = sprintf('(%d, %d)', $backlogId, $version);
+        }
+
         return [
-            EmbeddingBacklogInterface::BACKLOG_ID . ' IN (?)' => $backlogIds,
-            EmbeddingBacklogInterface::OPERATION . ' = ?' => Operation::Upsert->value,
+            sprintf(
+                '(`backlog_id`, `version`) IN (%s)',
+                implode(', ', $pairs)
+            ),
             EmbeddingBacklogInterface::STATUS . ' IN (?)' => [
                 Status::Pending->value,
                 Status::Failed->value,
             ],
         ];
+    }
+
+    private function configureQuotedIdentifiers(
+        AdapterInterface&MockObject $connection
+    ): void {
+        $connection->expects(self::exactly(2))
+            ->method('quoteIdentifier')
+            ->willReturnCallback(
+                static fn (string $identifier): string => sprintf('`%s`', $identifier)
+            );
     }
 }

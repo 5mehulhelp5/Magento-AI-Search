@@ -61,7 +61,7 @@ class ConfigurationXmlTest extends TestCase
         self::assertSame([], Dom::validateDomDocument($document, $schema));
     }
 
-    public function testVectorEmbeddingCronUsesDedicatedProcessGroup(): void
+    public function testChunkWorkflowsUseDedicatedProcessGroups(): void
     {
         $configurationDirectory = dirname(__DIR__, 2) . '/src/etc/';
         $crontab = new DOMDocument();
@@ -73,21 +73,42 @@ class ConfigurationXmlTest extends TestCase
         $crontabXPath = new DOMXPath($crontab);
         $cronGroupsXPath = new DOMXPath($cronGroups);
 
-        self::assertSame(
-            1.0,
-            $crontabXPath->evaluate(
-                'count(/config/group[@id="davidbel_ai_search"]'
-                . '/job[@name="davidbel_ai_search_vector_embedding"'
-                . ' and @instance="DavidBel\AiSearch\Cron\VectorEmbedding"'
-                . ' and @method="execute"])'
-            )
-        );
-        self::assertSame(
-            '1',
-            $cronGroupsXPath->evaluate(
-                'string(/config/group[@id="davidbel_ai_search"]/use_separate_process)'
-            )
-        );
+        $jobs = [
+            'davidbel_ai_search' => [
+                'davidbel_ai_search_chunk_processing' => 'DavidBel\AiSearch\Cron\ChunkProcessing',
+            ],
+            'davidbel_ai_search_maintenance' => [
+                'davidbel_ai_search_chunk_processing_retry' => 'DavidBel\AiSearch\Cron\ChunkProcessingRetry',
+                'davidbel_ai_search_chunk_processing_cleanup' => 'DavidBel\AiSearch\Cron\ChunkProcessingCleanup',
+            ],
+            'davidbel_ai_search_deletion' => [
+                'davidbel_ai_search_chunk_deletion' => 'DavidBel\AiSearch\Cron\ChunkDeletion',
+            ],
+        ];
+
+        foreach ($jobs as $group => $groupJobs) {
+            self::assertSame(
+                '1',
+                $cronGroupsXPath->evaluate(
+                    sprintf('string(/config/group[@id="%s"]/use_separate_process)', $group)
+                )
+            );
+
+            foreach ($groupJobs as $job => $instance) {
+                self::assertSame(
+                    1.0,
+                    $crontabXPath->evaluate(
+                        sprintf(
+                            'count(/config/group[@id="%s"]/job[@name="%s"]'
+                            . '[@instance="%s"][@method="execute"])',
+                            $group,
+                            $job,
+                            $instance
+                        )
+                    )
+                );
+            }
+        }
     }
 
     /**
@@ -218,11 +239,16 @@ class ConfigurationXmlTest extends TestCase
                     'count(%s'
                     . '[column[@name="backlog_id"][@identity="true"]]'
                     . '[column[@name="chunk_id"]]'
+                    . '[column[@name="source_entity_type"]]'
+                    . '[column[@name="source_entity_id"]]'
                     . '[column[@name="operation"][@default="upsert"]]'
                     . '[column[@name="status"][@default="pending"]]'
+                    . '[column[@name="version"][@default="1"]]'
                     . '[column[@name="attempt_count"][@default="0"]]'
-                    . '[constraint/column[@name="chunk_id"]]'
-                    . '[index/column[@name="status"]])',
+                    . '[constraint/column[@name="chunk_id"]'
+                    . '/../column[@name="operation"]]'
+                    . '[index/column[@name="operation"]'
+                    . '/../column[@name="status"]])',
                     $tablePath
                 )
             )
