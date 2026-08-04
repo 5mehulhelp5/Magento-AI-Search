@@ -85,33 +85,33 @@ class EmbeddingBacklog extends AbstractDb
     /**
      * @return list<array<string, mixed>>
      */
-    public function getItemsForDeletion(int $limit): array
-    {
+    public function getItemsForDeletion(
+        int $limit,
+        ?string $cursorUpdatedAt = null,
+        ?int $cursorBacklogId = null
+    ): array {
         if ($limit < 1) {
             throw new InvalidArgumentException('The deletion backlog batch limit must be positive.');
+        }
+
+        if (($cursorUpdatedAt === null) !== ($cursorBacklogId === null)) {
+            throw new InvalidArgumentException('Both deletion backlog cursor values must be provided together.');
+        }
+
+        if ($cursorBacklogId !== null && $cursorBacklogId < 0) {
+            throw new InvalidArgumentException('The deletion backlog cursor ID must be non-negative.');
         }
 
         /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
         /** @var list<array<string, mixed>> $rows */
         $rows = $connection->fetchAll(
-            $connection->select()
-                ->from(
-                    ['backlog' => $this->getMainTable()],
-                    [
-                        EmbeddingBacklogInterface::BACKLOG_ID,
-                        EmbeddingBacklogInterface::CHUNK_ID,
-                        EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE,
-                        EmbeddingBacklogInterface::SOURCE_ENTITY_ID,
-                    ]
-                )
-                ->where('backlog.operation = ?', Operation::Deletion->value)
-                ->where('backlog.status = ?', Status::Pending->value)
-                ->order([
-                    'backlog.updated_at ASC',
-                    'backlog.backlog_id ASC',
-                ])
-                ->limit($limit)
+            $this->createDeletionSelect(
+                $connection,
+                $limit,
+                $cursorUpdatedAt,
+                $cursorBacklogId
+            )
         );
 
         return $rows;
@@ -231,6 +231,44 @@ class EmbeddingBacklog extends AbstractDb
     ): Select {
         $select = $this->createEmbeddingSelect($connection)
             ->where('backlog.operation = ?', Operation::Upsert->value)
+            ->where('backlog.status = ?', Status::Pending->value)
+            ->order([
+                'backlog.updated_at ASC',
+                'backlog.backlog_id ASC',
+            ])
+            ->limit($limit);
+
+        if ($cursorUpdatedAt !== null && $cursorBacklogId !== null) {
+            $select->where(
+                $this->createCursorCondition(
+                    $connection,
+                    $cursorUpdatedAt,
+                    $cursorBacklogId
+                )
+            );
+        }
+
+        return $select;
+    }
+
+    private function createDeletionSelect(
+        AdapterInterface $connection,
+        int $limit,
+        ?string $cursorUpdatedAt,
+        ?int $cursorBacklogId
+    ): Select {
+        $select = $connection->select()
+            ->from(
+                ['backlog' => $this->getMainTable()],
+                [
+                    EmbeddingBacklogInterface::BACKLOG_ID,
+                    EmbeddingBacklogInterface::CHUNK_ID,
+                    EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE,
+                    EmbeddingBacklogInterface::SOURCE_ENTITY_ID,
+                    EmbeddingBacklogInterface::UPDATED_AT,
+                ]
+            )
+            ->where('backlog.operation = ?', Operation::Deletion->value)
             ->where('backlog.status = ?', Status::Pending->value)
             ->order([
                 'backlog.updated_at ASC',

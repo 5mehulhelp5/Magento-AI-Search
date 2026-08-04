@@ -27,7 +27,7 @@ use Throwable;
 class ChunkProcessing
 {
     private const int EMBEDDING_BATCH_SIZE = 100;
-    private const int DELETION_BATCH_SIZE = 500;
+    private const int DELETION_BATCH_SIZE = 1_000;
     private const int CONCURRENT_EMBEDDING_REQUESTS = 3;
     private const int MAX_RUNTIME_SECONDS = 600;
     private const int NANOSECONDS_PER_SECOND = 1_000_000_000;
@@ -56,34 +56,27 @@ class ChunkProcessing
         ]);
 
         $this->cacheClean->start();
-        $this->runDeletion($resultHandler);
+        $this->runDeletion($processingState, $resultHandler);
         $this->runVectorEmbedding($processingState, $resultHandler);
 
         return $this->finish($resultHandler);
     }
 
     private function runDeletion(
+        ProcessingState $processingState,
         ProcessingResultHandler $resultHandler
     ): void {
-        $rows = $this->getResource()->getItemsForDeletion(self::DELETION_BATCH_SIZE);
+        foreach ($this->createDeletionBatches($processingState) as $batch) {
+            try {
+                $result = $this->vectorSync->delete($batch);
+            } catch (Throwable) {
+                $resultHandler->openSearchFailed($batch->getBacklogIds());
 
-        if ($rows === []) {
-            return;
+                continue;
+            }
+
+            $resultHandler->completeDeletion($result);
         }
-
-        $batch = $this->deleteBatchFactory->create([
-            'items' => $this->deleteItemMapper->mapRows($rows),
-        ]);
-
-        try {
-            $result = $this->vectorSync->delete($batch);
-        } catch (Throwable) {
-            $resultHandler->openSearchFailed($batch->getBacklogIds());
-
-            return;
-        }
-
-        $resultHandler->completeDeletion($result);
     }
 
     private function runVectorEmbedding(
@@ -130,6 +123,37 @@ class ChunkProcessing
             yield $batchId => $batch;
 
             $batchId++;
+        }
+    }
+
+    /**
+     * @return Generator<int, \DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync\Delete\Batch>
+     */
+    private function createDeletionBatches(ProcessingState $processingState): Generator
+    {
+        $cursorUpdatedAt = null;
+        $cursorBacklogId = null;
+        $maxRuntimeNanoseconds = self::MAX_RUNTIME_SECONDS * self::NANOSECONDS_PER_SECOND;
+
+        while ($processingState->isWithinRuntime($maxRuntimeNanoseconds)) {
+            $rows = $this->getResource()->getItemsForDeletion(
+                self::DELETION_BATCH_SIZE,
+                $cursorUpdatedAt,
+                $cursorBacklogId
+            );
+
+            if ($rows === []) {
+                return;
+            }
+
+            $batch = $this->deleteBatchFactory->create([
+                'items' => $this->deleteItemMapper->mapRows($rows),
+            ]);
+            $lastItem = $batch->getLastItem();
+            $cursorUpdatedAt = $lastItem->backlogUpdatedAt;
+            $cursorBacklogId = $lastItem->backlogId;
+
+            yield $batch;
         }
     }
 

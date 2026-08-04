@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync\Upsert;
 
 use DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync\Index;
+use DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync\Item;
 use DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync\Result;
 use DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync\ResultFactory;
 use UnexpectedValueException;
@@ -49,13 +50,13 @@ class Bulk
             $body[] = [
                 'index' => [
                     '_index' => $this->index->getName(),
-                    '_id' => (string) $document->chunkId,
+                    '_id' => (string) $document->item->chunkId,
                 ],
             ];
             $body[] = [
-                'chunk_id' => $document->chunkId,
-                'source_entity_type' => $document->sourceEntityType,
-                'source_entity_id' => $document->sourceEntityId,
+                'chunk_id' => $document->item->chunkId,
+                'source_entity_type' => $document->item->sourceEntityType,
+                'source_entity_id' => $document->item->sourceEntityId,
                 'store_id' => $document->storeId,
                 'source_code' => $document->sourceCode,
                 'chunk_index' => $document->chunkIndex,
@@ -135,7 +136,7 @@ class Bulk
      */
     private function isExpectedDocument(array $operation, Document $document): bool
     {
-        return ($operation['_id'] ?? null) === (string) $document->chunkId;
+        return ($operation['_id'] ?? null) === (string) $document->item->chunkId;
     }
 
     private function isSuccessfulStatus(mixed $status): bool
@@ -152,8 +153,20 @@ class Bulk
         array $failedDocuments
     ): Result {
         return $this->resultFactory->create([
-            'successfulItems' => $successfulDocuments,
-            'failedItems' => $failedDocuments,
+            'successfulItems' => $this->getItems($successfulDocuments),
+            'failedItems' => $this->getItems($failedDocuments),
         ]);
+    }
+
+    /**
+     * @param list<Document> $documents
+     * @return list<Item>
+     */
+    private function getItems(array $documents): array
+    {
+        return array_map(
+            static fn (Document $document): Item => $document->item,
+            $documents
+        );
     }
 }

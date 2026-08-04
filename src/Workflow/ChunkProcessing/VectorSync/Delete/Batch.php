@@ -41,6 +41,11 @@ class Batch
         );
     }
 
+    public function getLastItem(): Item
+    {
+        return $this->items[array_key_last($this->items)];
+    }
+
     /**
      * @return non-empty-list<Item>
      */

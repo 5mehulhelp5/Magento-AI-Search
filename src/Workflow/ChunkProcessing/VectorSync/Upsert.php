@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync;
 
 use DavidBel\AiSearch\Workflow\ChunkProcessing\ProcessingBatch;
+use DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync\Item;
 use DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync\Upsert\Bulk;
 use DavidBel\AiSearch\Workflow\ChunkProcessing\VectorSync\Upsert\Document;
 use UnexpectedValueException;
@@ -46,10 +47,13 @@ class Upsert
 
         foreach ($items as $index => $item) {
             $documents[] = new Document(
-                $item->backlogId,
-                $item->chunkId,
-                $item->sourceEntityType,
-                $item->sourceEntityId,
+                new Item(
+                    $item->backlogId,
+                    $item->backlogUpdatedAt,
+                    $item->chunkId,
+                    $item->sourceEntityType,
+                    $item->sourceEntityId
+                ),
                 $item->storeId,
                 $item->sourceCode,
                 $item->chunkIndex,

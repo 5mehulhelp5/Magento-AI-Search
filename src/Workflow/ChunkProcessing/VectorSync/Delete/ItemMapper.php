@@ -25,6 +25,7 @@ class ItemMapper
         foreach ($rows as $row) {
             $items[] = new Item(
                 $this->toInteger($row[EmbeddingBacklogInterface::BACKLOG_ID] ?? null, 'backlog_id'),
+                $this->toString($row[EmbeddingBacklogInterface::UPDATED_AT] ?? null, 'updated_at'),
                 $this->toInteger($row[EmbeddingBacklogInterface::CHUNK_ID] ?? null, 'chunk_id'),
                 $this->toString(
                     $row[EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE] ?? null,
