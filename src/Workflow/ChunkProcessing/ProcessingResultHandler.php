@@ -40,7 +40,7 @@ class ProcessingResultHandler
             try {
                 $result = $this->vectorSync->upsert($batch, $vectors);
             } catch (Throwable) {
-                $this->openSearchFailed($batch->getBacklogIds());
+                $this->openSearchFailed($batch->getBacklogVersions());
 
                 return;
             }
@@ -54,8 +54,8 @@ class ProcessingResultHandler
     public function failed(mixed $reason, int $batchId): void
     {
         try {
-            $this->getResource()->markFailedByIds(
-                $this->processingState->getBatch($batchId)->getBacklogIds(),
+            $this->getResource()->markFailedByVersions(
+                $this->processingState->getBatch($batchId)->getBacklogVersions(),
                 self::EMBEDDER_ERROR_CATEGORY
             );
         } finally {
@@ -69,43 +69,43 @@ class ProcessingResultHandler
     }
 
     /**
-     * @param list<int> $backlogIds
+     * @param array<int, int> $backlogVersions
      */
-    public function openSearchFailed(array $backlogIds): void
+    public function openSearchFailed(array $backlogVersions): void
     {
-        $this->getResource()->markFailedByIds(
-            $backlogIds,
+        $this->getResource()->markFailedByVersions(
+            $backlogVersions,
             self::OPENSEARCH_ERROR_CATEGORY
         );
     }
 
     public function finish(): int
     {
-        $successfulBacklogIds = $this->processingState->getSuccessfulBacklogIds();
+        $successfulBacklogVersions = $this->processingState->getSuccessfulBacklogVersions();
 
         try {
             $this->cacheClean->flush();
         } catch (Throwable $throwable) {
-            $this->getResource()->markFailedByIds(
-                $successfulBacklogIds,
+            $this->getResource()->markFailedByVersions(
+                $successfulBacklogVersions,
                 self::CACHE_ERROR_CATEGORY
             );
 
             throw $throwable;
         }
 
-        $this->getResource()->markDoneByIds($successfulBacklogIds);
+        $this->getResource()->markDoneByVersions($successfulBacklogVersions);
 
         return $this->processingState->getProcessedCount();
     }
 
     private function handleVectorSyncResult(Result $result): void
     {
-        $failedBacklogIds = $result->getFailedBacklogIds();
-        $successfulBacklogIds = $result->getSuccessfulBacklogIds();
+        $failedBacklogVersions = $result->getFailedBacklogVersions();
+        $successfulBacklogVersions = $result->getSuccessfulBacklogVersions();
 
-        $this->getResource()->markFailedByIds(
-            $failedBacklogIds,
+        $this->getResource()->markFailedByVersions(
+            $failedBacklogVersions,
             self::OPENSEARCH_ERROR_CATEGORY
         );
 
@@ -114,15 +114,15 @@ class ProcessingResultHandler
                 $this->cacheClean->register($entityType, $entityIds);
             }
         } catch (Throwable $throwable) {
-            $this->getResource()->markFailedByIds(
-                $successfulBacklogIds,
+            $this->getResource()->markFailedByVersions(
+                $successfulBacklogVersions,
                 self::CACHE_ERROR_CATEGORY
             );
 
             throw $throwable;
         }
 
-        $this->processingState->recordSuccesses($successfulBacklogIds);
+        $this->processingState->recordSuccesses($successfulBacklogVersions);
     }
 
     private function getResource(): EmbeddingBacklogResource

@@ -32,6 +32,16 @@ class EmbeddingBacklog extends AbstractExtensibleModel implements EmbeddingBackl
         return $this->setData(self::BACKLOG_ID, $backlogId);
     }
 
+    public function getVersion(): int
+    {
+        return $this->getInteger(self::VERSION);
+    }
+
+    public function setVersion(int $version): EmbeddingBacklogInterface
+    {
+        return $this->setData(self::VERSION, $version);
+    }
+
     public function getChunkId(): int
     {
         return $this->getInteger(self::CHUNK_ID);

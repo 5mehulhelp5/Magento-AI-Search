@@ -21,25 +21,19 @@ class Result
     }
 
     /**
-     * @return list<int>
+     * @return array<int, int>
      */
-    public function getSuccessfulBacklogIds(): array
+    public function getSuccessfulBacklogVersions(): array
     {
-        return array_map(
-            static fn (Item $item): int => $item->backlogId,
-            $this->successfulItems
-        );
+        return $this->getBacklogVersions($this->successfulItems);
     }
 
     /**
-     * @return list<int>
+     * @return array<int, int>
      */
-    public function getFailedBacklogIds(): array
+    public function getFailedBacklogVersions(): array
     {
-        return array_map(
-            static fn (Item $item): int => $item->backlogId,
-            $this->failedItems
-        );
+        return $this->getBacklogVersions($this->failedItems);
     }
 
     /**
@@ -63,5 +57,20 @@ class Result
     public function getSuccessfulCount(): int
     {
         return count($this->successfulItems);
+    }
+
+    /**
+     * @param list<Item> $items
+     * @return array<int, int>
+     */
+    private function getBacklogVersions(array $items): array
+    {
+        $backlogVersions = [];
+
+        foreach ($items as $item) {
+            $backlogVersions[$item->backlogId] = $item->backlogVersion;
+        }
+
+        return $backlogVersions;
     }
 }

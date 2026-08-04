@@ -25,6 +25,7 @@ interface EmbeddingBacklogInterface extends ExtensibleDataInterface
     public const string SOURCE_ENTITY_ID = 'source_entity_id';
     public const string OPERATION = 'operation';
     public const string STATUS = 'status';
+    public const string VERSION = 'version';
     public const string ATTEMPT_COUNT = 'attempt_count';
     public const string LAST_ERROR_CATEGORY = 'last_error_category';
     public const string CREATED_AT = 'created_at';
@@ -44,6 +45,21 @@ interface EmbeddingBacklogInterface extends ExtensibleDataInterface
      * @return \DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface
      */
     public function setBacklogId(int $backlogId): EmbeddingBacklogInterface;
+
+    /**
+     * Get the backlog version.
+     *
+     * @return int
+     */
+    public function getVersion(): int;
+
+    /**
+     * Set the backlog version.
+     *
+     * @param int $version
+     * @return \DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface
+     */
+    public function setVersion(int $version): EmbeddingBacklogInterface;
 
     /**
      * Get the chunk ID.

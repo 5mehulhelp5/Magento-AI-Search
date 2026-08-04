@@ -124,16 +124,16 @@ class EmbeddingBacklog extends AbstractDb
     }
 
     /**
-     * @param list<int> $backlogIds
+     * @param array<int, int> $backlogVersions
      */
-    public function markDoneByIds(array $backlogIds): void
+    public function markDoneByVersions(array $backlogVersions): void
     {
-        if ($backlogIds === []) {
+        if ($backlogVersions === []) {
             return;
         }
 
         $this->updateItems(
-            $backlogIds,
+            $backlogVersions,
             [
                 EmbeddingBacklogInterface::STATUS => Status::Done->value,
                 EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
@@ -142,16 +142,16 @@ class EmbeddingBacklog extends AbstractDb
     }
 
     /**
-     * @param list<int> $backlogIds
+     * @param array<int, int> $backlogVersions
      */
-    public function markFailedByIds(array $backlogIds, string $errorCategory): void
+    public function markFailedByVersions(array $backlogVersions, string $errorCategory): void
     {
-        if ($backlogIds === []) {
+        if ($backlogVersions === []) {
             return;
         }
 
         $this->updateItems(
-            $backlogIds,
+            $backlogVersions,
             [
                 EmbeddingBacklogInterface::STATUS => Status::Failed->value,
                 EmbeddingBacklogInterface::ATTEMPT_COUNT => new Expression(
@@ -321,6 +321,7 @@ class EmbeddingBacklog extends AbstractDb
                 ['backlog' => $this->getMainTable()],
                 [
                     EmbeddingBacklogInterface::BACKLOG_ID,
+                    EmbeddingBacklogInterface::VERSION,
                     EmbeddingBacklogInterface::CHUNK_ID,
                     EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE,
                     EmbeddingBacklogInterface::SOURCE_ENTITY_ID,
@@ -385,6 +386,7 @@ class EmbeddingBacklog extends AbstractDb
                 ['backlog' => $this->getMainTable()],
                 [
                     EmbeddingBacklogInterface::BACKLOG_ID,
+                    EmbeddingBacklogInterface::VERSION,
                     EmbeddingBacklogInterface::CHUNK_ID,
                     EmbeddingBacklogInterface::UPDATED_AT,
                 ]
@@ -439,6 +441,7 @@ class EmbeddingBacklog extends AbstractDb
                 EmbeddingBacklogInterface::SOURCE_ENTITY_ID => $sourceEntityId,
                 EmbeddingBacklogInterface::OPERATION => $operation->value,
                 EmbeddingBacklogInterface::STATUS => Status::Pending->value,
+                EmbeddingBacklogInterface::VERSION => 1,
                 EmbeddingBacklogInterface::ATTEMPT_COUNT => 0,
                 EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
             ],
@@ -447,6 +450,9 @@ class EmbeddingBacklog extends AbstractDb
                 EmbeddingBacklogInterface::SOURCE_ENTITY_ID,
                 EmbeddingBacklogInterface::OPERATION,
                 EmbeddingBacklogInterface::STATUS,
+                EmbeddingBacklogInterface::VERSION => new Expression(
+                    EmbeddingBacklogInterface::VERSION . ' + 1'
+                ),
                 EmbeddingBacklogInterface::ATTEMPT_COUNT,
                 EmbeddingBacklogInterface::LAST_ERROR_CATEGORY,
             ]
@@ -454,23 +460,51 @@ class EmbeddingBacklog extends AbstractDb
     }
 
     /**
-     * @param list<int> $backlogIds
+     * @param array<int, int> $backlogVersions
      * @param array<string, mixed> $values
      */
-    private function updateItems(array $backlogIds, array $values): void
+    private function updateItems(array $backlogVersions, array $values): void
     {
         /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
-        $connection->update(
-            $this->getMainTable(),
-            $values,
-            [
-                EmbeddingBacklogInterface::BACKLOG_ID . ' IN (?)' => $backlogIds,
-                EmbeddingBacklogInterface::STATUS . ' IN (?)' => [
-                    Status::Pending->value,
-                    Status::Failed->value,
-                ],
-            ]
+
+        foreach (array_chunk($backlogVersions, 1_000, true) as $versionBatch) {
+            $connection->update(
+                $this->getMainTable(),
+                $values,
+                [
+                    $this->createVersionCondition($connection, $versionBatch),
+                    EmbeddingBacklogInterface::STATUS . ' IN (?)' => [
+                        Status::Pending->value,
+                        Status::Failed->value,
+                    ],
+                ]
+            );
+        }
+    }
+
+    /**
+     * @param array<int, int> $backlogVersions
+     */
+    private function createVersionCondition(
+        AdapterInterface $connection,
+        array $backlogVersions
+    ): string {
+        $pairs = array_map(
+            static fn (int $backlogId, int $version): string => sprintf(
+                '(%d, %d)',
+                $backlogId,
+                $version
+            ),
+            array_keys($backlogVersions),
+            array_values($backlogVersions)
+        );
+
+        return sprintf(
+            '(%s, %s) IN (%s)',
+            $connection->quoteIdentifier(EmbeddingBacklogInterface::BACKLOG_ID),
+            $connection->quoteIdentifier(EmbeddingBacklogInterface::VERSION),
+            implode(', ', $pairs)
         );
     }
 }

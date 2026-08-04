@@ -30,14 +30,17 @@ class ProcessingBatch
     }
 
     /**
-     * @return list<int>
+     * @return array<int, int>
      */
-    public function getBacklogIds(): array
+    public function getBacklogVersions(): array
     {
-        return array_map(
-            static fn (ProcessingItem $item): int => $item->backlogId,
-            $this->items
-        );
+        $backlogVersions = [];
+
+        foreach ($this->items as $item) {
+            $backlogVersions[$item->backlogId] = $item->backlogVersion;
+        }
+
+        return $backlogVersions;
     }
 
     /**

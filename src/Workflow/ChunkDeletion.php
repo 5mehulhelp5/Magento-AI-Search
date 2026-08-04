@@ -62,7 +62,7 @@ class ChunkDeletion
             try {
                 $result = $this->vectorSync->delete($batch);
             } catch (Throwable) {
-                $resultHandler->openSearchFailed($batch->getBacklogIds());
+                $resultHandler->openSearchFailed($batch->getBacklogVersions());
 
                 continue;
             }

@@ -162,6 +162,12 @@
                 default="pending"
                 length="16"
                 comment="Status"/>
+        <column xsi:type="bigint"
+                name="version"
+                unsigned="true"
+                nullable="false"
+                default="1"
+                comment="Version"/>
         <column xsi:type="smallint"
                 name="attempt_count"
                 unsigned="true"

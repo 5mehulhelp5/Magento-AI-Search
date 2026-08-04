@@ -25,6 +25,7 @@ class ItemMapper
         foreach ($rows as $row) {
             $items[] = new Item(
                 $this->toInteger($row[EmbeddingBacklogInterface::BACKLOG_ID] ?? null, 'backlog_id'),
+                $this->toPositiveInteger($row[EmbeddingBacklogInterface::VERSION] ?? null, 'version'),
                 $this->toString($row[EmbeddingBacklogInterface::UPDATED_AT] ?? null, 'updated_at'),
                 $this->toInteger($row[EmbeddingBacklogInterface::CHUNK_ID] ?? null, 'chunk_id'),
                 $this->toString(
@@ -47,6 +48,17 @@ class ItemMapper
 
         if ($integer === false || $integer < 0) {
             throw new UnexpectedValueException(sprintf('%s must be a non-negative integer.', $field));
+        }
+
+        return $integer;
+    }
+
+    private function toPositiveInteger(mixed $value, string $field): int
+    {
+        $integer = $this->toInteger($value, $field);
+
+        if ($integer === 0) {
+            throw new UnexpectedValueException(sprintf('%s must be a positive integer.', $field));
         }
 
         return $integer;

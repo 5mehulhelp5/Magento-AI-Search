@@ -49,6 +49,7 @@ class Upsert
             $documents[] = new Document(
                 new Item(
                     $item->backlogId,
+                    $item->backlogVersion,
                     $item->backlogUpdatedAt,
                     $item->chunkId,
                     $item->sourceEntityType,

@@ -18,9 +18,9 @@ class ProcessingState
     private array $batches = [];
 
     /**
-     * @var list<int>
+     * @var array<int, int>
      */
-    private array $successfulBacklogIds = [];
+    private array $successfulBacklogVersions = [];
 
     private int $processedCount = 0;
     private readonly int $startedAt;
@@ -55,23 +55,23 @@ class ProcessingState
     }
 
     /**
-     * @param list<int> $backlogIds
+     * @param array<int, int> $backlogVersions
      */
-    public function recordSuccesses(array $backlogIds): void
+    public function recordSuccesses(array $backlogVersions): void
     {
-        $this->successfulBacklogIds = array_merge(
-            $this->successfulBacklogIds,
-            $backlogIds
+        $this->successfulBacklogVersions = array_replace(
+            $this->successfulBacklogVersions,
+            $backlogVersions
         );
-        $this->processedCount += count($backlogIds);
+        $this->processedCount += count($backlogVersions);
     }
 
     /**
-     * @return list<int>
+     * @return array<int, int>
      */
-    public function getSuccessfulBacklogIds(): array
+    public function getSuccessfulBacklogVersions(): array
     {
-        return $this->successfulBacklogIds;
+        return $this->successfulBacklogVersions;
     }
 
     public function getProcessedCount(): int

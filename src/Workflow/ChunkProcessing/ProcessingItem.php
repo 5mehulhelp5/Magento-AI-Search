@@ -12,6 +12,7 @@ readonly class ProcessingItem
 {
     public function __construct(
         public int $backlogId,
+        public int $backlogVersion,
         public string $backlogUpdatedAt,
         public int $chunkId,
         public string $sourceEntityType,
