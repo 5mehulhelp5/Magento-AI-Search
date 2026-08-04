@@ -87,11 +87,16 @@ class EmbeddingBacklog extends AbstractDb
      */
     public function getItemsForDeletion(
         int $limit,
+        int $upsertAttemptThreshold,
         ?string $cursorUpdatedAt = null,
         ?int $cursorBacklogId = null
     ): array {
         if ($limit < 1) {
             throw new InvalidArgumentException('The deletion backlog batch limit must be positive.');
+        }
+
+        if ($upsertAttemptThreshold < 1) {
+            throw new InvalidArgumentException('The upsert attempt threshold must be positive.');
         }
 
         if (($cursorUpdatedAt === null) !== ($cursorBacklogId === null)) {
@@ -109,6 +114,7 @@ class EmbeddingBacklog extends AbstractDb
             $this->createDeletionSelect(
                 $connection,
                 $limit,
+                $upsertAttemptThreshold,
                 $cursorUpdatedAt,
                 $cursorBacklogId
             )
@@ -175,7 +181,7 @@ class EmbeddingBacklog extends AbstractDb
         );
     }
 
-    public function deleteFailedAtThresholdOrDoneBefore(
+    public function deleteExhaustedUpsertsOrDoneBefore(
         int $attemptThreshold,
         string $doneBefore
     ): int {
@@ -197,6 +203,10 @@ class EmbeddingBacklog extends AbstractDb
             EmbeddingBacklogInterface::ATTEMPT_COUNT . ' >= ?',
             $attemptThreshold
         );
+        $upsertOperation = $connection->quoteInto(
+            EmbeddingBacklogInterface::OPERATION . ' = ?',
+            Operation::Upsert->value
+        );
         $doneStatus = $connection->quoteInto(
             EmbeddingBacklogInterface::STATUS . ' = ?',
             Status::Done->value
@@ -209,7 +219,8 @@ class EmbeddingBacklog extends AbstractDb
         return $connection->delete(
             $this->getMainTable(),
             sprintf(
-                '((%s AND %s) OR (%s AND %s))',
+                '((%s AND %s AND %s) OR (%s AND %s))',
+                $upsertOperation,
                 $failedStatus,
                 $attemptLimit,
                 $doneStatus,
@@ -254,9 +265,14 @@ class EmbeddingBacklog extends AbstractDb
     private function createDeletionSelect(
         AdapterInterface $connection,
         int $limit,
+        int $upsertAttemptThreshold,
         ?string $cursorUpdatedAt,
         ?int $cursorBacklogId
     ): Select {
+        $blockingUpsertSelect = $this->createBlockingUpsertSelect(
+            $connection,
+            $upsertAttemptThreshold
+        );
         $select = $connection->select()
             ->from(
                 ['backlog' => $this->getMainTable()],
@@ -270,6 +286,9 @@ class EmbeddingBacklog extends AbstractDb
             )
             ->where('backlog.operation = ?', Operation::Deletion->value)
             ->where('backlog.status = ?', Status::Pending->value)
+            ->where(
+                sprintf('NOT EXISTS (%s)', $blockingUpsertSelect->assemble())
+            )
             ->order([
                 'backlog.updated_at ASC',
                 'backlog.backlog_id ASC',
@@ -287,6 +306,33 @@ class EmbeddingBacklog extends AbstractDb
         }
 
         return $select;
+    }
+
+    private function createBlockingUpsertSelect(
+        AdapterInterface $connection,
+        int $attemptThreshold
+    ): Select {
+        $pendingStatus = $connection->quoteInto(
+            'blocking_upsert.status = ?',
+            Status::Pending->value
+        );
+        $failedStatus = $connection->quoteInto(
+            'blocking_upsert.status = ?',
+            Status::Failed->value
+        );
+        $attemptLimit = $connection->quoteInto(
+            'blocking_upsert.attempt_count < ?',
+            $attemptThreshold
+        );
+
+        return $connection->select()
+            ->from(['blocking_upsert' => $this->getMainTable()], [])
+            ->columns([new Expression('1')])
+            ->where('blocking_upsert.chunk_id = backlog.chunk_id')
+            ->where('blocking_upsert.operation = ?', Operation::Upsert->value)
+            ->where(
+                sprintf('(%s OR (%s AND %s))', $pendingStatus, $failedStatus, $attemptLimit)
+            );
     }
 
     private function createEmbeddingSelect(AdapterInterface $connection): Select

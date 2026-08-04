@@ -189,8 +189,9 @@
             <column name="backlog_id"/>
         </constraint>
         <constraint xsi:type="unique"
-                    referenceId="DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_CHUNK_ID">
+                    referenceId="DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_CHUNK_OPERATION">
             <column name="chunk_id"/>
+            <column name="operation"/>
         </constraint>
         <index referenceId="DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_STATUS" indexType="btree">
             <column name="status"/>

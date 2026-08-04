@@ -12,6 +12,8 @@
              method="execute">
             <schedule>* * * * *</schedule>
         </job>
+    </group>
+    <group id="davidbel_ai_search_maintenance">
         <job name="davidbel_ai_search_chunk_processing_retry"
              instance="DavidBel\AiSearch\Cron\ChunkProcessingRetry"
              method="execute">
@@ -21,6 +23,13 @@
              instance="DavidBel\AiSearch\Cron\ChunkProcessingCleanup"
              method="execute">
             <schedule>0 0 * * *</schedule>
+        </job>
+    </group>
+    <group id="davidbel_ai_search_deletion">
+        <job name="davidbel_ai_search_chunk_deletion"
+             instance="DavidBel\AiSearch\Cron\ChunkDeletion"
+             method="execute">
+            <schedule>* * * * *</schedule>
         </job>
     </group>
 </config>

@@ -29,7 +29,7 @@ class ChunkProcessingCleanup
         return $this->collectionFactory
             ->create()
             ->getResourceModel()
-            ->deleteFailedAtThresholdOrDoneBefore(
+            ->deleteExhaustedUpsertsOrDoneBefore(
                 self::ATTEMPT_THRESHOLD,
                 $doneBefore
             );
