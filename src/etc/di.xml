@@ -42,4 +42,8 @@
             </argument>
         </arguments>
     </type>
+    <type name="Magento\OpenSearch\SearchAdapter\Mapper">
+        <plugin name="davidbel_ai_search_semantic_query"
+                type="DavidBel\AiSearch\Plugin\OpenSearch\SemanticQuery"/>
+    </type>
 </config>
