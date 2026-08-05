@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Indexer;
 
 use DavidBel\AiSearch\Indexer\ProductIndexer;
-use DavidBel\AiSearch\Workflow\DocumentProcessing;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 

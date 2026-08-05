@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Indexer;
 
-use DavidBel\AiSearch\Workflow\DocumentProcessing;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing;
 use InvalidArgumentException;
 use Magento\Framework\Indexer\ActionInterface as IndexerActionInterface;
 use Magento\Framework\Mview\ActionInterface as MviewActionInterface;

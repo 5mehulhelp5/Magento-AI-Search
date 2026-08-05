@@ -8,12 +8,12 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Cron;
 
-use DavidBel\AiSearch\Workflow\ChunkProcessingRetry as ChunkProcessingRetryWorkflow;
+use DavidBel\AiSearch\Ingestion\ChunkProcessingRetry as IngestionChunkProcessingRetry;
 
 class ChunkProcessingRetry
 {
     public function __construct(
-        private readonly ChunkProcessingRetryWorkflow $chunkProcessingRetry
+        private readonly IngestionChunkProcessingRetry $chunkProcessingRetry
     ) {
     }
 

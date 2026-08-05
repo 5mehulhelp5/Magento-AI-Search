@@ -8,12 +8,12 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Cron;
 
-use DavidBel\AiSearch\Workflow\ChunkProcessingCleanup as ChunkProcessingCleanupWorkflow;
+use DavidBel\AiSearch\Ingestion\ChunkProcessingCleanup as IngestionChunkProcessingCleanup;
 
 class ChunkProcessingCleanup
 {
     public function __construct(
-        private readonly ChunkProcessingCleanupWorkflow $chunkProcessingCleanup
+        private readonly IngestionChunkProcessingCleanup $chunkProcessingCleanup
     ) {
     }
 

@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Cron;
 
-use DavidBel\AiSearch\Workflow\ChunkDeletionFactory;
+use DavidBel\AiSearch\Ingestion\ChunkDeletionFactory;
 
 class ChunkDeletion
 {

@@ -34,11 +34,11 @@
                       xsi:type="object">DavidBel\AiSearch\Client\Embedding\HttpClient</argument>
         </arguments>
     </type>
-    <type name="DavidBel\AiSearch\Workflow\DocumentProcessing\Chunking">
+    <type name="DavidBel\AiSearch\Ingestion\DocumentProcessing\Chunking">
         <arguments>
             <argument name="chunkingStrategies" xsi:type="array">
                 <item name="general"
-                      xsi:type="object">DavidBel\AiSearch\Workflow\DocumentProcessing\Chunking\GeneralChunking</item>
+                      xsi:type="object">DavidBel\AiSearch\Ingestion\DocumentProcessing\Chunking\GeneralChunking</item>
             </argument>
         </arguments>
     </type>
