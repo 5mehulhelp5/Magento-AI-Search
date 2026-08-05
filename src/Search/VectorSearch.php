@@ -19,6 +19,7 @@ class VectorSearch
 {
     private const string INDEX_NAME = 'davidbel_ai_search_chunks';
     private const int CHUNK_RESULT_LIMIT = 1000;
+    private const float MINIMUM_SCORE = 0.46;
 
     public function __construct(
         private readonly ConnectionManager $connectionManager
@@ -89,6 +90,10 @@ class VectorSearch
 
         foreach ($hits as $hit) {
             [$productId, $score] = $this->getProductScore($hit);
+
+            if ($score < self::MINIMUM_SCORE) {
+                continue;
+            }
 
             if (isset($scoresByProductId[$productId]) && $scoresByProductId[$productId] >= $score) {
                 continue;
