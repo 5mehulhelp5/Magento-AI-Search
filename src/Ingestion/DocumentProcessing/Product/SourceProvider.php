@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product;
 
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\Eligibility\EligibleScope;
 use InvalidArgumentException;
 use Magento\Catalog\Model\ResourceModel\Product as ProductResource;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
@@ -22,7 +23,8 @@ class SourceProvider
     private const int DEFAULT_STORE_ID = 0;
 
     public function __construct(
-        private readonly CollectionFactory $collectionFactory
+        private readonly CollectionFactory $collectionFactory,
+        private readonly Eligibility $eligibility
     ) {
     }
 
@@ -53,9 +55,15 @@ class SourceProvider
      * @param list<int> $productIds
      * @return array<int, list<ScopedSource>>
      */
-    public function getByProductIds(array $productIds): array
+    public function getSourcesByProductIds(array $productIds): array
     {
         if ($productIds === []) {
+            return [];
+        }
+
+        $eligibleScopes = $this->eligibility->getEligibleScopesByProductIds($productIds);
+
+        if ($eligibleScopes === []) {
             return [];
         }
 
@@ -63,29 +71,22 @@ class SourceProvider
         $connection = $productResource->getConnection();
         $attributeId = $this->getDescriptionAttributeId($productResource, $connection);
         $values = $this->getDescriptionValues(
-            $productIds,
+            $this->getSourceProductIds($eligibleScopes),
             $attributeId,
             $productResource,
             $connection
         );
-        $assignments = $connection->fetchAll(
-            $connection->select()
-                ->from(
-                    ['assignment' => $productResource->getProductWebsiteTable()],
-                    ['product_id']
-                )
-                ->join(
-                    ['store' => $productResource->getTable('store')],
-                    'store.website_id = assignment.website_id',
-                    ['store_id']
-                )
-                ->where('assignment.product_id IN (?)', $productIds)
-                ->where('store.store_id <> ?', self::DEFAULT_STORE_ID)
-                ->where('store.is_active = ?', 1)
-                ->order(['assignment.product_id ASC', 'store.store_id ASC'])
-        );
 
-        return $this->buildScopedSources($assignments, $values);
+        return $this->buildScopedSources($eligibleScopes, $values);
+    }
+
+    /**
+     * @param list<int> $productIds
+     * @return list<int>
+     */
+    public function getAffectedProductIds(array $productIds): array
+    {
+        return $this->eligibility->getAffectedProductIds($productIds);
     }
 
     private function createProductResource(): ProductResource
@@ -166,28 +167,87 @@ class SourceProvider
     }
 
     /**
-     * @param array<array-key, mixed> $assignments
+     * @param array<int, list<EligibleScope>> $eligibleScopes
+     * @return list<int>
+     */
+    private function getSourceProductIds(array $eligibleScopes): array
+    {
+        $sourceProductIds = [];
+
+        foreach ($eligibleScopes as $productScopes) {
+            foreach ($productScopes as $productScope) {
+                $sourceProductIds += array_fill_keys($productScope->sourceProductIds, true);
+            }
+        }
+
+        return array_keys($sourceProductIds);
+    }
+
+    /**
+     * @param array<int, list<EligibleScope>> $eligibleScopes
      * @param array<string, string> $values
      * @return array<int, list<ScopedSource>>
      */
-    private function buildScopedSources(array $assignments, array $values): array
+    private function buildScopedSources(array $eligibleScopes, array $values): array
     {
         $sources = [];
 
-        foreach ($assignments as $assignment) {
-            if (!is_array($assignment)) {
-                throw new RuntimeException('A product store assignment is not an array.');
+        foreach ($eligibleScopes as $productId => $productScopes) {
+            foreach ($productScopes as $productScope) {
+                $sources[$productId][] = new ScopedSource(
+                    $productScope->storeId,
+                    $this->getScopeContent($productScope, $values)
+                );
             }
-
-            $productId = $this->toInteger($assignment['product_id'] ?? null, 'product_id');
-            $storeId = $this->toInteger($assignment['store_id'] ?? null, 'store_id');
-            $storeValueKey = $this->getValueKey($productId, $storeId);
-            $defaultValueKey = $this->getValueKey($productId, self::DEFAULT_STORE_ID);
-            $content = $values[$storeValueKey] ?? $values[$defaultValueKey] ?? '';
-            $sources[$productId][] = new ScopedSource($storeId, $content);
         }
 
         return $sources;
+    }
+
+    /**
+     * @param array<string, string> $values
+     */
+    private function getScopeContent(EligibleScope $eligibleScope, array $values): string
+    {
+        $contentsByHash = [];
+        $contents = [];
+
+        foreach ($eligibleScope->sourceProductIds as $sourceProductId) {
+            $content = $this->getStoreValue(
+                $values,
+                $sourceProductId,
+                $eligibleScope->storeId
+            );
+
+            if ($content === '' || $this->hasContent($contentsByHash, $content)) {
+                continue;
+            }
+
+            $contentsByHash[hash('sha256', $content)][] = $content;
+            $contents[] = $content;
+        }
+
+        return implode("\n\n", $contents);
+    }
+
+    /**
+     * @param array<string, string> $values
+     */
+    private function getStoreValue(array $values, int $productId, int $storeId): string
+    {
+        return $values[$this->getValueKey($productId, $storeId)]
+            ?? $values[$this->getValueKey($productId, self::DEFAULT_STORE_ID)]
+            ?? '';
+    }
+
+    /**
+     * @param array<string, list<string>> $contentsByHash
+     */
+    private function hasContent(array $contentsByHash, string $content): bool
+    {
+        $matchingContents = $contentsByHash[hash('sha256', $content)] ?? [];
+
+        return in_array($content, $matchingContents, true);
     }
 
     /**

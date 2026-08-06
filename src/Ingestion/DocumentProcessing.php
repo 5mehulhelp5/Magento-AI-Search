@@ -55,9 +55,29 @@ class DocumentProcessing
      */
     public function deltaUpdate(array $productIds): void
     {
-        foreach (array_chunk($productIds, self::BATCH_SIZE) as $productIdBatch) {
+        $affectedProductIds = $this->getAffectedProductIds($productIds);
+
+        foreach (array_chunk($affectedProductIds, self::BATCH_SIZE) as $productIdBatch) {
             $this->processProducts($productIdBatch, UpdateMode::DeltaUpdate);
         }
+    }
+
+    /**
+     * @param list<int> $productIds
+     * @return list<int>
+     */
+    private function getAffectedProductIds(array $productIds): array
+    {
+        $affectedProductIds = [];
+
+        foreach (array_chunk($productIds, self::BATCH_SIZE) as $productIdBatch) {
+            $affectedProductIds += array_fill_keys(
+                $this->sourceProvider->getAffectedProductIds($productIdBatch),
+                true
+            );
+        }
+
+        return array_keys($affectedProductIds);
     }
 
     /**
@@ -65,7 +85,7 @@ class DocumentProcessing
      */
     private function processProducts(array $productIds, UpdateMode $updateMode): void
     {
-        $sourcesByProductId = $this->sourceProvider->getByProductIds($productIds);
+        $sourcesByProductId = $this->sourceProvider->getSourcesByProductIds($productIds);
         $embeddingBacklogResource = $this->embeddingBacklogCollectionFactory
             ->create()
             ->getResourceModel();
