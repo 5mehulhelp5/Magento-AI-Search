@@ -1,0 +1,18 @@
+<?php
+/**
+ * davidbel/ai-search by David Belicza
+ * SPDX-License-Identifier: MIT
+ * https://github.com/DavidBelicza/Magento-AI-Search
+ */
+declare(strict_types=1);
+
+namespace DavidBel\AiSearch\Config;
+
+readonly class EmbeddedAttribute
+{
+    public function __construct(
+        public string $attributeCode,
+        public bool $composite
+    ) {
+    }
+}

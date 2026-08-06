@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Search;
 
+use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
 use Magento\Elasticsearch\SearchAdapter\ConnectionManager;
 use Magento\OpenSearch\Model\SearchClient;
 use RuntimeException;
@@ -22,7 +23,8 @@ class VectorSearch
     private const float MINIMUM_SCORE = 0.46;
 
     public function __construct(
-        private readonly ConnectionManager $connectionManager
+        private readonly ConnectionManager $connectionManager,
+        private readonly EmbeddedAttributesConfig $embeddedAttributesConfig
     ) {
     }
 
@@ -58,7 +60,7 @@ class VectorSearch
                                 'filter' => [
                                     ['term' => ['source_entity_type' => 'product']],
                                     ['term' => ['store_id' => $storeId]],
-                                    ['term' => ['source_code' => 'description']],
+                                    ['terms' => ['source_code' => $this->getAttributeCodes()]],
                                 ],
                             ],
                         ],
@@ -66,6 +68,20 @@ class VectorSearch
                 ],
             ],
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function getAttributeCodes(): array
+    {
+        $attributeCodes = [];
+
+        foreach ($this->embeddedAttributesConfig->getAttributes() as $embeddedAttribute) {
+            $attributeCodes[] = $embeddedAttribute->attributeCode;
+        }
+
+        return $attributeCodes;
     }
 
     /**
@@ -90,19 +106,32 @@ class VectorSearch
 
         foreach ($hits as $hit) {
             [$productId, $score] = $this->getProductScore($hit);
+            $highestScore = $this->getHighestRelevantScore(
+                $scoresByProductId[$productId] ?? null,
+                $score
+            );
 
-            if ($score < self::MINIMUM_SCORE) {
+            if ($highestScore === null) {
                 continue;
             }
 
-            if (isset($scoresByProductId[$productId]) && $scoresByProductId[$productId] >= $score) {
-                continue;
-            }
-
-            $scoresByProductId[$productId] = $score;
+            $scoresByProductId[$productId] = $highestScore;
         }
 
         return $scoresByProductId;
+    }
+
+    private function getHighestRelevantScore(?float $currentScore, float $candidateScore): ?float
+    {
+        if ($candidateScore < self::MINIMUM_SCORE) {
+            return $currentScore;
+        }
+
+        if ($currentScore !== null && $currentScore >= $candidateScore) {
+            return $currentScore;
+        }
+
+        return $candidateScore;
     }
 
     /**

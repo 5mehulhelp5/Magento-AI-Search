@@ -13,16 +13,17 @@ use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory
     as EmbeddingBacklogCollectionFactory;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdateResult;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\ProductSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\UpdateMode;
 use Magento\Framework\DB\Adapter\AdapterInterface;
+use RuntimeException;
 use Throwable;
 
 class DocumentProcessing
 {
     public const int BATCH_SIZE = 200;
     private const string SOURCE_ENTITY_TYPE = 'product';
-    private const string SOURCE_CODE = 'description';
 
     public function __construct(
         private readonly SourceProvider $sourceProvider,
@@ -93,7 +94,12 @@ class DocumentProcessing
         $connection = $embeddingBacklogResource->getConnection();
 
         foreach ($productIds as $productId) {
-            $sources = $sourcesByProductId[$productId] ?? [];
+            $sources = $sourcesByProductId[$productId] ?? null;
+
+            if ($sources === null) {
+                throw new RuntimeException('Product sources could not be resolved.');
+            }
+
             $this->processProduct(
                 $productId,
                 $sources,
@@ -105,7 +111,7 @@ class DocumentProcessing
     }
 
     /**
-     * @param list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\ScopedSource> $sources
+     * @param list<ProductSource> $sources
      */
     private function processProduct(
         int $productId,
@@ -117,12 +123,15 @@ class DocumentProcessing
         $connection->beginTransaction();
 
         try {
-            $updateResult = $this->updateProduct($productId, $sources, $updateMode);
-            $this->saveBacklog(
-                $updateResult,
-                $embeddingBacklogResource,
-                $productId
-            );
+            foreach ($sources as $source) {
+                $updateResult = $this->updateProductSource($productId, $source, $updateMode);
+                $this->saveBacklog(
+                    $updateResult,
+                    $embeddingBacklogResource,
+                    $productId
+                );
+            }
+
             $connection->commit();
         } catch (Throwable $throwable) {
             $connection->rollBack();
@@ -130,28 +139,25 @@ class DocumentProcessing
         }
     }
 
-    /**
-     * @param list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\ScopedSource> $sources
-     */
-    private function updateProduct(
+    private function updateProductSource(
         int $productId,
-        array $sources,
+        ProductSource $source,
         UpdateMode $updateMode
     ): DocumentUpdateResult {
         if ($updateMode === UpdateMode::FullUpdate) {
             return $this->documentUpdater->fullUpdate(
                 self::SOURCE_ENTITY_TYPE,
                 $productId,
-                self::SOURCE_CODE,
-                $sources
+                $source->sourceCode,
+                $source->scopedSources
             );
         }
 
         return $this->documentUpdater->deltaUpdate(
             self::SOURCE_ENTITY_TYPE,
             $productId,
-            self::SOURCE_CODE,
-            $sources
+            $source->sourceCode,
+            $source->scopedSources
         );
     }
 
