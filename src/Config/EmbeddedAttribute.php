@@ -11,12 +11,13 @@ namespace DavidBel\AiSearch\Config;
 readonly class EmbeddedAttribute
 {
     /**
-     * @param list<string>|null $template
+     * @param list<EmbeddedAttribute>|null $children
      */
     public function __construct(
         public string $attributeCode,
         public bool $composite,
-        public ?array $template
+        public ?string $template,
+        public ?array $children
     ) {
     }
 }

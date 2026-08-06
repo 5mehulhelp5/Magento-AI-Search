@@ -24,7 +24,8 @@ class SourceProvider
         private readonly Eligibility $eligibility,
         private readonly EmbeddedAttributesConfig $embeddedAttributesConfig,
         private readonly AttributeValueProvider $attributeValueProvider,
-        private readonly SourceComposer $sourceComposer
+        private readonly SourceComposer $sourceComposer,
+        private readonly EmbeddingTemplate $embeddingTemplate
     ) {
     }
 
@@ -63,17 +64,24 @@ class SourceProvider
 
         $eligibleScopes = $this->eligibility->getEligibleScopesByProductIds($productIds);
         $embeddedAttributes = $this->embeddedAttributesConfig->getAttributes();
+        $directAttributes = $this->getDirectAttributes($embeddedAttributes);
         $valuesBySourceCode = $this->attributeValueProvider->getValuesBySourceCode(
-            $this->getAttributeCodes($embeddedAttributes),
+            $this->getAttributeCodes($directAttributes),
             $this->getSourceProductIds($eligibleScopes)
         );
-
-        return $this->sourceComposer->compose(
-            $embeddedAttributes,
+        $directSources = $this->sourceComposer->compose(
+            $directAttributes,
             $productIds,
             $eligibleScopes,
             $valuesBySourceCode
         );
+        $templateSources = $this->embeddingTemplate->buildSourcesByProductId(
+            $embeddedAttributes,
+            $productIds,
+            $eligibleScopes
+        );
+
+        return $this->mergeSources($productIds, $directSources, $templateSources);
     }
 
     /**
@@ -123,6 +131,48 @@ class SourceProvider
         }
 
         return $attributeCodes;
+    }
+
+    /**
+     * @param list<EmbeddedAttribute> $embeddedAttributes
+     * @return list<EmbeddedAttribute>
+     */
+    private function getDirectAttributes(array $embeddedAttributes): array
+    {
+        $directAttributes = [];
+
+        foreach ($embeddedAttributes as $embeddedAttribute) {
+            if ($embeddedAttribute->children !== null) {
+                continue;
+            }
+
+            $directAttributes[] = $embeddedAttribute;
+        }
+
+        return $directAttributes;
+    }
+
+    /**
+     * @param list<int> $productIds
+     * @param array<int, list<ProductSource>> $directSources
+     * @param array<int, list<ProductSource>> $templateSources
+     * @return array<int, list<ProductSource>>
+     */
+    private function mergeSources(
+        array $productIds,
+        array $directSources,
+        array $templateSources
+    ): array {
+        $sourcesByProductId = [];
+
+        foreach ($productIds as $productId) {
+            $sourcesByProductId[$productId] = [
+                ...($directSources[$productId] ?? []),
+                ...($templateSources[$productId] ?? []),
+            ];
+        }
+
+        return $sourcesByProductId;
     }
 
     /**

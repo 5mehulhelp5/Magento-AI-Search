@@ -21,33 +21,62 @@ class EmbeddedAttributesConfig
             new EmbeddedAttribute(
                 attributeCode: 'description',
                 composite: true,
-                template: null
+                template: null,
+                children: null
             ),
             new EmbeddedAttribute(
                 attributeCode: 'name',
                 composite: false,
-                template: null
+                template: null,
+                children: null
             ),
-        ];
-    }
-
-    /**
-     * @return list<EmbeddedAttribute>
-     */
-    public function getTemplates(): array
-    {
-        return [
             new EmbeddedAttribute(
                 attributeCode: 'embedding_template',
-                composite: true,
-                template: [
-                    'This product is called {name}.',
-                    'It is available in {color}, with size options including {size}.',
-                    'It is made from {material}.',
-                    'Its design features a {pattern} pattern.',
-                    'It is designed for {activity}.',
-                    'It is well suited to {climate} conditions.',
-                    'Here is a brief description: {short_description}',
+                composite: false,
+                template: null,
+                children: [
+                    new EmbeddedAttribute(
+                        attributeCode: 'name',
+                        composite: false,
+                        template: 'This product is called {name}.',
+                        children: null
+                    ),
+                    new EmbeddedAttribute(
+                        attributeCode: 'color,size',
+                        composite: true,
+                        template: 'It is available in {color}, with size options including {size}.',
+                        children: null
+                    ),
+                    new EmbeddedAttribute(
+                        attributeCode: 'material',
+                        composite: true,
+                        template: 'It is made from {material}.',
+                        children: null
+                    ),
+                    new EmbeddedAttribute(
+                        attributeCode: 'pattern',
+                        composite: true,
+                        template: 'Its design features a {pattern} pattern.',
+                        children: null
+                    ),
+                    new EmbeddedAttribute(
+                        attributeCode: 'activity',
+                        composite: true,
+                        template: 'It is designed for {activity}.',
+                        children: null
+                    ),
+                    new EmbeddedAttribute(
+                        attributeCode: 'climate',
+                        composite: true,
+                        template: 'It is well suited to {climate} conditions.',
+                        children: null
+                    ),
+                    new EmbeddedAttribute(
+                        attributeCode: 'short_description',
+                        composite: true,
+                        template: 'Here is a brief description: {short_description}',
+                        children: null
+                    ),
                 ]
             ),
         ];
