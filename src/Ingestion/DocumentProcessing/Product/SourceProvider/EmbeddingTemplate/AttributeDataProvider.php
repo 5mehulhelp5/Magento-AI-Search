@@ -6,7 +6,7 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\EmbeddingTemplate;
+namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\EmbeddingTemplate;
 
 use Magento\Catalog\Model\ResourceModel\Product as ProductResource;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;

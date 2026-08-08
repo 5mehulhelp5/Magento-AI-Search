@@ -6,7 +6,7 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Chunking;
+namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Chunking;
 
 interface ChunkingInterface
 {

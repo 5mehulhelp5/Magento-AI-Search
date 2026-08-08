@@ -70,6 +70,16 @@ class Document extends AbstractExtensibleModel implements DocumentInterface
         return $this->setData(self::SOURCE_CODE, $sourceCode);
     }
 
+    public function getTitle(): ?string
+    {
+        return $this->getNullableString(self::TITLE);
+    }
+
+    public function setTitle(?string $title): DocumentInterface
+    {
+        return $this->setData(self::TITLE, $title);
+    }
+
     public function getSourceHash(): string
     {
         return $this->getString(self::SOURCE_HASH);

@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Client\Embedding;
 
 use DavidBel\AiSearch\Api\EmbedderClientInterface;
+use DavidBel\AiSearch\Config\EmbedderConfig;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -22,28 +23,54 @@ use function is_finite;
 
 class OpenAi implements EmbedderClientInterface
 {
-    private const BASE_URL = 'http://host.docker.internal:1234';
-    private const MODEL = 'text-embedding-embeddinggemma-300m-qat';
-    private const VECTOR_DIMENSIONS = 768;
-    private const REQUEST_TIMEOUT_SECONDS = 60;
-
     public function __construct(
         private readonly ClientInterface $client,
-        private readonly SerializerInterface $serializer
+        private readonly SerializerInterface $serializer,
+        private readonly EmbedderConfig $embedderConfig
     ) {
+    }
+
+    /**
+     * @param list<EmbeddingInput> $inputs
+     */
+    public function embedDocumentsAsync(array $inputs): PromiseInterface
+    {
+        $requestInputs = [];
+
+        foreach ($inputs as $input) {
+            $requestInputs[] = strtr(
+                $this->embedderConfig->getDocumentTemplate(),
+                [
+                    '{title}' => $input->title ?? 'none',
+                    '{text}' => $input->text,
+                ]
+            );
+        }
+
+        return $this->sendAsync($requestInputs);
+    }
+
+    public function embedQueryAsync(string $queryText): PromiseInterface
+    {
+        return $this->sendAsync([
+            strtr(
+                $this->embedderConfig->getQueryTemplate(),
+                ['{text}' => $queryText]
+            ),
+        ]);
     }
 
     /**
      * @param list<string> $inputs
      */
-    public function embedAsync(array $inputs): PromiseInterface
+    private function sendAsync(array $inputs): PromiseInterface
     {
         if ($inputs === []) {
             return Create::promiseFor([]);
         }
 
         $payload = $this->serializer->serialize([
-            'model' => self::MODEL,
+            'model' => $this->embedderConfig->getModel(),
             'input' => $inputs,
             'encoding_format' => 'float',
         ]);
@@ -54,7 +81,7 @@ class OpenAi implements EmbedderClientInterface
 
         return $this->client->requestAsync(
             'POST',
-            self::BASE_URL . '/v1/embeddings',
+            $this->embedderConfig->getBaseUrl() . '/v1/embeddings',
             [
                 RequestOptions::BODY => $payload,
                 RequestOptions::HEADERS => [
@@ -62,7 +89,7 @@ class OpenAi implements EmbedderClientInterface
                     'Content-Type' => 'application/json',
                 ],
                 RequestOptions::HTTP_ERRORS => false,
-                RequestOptions::TIMEOUT => self::REQUEST_TIMEOUT_SECONDS,
+                RequestOptions::TIMEOUT => $this->embedderConfig->getRequestTimeoutSeconds(),
             ]
         )->then(
             fn (ResponseInterface $response): array => $this->decodeHttpResponse(
@@ -93,7 +120,7 @@ class OpenAi implements EmbedderClientInterface
     {
         $response = $this->serializer->unserialize($body);
 
-        if (!is_array($response) || ($response['model'] ?? null) !== self::MODEL) {
+        if (!is_array($response) || ($response['model'] ?? null) !== $this->embedderConfig->getModel()) {
             throw new UnexpectedValueException('Embedding response contains an unexpected model.');
         }
 
@@ -142,7 +169,7 @@ class OpenAi implements EmbedderClientInterface
             throw new UnexpectedValueException('Embedding response vector must be a list.');
         }
 
-        if (count($embedding) !== self::VECTOR_DIMENSIONS) {
+        if (count($embedding) !== $this->embedderConfig->getVectorDimensions()) {
             throw new UnexpectedValueException('Embedding response contains an invalid vector dimension.');
         }
 

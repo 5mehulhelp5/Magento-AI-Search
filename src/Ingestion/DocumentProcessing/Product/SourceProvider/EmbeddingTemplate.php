@@ -6,31 +6,33 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product;
+namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 
 use DavidBel\AiSearch\Config\EmbeddedAttribute;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\EmbeddingTemplate\AttributeValueResolver;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\EmbeddingTemplate\TemplateRenderer;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\Eligibility\EligibleScope;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\EmbeddingTemplate\AttributeValueResolver;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\EmbeddingTemplate\TemplateRenderer;
 
 class EmbeddingTemplate
 {
     public function __construct(
         private readonly AttributeValueResolver $attributeValueResolver,
-        private readonly TemplateRenderer $templateRenderer
+        private readonly TemplateRenderer $templateRenderer,
+        private readonly TitleResolver $titleResolver
     ) {
     }
 
     /**
-     * @param list<EmbeddedAttribute> $embeddedAttributes
+     * @param list<\DavidBel\AiSearch\Config\EmbeddedAttribute> $embeddedAttributes
      * @param list<int> $productIds
-     * @param array<int, list<EligibleScope>> $eligibleScopes
+     * @param array<int, list<Eligibility\EligibleScope>> $eligibleScopes
+     * @param array<string, string> $titleValues
      * @return array<int, list<ProductSource>>
      */
     public function buildSourcesByProductId(
         array $embeddedAttributes,
         array $productIds,
-        array $eligibleScopes
+        array $eligibleScopes,
+        array $titleValues
     ): array {
         $embeddingTemplates = $this->getEmbeddingTemplates($embeddedAttributes);
         $valuesByAttributeCode = $this->attributeValueResolver->getValuesByAttributeCode(
@@ -45,7 +47,8 @@ class EmbeddingTemplate
                 $embeddingTemplates,
                 $productId,
                 $eligibleScopes[$productId] ?? [],
-                $valuesByAttributeCode
+                $valuesByAttributeCode,
+                $titleValues
             );
         }
 
@@ -53,8 +56,8 @@ class EmbeddingTemplate
     }
 
     /**
-     * @param list<EmbeddedAttribute> $embeddedAttributes
-     * @return list<EmbeddedAttribute>
+     * @param list<\DavidBel\AiSearch\Config\EmbeddedAttribute> $embeddedAttributes
+     * @return list<\DavidBel\AiSearch\Config\EmbeddedAttribute>
      */
     private function getEmbeddingTemplates(array $embeddedAttributes): array
     {
@@ -72,27 +75,30 @@ class EmbeddingTemplate
     }
 
     /**
-     * @param list<EmbeddedAttribute> $embeddingTemplates
-     * @param list<EligibleScope> $eligibleScopes
+     * @param list<\DavidBel\AiSearch\Config\EmbeddedAttribute> $embeddingTemplates
+     * @param list<Eligibility\EligibleScope> $eligibleScopes
      * @param array<string, array<string, list<string>>> $valuesByAttributeCode
+     * @param array<string, string> $titleValues
      * @return list<ProductSource>
      */
     private function buildProductSources(
         array $embeddingTemplates,
         int $productId,
         array $eligibleScopes,
-        array $valuesByAttributeCode
+        array $valuesByAttributeCode,
+        array $titleValues
     ): array {
         $productSources = [];
 
         foreach ($embeddingTemplates as $embeddingTemplate) {
             $productSources[] = new ProductSource(
                 $embeddingTemplate->attributeCode,
-                $this->buildScopedSources(
+                $this->buildStoreScopedSources(
                     $embeddingTemplate,
                     $productId,
                     $eligibleScopes,
-                    $valuesByAttributeCode
+                    $valuesByAttributeCode,
+                    $titleValues
                 )
             );
         }
@@ -101,35 +107,42 @@ class EmbeddingTemplate
     }
 
     /**
-     * @param list<EligibleScope> $eligibleScopes
+     * @param list<Eligibility\EligibleScope> $eligibleScopes
      * @param array<string, array<string, list<string>>> $valuesByAttributeCode
-     * @return list<ScopedSource>
+     * @param array<string, string> $titleValues
+     * @return list<StoreScopedSource>
      */
-    private function buildScopedSources(
+    private function buildStoreScopedSources(
         EmbeddedAttribute $embeddingTemplate,
         int $productId,
         array $eligibleScopes,
-        array $valuesByAttributeCode
+        array $valuesByAttributeCode,
+        array $titleValues
     ): array {
-        $scopedSources = [];
+        $storeScopedSources = [];
 
         foreach ($eligibleScopes as $eligibleScope) {
-            $scopedSources[] = new ScopedSource(
+            $storeScopedSources[] = new StoreScopedSource(
                 $eligibleScope->storeId,
                 $this->templateRenderer->render(
                     $embeddingTemplate,
                     $productId,
                     $eligibleScope,
                     $valuesByAttributeCode
+                ),
+                $this->titleResolver->getTitle(
+                    $titleValues,
+                    $productId,
+                    $eligibleScope->storeId
                 )
             );
         }
 
-        return $scopedSources;
+        return $storeScopedSources;
     }
 
     /**
-     * @param array<int, list<EligibleScope>> $eligibleScopes
+     * @param array<int, list<Eligibility\EligibleScope>> $eligibleScopes
      * @return list<int>
      */
     private function getSourceProductIds(array $eligibleScopes): array
@@ -147,7 +160,7 @@ class EmbeddingTemplate
     }
 
     /**
-     * @param list<EligibleScope> $productScopes
+     * @param list<Eligibility\EligibleScope> $productScopes
      * @return list<int>
      */
     private function getScopeProductIds(array $productScopes): array
@@ -162,7 +175,7 @@ class EmbeddingTemplate
     }
 
     /**
-     * @param array<int, list<EligibleScope>> $eligibleScopes
+     * @param array<int, list<Eligibility\EligibleScope>> $eligibleScopes
      * @return list<int>
      */
     private function getStoreIds(array $eligibleScopes): array
@@ -177,7 +190,7 @@ class EmbeddingTemplate
     }
 
     /**
-     * @param list<EligibleScope> $productScopes
+     * @param list<Eligibility\EligibleScope> $productScopes
      * @return list<int>
      */
     private function getScopeStoreIds(array $productScopes): array

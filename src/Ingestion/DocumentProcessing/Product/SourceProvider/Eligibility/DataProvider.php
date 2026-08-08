@@ -6,7 +6,7 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\Eligibility;
+namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\Eligibility;
 
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Visibility;

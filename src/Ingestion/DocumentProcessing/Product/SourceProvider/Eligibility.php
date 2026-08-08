@@ -6,10 +6,10 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product;
+namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\Eligibility\DataProvider;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\Eligibility\EligibleScope;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\Eligibility\DataProvider;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\Eligibility\EligibleScope;
 use Magento\Bundle\Model\Product\Type as BundleProductType;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\GroupedProduct\Model\Product\Type\Grouped;

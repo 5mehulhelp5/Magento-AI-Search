@@ -6,7 +6,7 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Ingestion\DocumentProcessing;
+namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
 
 use InvalidArgumentException;
 

@@ -8,10 +8,11 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product;
 
-use DavidBel\AiSearch\Config\EmbeddedAttribute;
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\Source\AttributeValueProvider;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\Source\SourceComposer;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\AttributeValueProvider;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\DirectSourceBuilder;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\Eligibility;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\EmbeddingTemplate;
 use InvalidArgumentException;
 use Magento\Catalog\Model\ResourceModel\Product as ProductResource;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
@@ -19,12 +20,14 @@ use RuntimeException;
 
 class SourceProvider
 {
+    private const string TITLE_ATTRIBUTE_CODE = 'name';
+
     public function __construct(
         private readonly CollectionFactory $collectionFactory,
         private readonly Eligibility $eligibility,
         private readonly EmbeddedAttributesConfig $embeddedAttributesConfig,
         private readonly AttributeValueProvider $attributeValueProvider,
-        private readonly SourceComposer $sourceComposer,
+        private readonly DirectSourceBuilder $directSourceBuilder,
         private readonly EmbeddingTemplate $embeddingTemplate
     ) {
     }
@@ -66,19 +69,22 @@ class SourceProvider
         $embeddedAttributes = $this->embeddedAttributesConfig->getAttributes();
         $directAttributes = $this->getDirectAttributes($embeddedAttributes);
         $valuesBySourceCode = $this->attributeValueProvider->getValuesBySourceCode(
-            $this->getAttributeCodes($directAttributes),
+            $this->getRequiredAttributeCodes($directAttributes),
             $this->getSourceProductIds($eligibleScopes)
         );
-        $directSources = $this->sourceComposer->compose(
+        $titleValues = $valuesBySourceCode[self::TITLE_ATTRIBUTE_CODE] ?? [];
+        $directSources = $this->directSourceBuilder->buildSourcesByProductId(
             $directAttributes,
             $productIds,
             $eligibleScopes,
-            $valuesBySourceCode
+            $valuesBySourceCode,
+            $titleValues
         );
         $templateSources = $this->embeddingTemplate->buildSourcesByProductId(
             $embeddedAttributes,
             $productIds,
-            $eligibleScopes
+            $eligibleScopes,
+            $titleValues
         );
 
         return $this->mergeSources($productIds, $directSources, $templateSources);
@@ -102,7 +108,7 @@ class SourceProvider
     }
 
     /**
-     * @param array<int, list<Eligibility\EligibleScope>> $eligibleScopes
+     * @param array<int, list<SourceProvider\Eligibility\EligibleScope>> $eligibleScopes
      * @return list<int>
      */
     private function getSourceProductIds(array $eligibleScopes): array
@@ -119,23 +125,23 @@ class SourceProvider
     }
 
     /**
-     * @param list<EmbeddedAttribute> $embeddedAttributes
+     * @param list<\DavidBel\AiSearch\Config\EmbeddedAttribute> $embeddedAttributes
      * @return list<string>
      */
-    private function getAttributeCodes(array $embeddedAttributes): array
+    private function getRequiredAttributeCodes(array $embeddedAttributes): array
     {
-        $attributeCodes = [];
+        $attributeCodes = [self::TITLE_ATTRIBUTE_CODE => true];
 
         foreach ($embeddedAttributes as $embeddedAttribute) {
-            $attributeCodes[] = $embeddedAttribute->attributeCode;
+            $attributeCodes[$embeddedAttribute->attributeCode] = true;
         }
 
-        return $attributeCodes;
+        return array_keys($attributeCodes);
     }
 
     /**
-     * @param list<EmbeddedAttribute> $embeddedAttributes
-     * @return list<EmbeddedAttribute>
+     * @param list<\DavidBel\AiSearch\Config\EmbeddedAttribute> $embeddedAttributes
+     * @return list<\DavidBel\AiSearch\Config\EmbeddedAttribute>
      */
     private function getDirectAttributes(array $embeddedAttributes): array
     {

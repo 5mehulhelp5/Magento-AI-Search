@@ -21,7 +21,8 @@ readonly class ProcessingItem
         public string $sourceCode,
         public int $chunkIndex,
         public string $content,
-        public string $contentHash
+        public string $contentHash,
+        public ?string $title = null
     ) {
     }
 }

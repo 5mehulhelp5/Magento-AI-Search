@@ -23,7 +23,7 @@ class QueryEmbedding
      */
     public function execute(string $queryText): array
     {
-        $vectors = $this->embedderClient->embedAsync([$queryText])->wait();
+        $vectors = $this->embedderClient->embedQueryAsync($queryText)->wait();
 
         if (!is_array($vectors) || count($vectors) !== 1) {
             throw new UnexpectedValueException('Query embedding returned an unexpected vector count.');

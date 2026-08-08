@@ -13,10 +13,18 @@ use GuzzleHttp\Promise\PromiseInterface;
 interface EmbedderClientInterface
 {
     /**
-     * Start generating an embedding vector for every input text.
+     * Start generating an embedding vector for every document input.
      *
-     * @param list<string> $inputs
+     * @param list<\DavidBel\AiSearch\Client\Embedding\EmbeddingInput> $inputs
      * @return \GuzzleHttp\Promise\PromiseInterface
      */
-    public function embedAsync(array $inputs): PromiseInterface;
+    public function embedDocumentsAsync(array $inputs): PromiseInterface;
+
+    /**
+     * Start generating an embedding vector for a search query.
+     *
+     * @param string $queryText
+     * @return \GuzzleHttp\Promise\PromiseInterface
+     */
+    public function embedQueryAsync(string $queryText): PromiseInterface;
 }

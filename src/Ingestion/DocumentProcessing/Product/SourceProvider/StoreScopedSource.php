@@ -6,16 +6,14 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\Eligibility;
+namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 
-readonly class EligibleScope
+readonly class StoreScopedSource
 {
-    /**
-     * @param list<int> $sourceProductIds
-     */
     public function __construct(
         public int $storeId,
-        public array $sourceProductIds
+        public string $content,
+        public ?string $title = null
     ) {
     }
 }

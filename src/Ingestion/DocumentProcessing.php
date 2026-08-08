@@ -11,10 +11,10 @@ namespace DavidBel\AiSearch\Ingestion;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory
     as EmbeddingBacklogCollectionFactory;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdateResult;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\ProductSource;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Result as DocumentUpdateResult;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\ProductSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\UpdateMode;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use RuntimeException;
@@ -149,7 +149,7 @@ class DocumentProcessing
                 self::SOURCE_ENTITY_TYPE,
                 $productId,
                 $source->sourceCode,
-                $source->scopedSources
+                $source->storeScopedSources
             );
         }
 
@@ -157,7 +157,7 @@ class DocumentProcessing
             self::SOURCE_ENTITY_TYPE,
             $productId,
             $source->sourceCode,
-            $source->scopedSources
+            $source->storeScopedSources
         );
     }
 

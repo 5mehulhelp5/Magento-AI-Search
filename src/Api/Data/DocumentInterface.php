@@ -22,6 +22,7 @@ interface DocumentInterface extends ExtensibleDataInterface
     public const string SOURCE_ENTITY_ID = 'source_entity_id';
     public const string STORE_ID = 'store_id';
     public const string SOURCE_CODE = 'source_code';
+    public const string TITLE = 'title';
     public const string SOURCE_HASH = 'source_hash';
     public const string CREATED_AT = 'created_at';
     public const string UPDATED_AT = 'updated_at';
@@ -100,6 +101,21 @@ interface DocumentInterface extends ExtensibleDataInterface
      * @return \DavidBel\AiSearch\Api\Data\DocumentInterface
      */
     public function setSourceCode(string $sourceCode): DocumentInterface;
+
+    /**
+     * Get the document title.
+     *
+     * @return string|null
+     */
+    public function getTitle(): ?string;
+
+    /**
+     * Set the document title.
+     *
+     * @param string|null $title
+     * @return \DavidBel\AiSearch\Api\Data\DocumentInterface
+     */
+    public function setTitle(?string $title): DocumentInterface;
 
     /**
      * Get the resolved source value SHA-256 hash.

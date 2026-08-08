@@ -8,38 +8,35 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\DocumentProcessing;
 
-use DavidBel\AiSearch\Api\ChunkRepositoryInterface;
-use DavidBel\AiSearch\Api\Data\ChunkInterface;
 use DavidBel\AiSearch\Api\Data\DocumentInterface;
 use DavidBel\AiSearch\Api\DocumentRepositoryInterface;
-use DavidBel\AiSearch\Model\ChunkFactory;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Chunking;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\ChunkPersistence;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Result;
 use DavidBel\AiSearch\Model\DocumentFactory;
 use LogicException;
 use Magento\Framework\Api\SearchCriteriaBuilderFactory;
-use Magento\Framework\Api\SortOrderBuilder;
 
 class DocumentUpdater
 {
     public function __construct(
         private readonly SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory,
-        private readonly SortOrderBuilder $sortOrderBuilder,
         private readonly DocumentRepositoryInterface $documentRepository,
-        private readonly ChunkRepositoryInterface $chunkRepository,
         private readonly DocumentFactory $documentFactory,
-        private readonly ChunkFactory $chunkFactory,
-        private readonly Chunking $chunking
+        private readonly Chunking $chunking,
+        private readonly ChunkPersistence $chunkPersistence
     ) {
     }
 
     /**
-     * @param list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\ScopedSource> $sources
+     * @param list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\StoreScopedSource> $sources
      */
     public function deltaUpdate(
         string $sourceEntityType,
         int $sourceEntityId,
         string $sourceCode,
         array $sources
-    ): DocumentUpdateResult {
+    ): Result {
         return $this->update(
             $sourceEntityType,
             $sourceEntityId,
@@ -50,14 +47,14 @@ class DocumentUpdater
     }
 
     /**
-     * @param list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\ScopedSource> $sources
+     * @param list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\StoreScopedSource> $sources
      */
     public function fullUpdate(
         string $sourceEntityType,
         int $sourceEntityId,
         string $sourceCode,
         array $sources
-    ): DocumentUpdateResult {
+    ): Result {
         return $this->update(
             $sourceEntityType,
             $sourceEntityId,
@@ -68,7 +65,7 @@ class DocumentUpdater
     }
 
     /**
-     * @param list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\ScopedSource> $sources
+     * @param list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\StoreScopedSource> $sources
      */
     private function update(
         string $sourceEntityType,
@@ -76,12 +73,8 @@ class DocumentUpdater
         string $sourceCode,
         array $sources,
         UpdateMode $updateMode
-    ): DocumentUpdateResult {
-        $documentsByStoreId = $this->getDocumentsByStoreId(
-            $sourceEntityType,
-            $sourceEntityId,
-            $sourceCode
-        );
+    ): Result {
+        $documentsByStoreId = $this->getDocumentsByStoreId($sourceEntityType, $sourceEntityId, $sourceCode);
         $currentStoreIds = [];
         $chunksBySourceHash = [];
         $upsertChunkIds = $deletionChunkIds = [];
@@ -90,15 +83,16 @@ class DocumentUpdater
             $sourceHash = hash('sha256', $source->content);
             $document = $documentsByStoreId[$source->storeId] ?? null;
             $currentStoreIds[$source->storeId] = true;
+            $sourceUnchanged = $this->hasMatchingSourceHash($document, $sourceHash);
 
-            if ($updateMode === UpdateMode::DeltaUpdate
-                && $this->hasSourceHash($document, $sourceHash)
-            ) {
+            if ($this->isUnchangedDelta($document, $sourceHash, $source->title, $updateMode)) {
                 continue;
             }
 
-            if (!isset($chunksBySourceHash[$sourceHash])) {
-                $chunksBySourceHash[$sourceHash] = $this->chunking->chunk($source->content);
+            if ($updateMode === UpdateMode::DeltaUpdate && $sourceUnchanged) {
+                array_push($upsertChunkIds, ...$this->updateDocumentTitle($document, $source->title));
+
+                continue;
             }
 
             $updateResult = $this->updateSource(
@@ -107,8 +101,9 @@ class DocumentUpdater
                 $sourceEntityId,
                 $source->storeId,
                 $sourceCode,
+                $source->title,
                 $sourceHash,
-                $chunksBySourceHash[$sourceHash],
+                $chunksBySourceHash[$sourceHash] ??= $this->chunking->chunk($source->content),
                 $updateMode
             );
             array_push($upsertChunkIds, ...$updateResult->upsertChunkIds);
@@ -117,12 +112,28 @@ class DocumentUpdater
 
         array_push($deletionChunkIds, ...$this->deleteStaleDocuments($documentsByStoreId, $currentStoreIds));
 
-        return new DocumentUpdateResult($upsertChunkIds, $deletionChunkIds);
+        return new Result($upsertChunkIds, $deletionChunkIds);
     }
 
-    private function hasSourceHash(?DocumentInterface $document, string $sourceHash): bool
+    private function isUnchangedDelta(
+        ?DocumentInterface $document,
+        string $sourceHash,
+        ?string $title,
+        UpdateMode $updateMode
+    ): bool {
+        return $updateMode === UpdateMode::DeltaUpdate
+            && $this->hasMatchingSourceHash($document, $sourceHash)
+            && $this->hasMatchingTitle($document, $title);
+    }
+
+    private function hasMatchingSourceHash(?DocumentInterface $document, string $sourceHash): bool
     {
         return $document !== null && hash_equals($document->getSourceHash(), $sourceHash);
+    }
+
+    private function hasMatchingTitle(?DocumentInterface $document, ?string $title): bool
+    {
+        return $document !== null && $document->getTitle() === $title;
     }
 
     /**
@@ -134,20 +145,23 @@ class DocumentUpdater
         int $sourceEntityId,
         int $storeId,
         string $sourceCode,
+        ?string $title,
         string $sourceHash,
         array $chunks,
         UpdateMode $updateMode
-    ): DocumentUpdateResult {
+    ): Result {
         $persistedDocument = $document ?? $this->createDocument(
             $sourceEntityType,
             $sourceEntityId,
             $storeId,
             $sourceCode
         );
-        $sourceChanged = !$this->hasSourceHash($document, $sourceHash);
+        $sourceChanged = !$this->hasMatchingSourceHash($document, $sourceHash);
+        $titleChanged = !$this->hasMatchingTitle($document, $title);
 
-        if ($sourceChanged) {
-            $persistedDocument->setSourceHash($sourceHash);
+        if ($sourceChanged || $titleChanged) {
+            $persistedDocument->setSourceHash($sourceHash)
+                ->setTitle($title);
             $persistedDocument = $this->documentRepository->save($persistedDocument);
         }
 
@@ -157,9 +171,36 @@ class DocumentUpdater
             throw new LogicException('A persisted AI search document must have an ID.');
         }
 
-        $existingChunks = $this->getChunks($documentId);
+        $updateResult = $this->chunkPersistence->reconcile($documentId, $chunks, $updateMode);
 
-        return $this->updateChunks($documentId, $existingChunks, $chunks, $updateMode);
+        if (!$titleChanged || $updateMode === UpdateMode::FullUpdate) {
+            return $updateResult;
+        }
+
+        return new Result(
+            $this->chunkPersistence->getChunkIdsByDocumentId($documentId),
+            $updateResult->deletionChunkIds
+        );
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function updateDocumentTitle(?DocumentInterface $document, ?string $title): array
+    {
+        if ($document === null) {
+            throw new LogicException('An unchanged source must have a persisted document.');
+        }
+
+        $document->setTitle($title);
+        $persistedDocument = $this->documentRepository->save($document);
+        $documentId = $persistedDocument->getDocumentId();
+
+        if ($documentId === null) {
+            throw new LogicException('A persisted AI search document must have an ID.');
+        }
+
+        return $this->chunkPersistence->getChunkIdsByDocumentId($documentId);
     }
 
     private function createDocument(
@@ -198,124 +239,6 @@ class DocumentUpdater
     }
 
     /**
-     * @return list<ChunkInterface>
-     */
-    private function getChunks(int $documentId): array
-    {
-        $sortOrder = $this->sortOrderBuilder
-            ->setField(ChunkInterface::CHUNK_INDEX)
-            ->setAscendingDirection()
-            ->create();
-        $searchCriteria = $this->searchCriteriaBuilderFactory->create()
-            ->addFilter(ChunkInterface::DOCUMENT_ID, $documentId)
-            ->addSortOrder($sortOrder)
-            ->create();
-
-        return array_values($this->chunkRepository->getList($searchCriteria)->getItems());
-    }
-
-    /**
-     * @param list<ChunkInterface> $existingChunks
-     * @param list<string> $generatedChunks
-     */
-    private function updateChunks(
-        int $documentId,
-        array $existingChunks,
-        array $generatedChunks,
-        UpdateMode $updateMode
-    ): DocumentUpdateResult {
-        $existingChunksByIndex = $this->getChunksByIndex($existingChunks);
-        $upsertChunkIds = [];
-
-        foreach ($generatedChunks as $chunkIndex => $content) {
-            $existingChunk = $existingChunksByIndex[$chunkIndex] ?? null;
-            unset($existingChunksByIndex[$chunkIndex]);
-            $contentHash = hash('sha256', $content);
-
-            if ($existingChunk !== null
-                && $this->hasChunkContent($existingChunk, $content, $contentHash)
-            ) {
-                if ($updateMode === UpdateMode::FullUpdate) {
-                    $upsertChunkIds[] = $this->getPersistedChunkId($existingChunk);
-                }
-
-                continue;
-            }
-
-            $chunk = $existingChunk ?? $this->createChunk($documentId, $chunkIndex);
-            $chunk->setContent($content)
-                ->setContentHash($contentHash);
-            $upsertChunkIds[] = $this->getPersistedChunkId(
-                $this->chunkRepository->save($chunk)
-            );
-        }
-
-        return new DocumentUpdateResult(
-            $upsertChunkIds,
-            $this->deleteChunks($existingChunksByIndex)
-        );
-    }
-
-    /**
-     * @param list<ChunkInterface> $chunks
-     * @return array<int, ChunkInterface>
-     */
-    private function getChunksByIndex(array $chunks): array
-    {
-        $chunksByIndex = [];
-
-        foreach ($chunks as $chunk) {
-            $chunksByIndex[$chunk->getChunkIndex()] = $chunk;
-        }
-
-        return $chunksByIndex;
-    }
-
-    private function hasChunkContent(
-        ChunkInterface $chunk,
-        string $content,
-        string $contentHash
-    ): bool {
-        return hash_equals($chunk->getContentHash(), $contentHash)
-            && $chunk->getContent() === $content;
-    }
-
-    private function createChunk(int $documentId, int $chunkIndex): ChunkInterface
-    {
-        return $this->chunkFactory->create()
-            ->setDocumentId($documentId)
-            ->setChunkIndex($chunkIndex);
-    }
-
-    private function getPersistedChunkId(ChunkInterface $chunk): int
-    {
-        $chunkId = $chunk->getChunkId();
-
-        if ($chunkId === null) {
-            throw new LogicException('A persisted AI search chunk must have an ID.');
-        }
-
-        return $chunkId;
-    }
-
-    /**
-     * @param array<int, ChunkInterface> $chunks
-     * @return list<int>
-     */
-    private function deleteChunks(array $chunks): array
-    {
-        $deletedChunkIds = [];
-
-        foreach ($chunks as $chunk) {
-            $chunkId = $this->getPersistedChunkId($chunk);
-            $this->chunkRepository->deleteById($chunkId);
-            $deletedChunkIds[] = $chunkId;
-        }
-
-        return $deletedChunkIds;
-    }
-
-    /**
      * @param array<int, DocumentInterface> $documentsByStoreId
      * @param array<int, true> $currentStoreIds
      * @return list<int>
@@ -335,7 +258,7 @@ class DocumentUpdater
                 throw new LogicException('A persisted AI search document must have an ID.');
             }
 
-            array_push($deletedChunkIds, ...$this->deleteChunks($this->getChunks($documentId)));
+            array_push($deletedChunkIds, ...$this->chunkPersistence->deleteByDocumentId($documentId));
             $this->documentRepository->deleteById($documentId);
         }
 

@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Ingestion\ChunkProcessing;
 
 use DavidBel\AiSearch\Api\EmbedderClientInterface;
+use DavidBel\AiSearch\Client\Embedding\EmbeddingInput;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorEmbedding\PromisePool;
 use Generator;
 
@@ -44,9 +45,26 @@ class VectorEmbedding
     private function createPromises(iterable $batches): Generator
     {
         foreach ($batches as $batchId => $batch) {
-            yield $batchId => $this->embedderClient->embedAsync(
-                $batch->getContents()
+            yield $batchId => $this->embedderClient->embedDocumentsAsync(
+                $this->getEmbeddingInputs($batch)
             );
         }
+    }
+
+    /**
+     * @return list<EmbeddingInput>
+     */
+    private function getEmbeddingInputs(ProcessingBatch $batch): array
+    {
+        $inputs = [];
+
+        foreach ($batch->getItems() as $item) {
+            $inputs[] = new EmbeddingInput(
+                title: $item->title,
+                text: $item->content
+            );
+        }
+
+        return $inputs;
     }
 }

@@ -408,6 +408,7 @@ class EmbeddingBacklog extends AbstractDb
                     DocumentInterface::SOURCE_ENTITY_ID,
                     DocumentInterface::STORE_ID,
                     DocumentInterface::SOURCE_CODE,
+                    DocumentInterface::TITLE,
                 ]
             );
     }

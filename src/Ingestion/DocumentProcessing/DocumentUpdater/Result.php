@@ -6,9 +6,9 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Ingestion\DocumentProcessing;
+namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
 
-readonly class DocumentUpdateResult
+readonly class Result
 {
     /**
      * @param list<int> $upsertChunkIds

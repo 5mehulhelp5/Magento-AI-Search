@@ -6,10 +6,10 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\EmbeddingTemplate;
+namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\EmbeddingTemplate;
 
 use DavidBel\AiSearch\Config\EmbeddedAttribute;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\Eligibility\EligibleScope;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\Eligibility\EligibleScope;
 use RuntimeException;
 
 class TemplateRenderer

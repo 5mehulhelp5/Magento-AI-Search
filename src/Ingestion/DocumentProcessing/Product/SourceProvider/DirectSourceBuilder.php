@@ -6,39 +6,45 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\Source;
+namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 
 use DavidBel\AiSearch\Config\EmbeddedAttribute;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\Eligibility\EligibleScope;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\ProductSource;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\ScopedSource;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\Eligibility\EligibleScope;
 
-class SourceComposer
+class DirectSourceBuilder
 {
     private const int DEFAULT_STORE_ID = 0;
+
+    public function __construct(
+        private readonly TitleResolver $titleResolver
+    ) {
+    }
 
     /**
      * @param list<EmbeddedAttribute> $embeddedAttributes
      * @param list<int> $productIds
      * @param array<int, list<EligibleScope>> $eligibleScopes
      * @param array<string, array<string, string>> $valuesBySourceCode
+     * @param array<string, string> $titleValues
      * @return array<int, list<ProductSource>>
      */
-    public function compose(
+    public function buildSourcesByProductId(
         array $embeddedAttributes,
         array $productIds,
         array $eligibleScopes,
-        array $valuesBySourceCode
+        array $valuesBySourceCode,
+        array $titleValues
     ): array {
         $sourcesByProductId = [];
 
         foreach ($productIds as $productId) {
             $productScopes = $eligibleScopes[$productId] ?? [];
-            $sourcesByProductId[$productId] = $this->composeProductSources(
+            $sourcesByProductId[$productId] = $this->buildProductSources(
                 $embeddedAttributes,
                 $productId,
                 $productScopes,
-                $valuesBySourceCode
+                $valuesBySourceCode,
+                $titleValues
             );
         }
 
@@ -49,24 +55,27 @@ class SourceComposer
      * @param list<EmbeddedAttribute> $embeddedAttributes
      * @param list<EligibleScope> $eligibleScopes
      * @param array<string, array<string, string>> $valuesBySourceCode
+     * @param array<string, string> $titleValues
      * @return list<ProductSource>
      */
-    private function composeProductSources(
+    private function buildProductSources(
         array $embeddedAttributes,
         int $productId,
         array $eligibleScopes,
-        array $valuesBySourceCode
+        array $valuesBySourceCode,
+        array $titleValues
     ): array {
         $productSources = [];
 
         foreach ($embeddedAttributes as $embeddedAttribute) {
             $productSources[] = new ProductSource(
                 $embeddedAttribute->attributeCode,
-                $this->composeAttributeScopes(
+                $this->buildStoreScopedSources(
                     $embeddedAttribute,
                     $productId,
                     $eligibleScopes,
-                    $valuesBySourceCode[$embeddedAttribute->attributeCode] ?? []
+                    $valuesBySourceCode[$embeddedAttribute->attributeCode] ?? [],
+                    $titleValues
                 )
             );
         }
@@ -77,28 +86,35 @@ class SourceComposer
     /**
      * @param list<EligibleScope> $eligibleScopes
      * @param array<string, string> $values
-     * @return list<ScopedSource>
+     * @param array<string, string> $titleValues
+     * @return list<StoreScopedSource>
      */
-    private function composeAttributeScopes(
+    private function buildStoreScopedSources(
         EmbeddedAttribute $embeddedAttribute,
         int $productId,
         array $eligibleScopes,
-        array $values
+        array $values,
+        array $titleValues
     ): array {
-        $scopedSources = [];
+        $storeScopedSources = [];
 
         foreach ($eligibleScopes as $eligibleScope) {
-            $scopedSources[] = new ScopedSource(
+            $storeScopedSources[] = new StoreScopedSource(
                 $eligibleScope->storeId,
                 $this->getContent(
                     $this->getSourceProductIds($embeddedAttribute, $productId, $eligibleScope),
                     $eligibleScope->storeId,
                     $values
+                ),
+                $this->titleResolver->getTitle(
+                    $titleValues,
+                    $productId,
+                    $eligibleScope->storeId
                 )
             );
         }
 
-        return $scopedSources;
+        return $storeScopedSources;
     }
 
     /**

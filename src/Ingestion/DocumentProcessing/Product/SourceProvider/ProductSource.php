@@ -6,16 +6,16 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product;
+namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 
 readonly class ProductSource
 {
     /**
-     * @param list<ScopedSource> $scopedSources
+     * @param list<StoreScopedSource> $storeScopedSources
      */
     public function __construct(
         public string $sourceCode,
-        public array $scopedSources
+        public array $storeScopedSources
     ) {
     }
 }
