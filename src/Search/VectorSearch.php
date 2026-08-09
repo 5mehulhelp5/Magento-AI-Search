@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Search;
 
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
-use DavidBel\AiSearch\Config\SearchConfig;
+use DavidBel\AiSearch\Config\StorefrontConfig;
 use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use UnexpectedValueException;
@@ -21,7 +21,7 @@ class VectorSearch
     public function __construct(
         private readonly OpenSearch $openSearch,
         private readonly EmbeddedAttributesConfig $embeddedAttributesConfig,
-        private readonly SearchConfig $searchConfig
+        private readonly StorefrontConfig $storefrontConfig
     ) {
     }
 
@@ -44,7 +44,7 @@ class VectorSearch
      */
     private function createQuery(array $vector, int $storeId): array
     {
-        $chunkResultLimit = $this->searchConfig->getChunkResultLimit();
+        $chunkResultLimit = $this->storefrontConfig->getChunkResultLimit();
 
         return [
             'size' => $chunkResultLimit,
@@ -122,7 +122,7 @@ class VectorSearch
 
     private function getHighestRelevantScore(?float $currentScore, float $candidateScore): ?float
     {
-        if ($candidateScore < $this->searchConfig->getMinimumScore()) {
+        if ($candidateScore < $this->storefrontConfig->getMinimumScore()) {
             return $currentScore;
         }
 

@@ -8,28 +8,28 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Indexer\Versioning;
 
-use DavidBel\AiSearch\Config\IndexVersionConfig;
-use Magento\Elasticsearch\Model\Config as SearchConfig;
+use DavidBel\AiSearch\Config\SearchConfig;
+use Magento\Elasticsearch\Model\Config as MagentoSearchConfig;
 use UnexpectedValueException;
 
 class IndexName
 {
     public function __construct(
-        private readonly SearchConfig $searchConfig,
-        private readonly IndexVersionConfig $indexVersionConfig
+        private readonly MagentoSearchConfig $magentoSearchConfig,
+        private readonly SearchConfig $searchConfig
     ) {
     }
 
     public function getAlias(): string
     {
-        $prefix = $this->searchConfig->getIndexPrefix();
+        $prefix = $this->magentoSearchConfig->getIndexPrefix();
         $prefix = trim($prefix);
 
         if ($prefix === '') {
-            return $this->indexVersionConfig->getIndexName();
+            return $this->searchConfig->getIndexName();
         }
 
-        return $prefix . '_' . $this->indexVersionConfig->getIndexName();
+        return $prefix . '_' . $this->searchConfig->getIndexName();
     }
 
     public function getVersionName(int $versionNumber): string

@@ -10,34 +10,40 @@ namespace DavidBel\AiSearch\Config;
 
 class SearchConfig
 {
-    private const bool ENABLED = true;
-    private const int REQUEST_TIMEOUT_SECONDS = 2;
-    private const bool USE_PREVIOUS_SEMANTIC_INDEX_DURING_REBUILD = true;
-    private const int CHUNK_RESULT_LIMIT = 1_000;
-    private const float MINIMUM_SCORE = 0.46;
+    private const string INDEX_NAME = 'davidbel_ai_search_chunks';
+    private const int INDEX_SCHEMA_VERSION = 1;
+    private const string VECTOR_METHOD = 'hnsw';
+    private const string VECTOR_ENGINE = 'faiss';
+    private const string VECTOR_SPACE = 'l2';
+    private const int LOCK_TIMEOUT_SECONDS = 10;
 
-    public function isEnabled(): bool
+    public function getIndexName(): string
     {
-        return self::ENABLED;
+        return self::INDEX_NAME;
     }
 
-    public function getRequestTimeoutSeconds(): int
+    public function getIndexSchemaVersion(): int
     {
-        return self::REQUEST_TIMEOUT_SECONDS;
+        return self::INDEX_SCHEMA_VERSION;
     }
 
-    public function usePreviousSemanticIndexDuringRebuild(): bool
+    public function getVectorMethod(): string
     {
-        return self::USE_PREVIOUS_SEMANTIC_INDEX_DURING_REBUILD;
+        return self::VECTOR_METHOD;
     }
 
-    public function getChunkResultLimit(): int
+    public function getVectorEngine(): string
     {
-        return self::CHUNK_RESULT_LIMIT;
+        return self::VECTOR_ENGINE;
     }
 
-    public function getMinimumScore(): float
+    public function getVectorSpace(): string
     {
-        return self::MINIMUM_SCORE;
+        return self::VECTOR_SPACE;
+    }
+
+    public function getLockTimeoutSeconds(): int
+    {
+        return self::LOCK_TIMEOUT_SECONDS;
     }
 }

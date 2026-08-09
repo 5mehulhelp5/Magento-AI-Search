@@ -11,7 +11,7 @@ namespace DavidBel\AiSearch\Indexer\Versioning;
 use DavidBel\AiSearch\Config\EmbeddedAttribute;
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
 use DavidBel\AiSearch\Config\EmbedderConfig;
-use DavidBel\AiSearch\Config\IndexVersionConfig;
+use DavidBel\AiSearch\Config\SearchConfig;
 use Magento\Framework\Serialize\SerializerInterface;
 use UnexpectedValueException;
 
@@ -20,7 +20,7 @@ class ConfigurationFingerprint
     public function __construct(
         private readonly EmbedderConfig $embedderConfig,
         private readonly EmbeddedAttributesConfig $embeddedAttributesConfig,
-        private readonly IndexVersionConfig $indexVersionConfig,
+        private readonly SearchConfig $searchConfig,
         private readonly IndexName $indexName,
         private readonly SerializerInterface $serializer
     ) {
@@ -30,7 +30,7 @@ class ConfigurationFingerprint
     {
         $serializedConfiguration = $this->serializer->serialize([
             'index_alias' => $this->indexName->getAlias(),
-            'index_schema_version' => $this->indexVersionConfig->getIndexSchemaVersion(),
+            'index_schema_version' => $this->searchConfig->getIndexSchemaVersion(),
             'title_attribute_code' => $this->embeddedAttributesConfig->getTitleAttributeCode(),
             'embedded_attributes' => $this->getEmbeddedAttributes(),
             'chunking' => [
@@ -46,9 +46,9 @@ class ConfigurationFingerprint
                 'query_template' => $this->embedderConfig->getQueryTemplate(),
             ],
             'index' => [
-                'vector_method' => $this->indexVersionConfig->getVectorMethod(),
-                'vector_engine' => $this->indexVersionConfig->getVectorEngine(),
-                'vector_space' => $this->indexVersionConfig->getVectorSpace(),
+                'vector_method' => $this->searchConfig->getVectorMethod(),
+                'vector_engine' => $this->searchConfig->getVectorEngine(),
+                'vector_space' => $this->searchConfig->getVectorSpace(),
             ],
         ]);
 

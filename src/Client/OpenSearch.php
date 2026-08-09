@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Client;
 
 use DavidBel\AiSearch\Config\EmbedderConfig;
-use DavidBel\AiSearch\Config\IndexVersionConfig;
+use DavidBel\AiSearch\Config\SearchConfig;
 use DavidBel\AiSearch\Indexer\Versioning\IndexName;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndexProvider;
@@ -25,7 +25,7 @@ class OpenSearch
     public function __construct(
         private readonly ConnectionManager $connectionManager,
         private readonly EmbedderConfig $embedderConfig,
-        private readonly IndexVersionConfig $indexVersionConfig,
+        private readonly SearchConfig $searchConfig,
         private readonly IndexName $indexName,
         private readonly PhysicalIndexProvider $physicalIndexProvider
     ) {
@@ -153,9 +153,9 @@ class OpenSearch
                 'type' => 'knn_vector',
                 'dimension' => $this->embedderConfig->getVectorDimensions(),
                 'method' => [
-                    'name' => $this->indexVersionConfig->getVectorMethod(),
-                    'engine' => $this->indexVersionConfig->getVectorEngine(),
-                    'space_type' => $this->indexVersionConfig->getVectorSpace(),
+                    'name' => $this->searchConfig->getVectorMethod(),
+                    'engine' => $this->searchConfig->getVectorEngine(),
+                    'space_type' => $this->searchConfig->getVectorSpace(),
                 ],
             ],
         ];

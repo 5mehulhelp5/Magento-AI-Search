@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Indexer\Versioning\Target;
 
 use DavidBel\AiSearch\Config\EmbedderConfig;
-use DavidBel\AiSearch\Config\IndexVersionConfig;
+use DavidBel\AiSearch\Config\SearchConfig;
 use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Indexer\Versioning\ConfigurationFingerprint;
 use DavidBel\AiSearch\Indexer\Versioning\IndexName;
@@ -28,7 +28,7 @@ class Preparation
     public function __construct(
         private readonly ConfigurationFingerprint $configurationFingerprint,
         private readonly EmbedderConfig $embedderConfig,
-        private readonly IndexVersionConfig $indexVersionConfig,
+        private readonly SearchConfig $searchConfig,
         private readonly IndexName $indexName,
         private readonly Flag $stateFlag,
         private readonly OpenSearch $openSearch,
@@ -155,7 +155,7 @@ class Preparation
 
     private function lock(): void
     {
-        if (!$this->versionLock->lock($this->indexVersionConfig->getLockTimeoutSeconds())) {
+        if (!$this->versionLock->lock($this->searchConfig->getLockTimeoutSeconds())) {
             throw new RuntimeException('The search index version is currently being changed.');
         }
     }

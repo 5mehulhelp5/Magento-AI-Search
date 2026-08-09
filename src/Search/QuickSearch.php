@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Search;
 
-use DavidBel\AiSearch\Config\SearchConfig;
+use DavidBel\AiSearch\Config\StorefrontConfig;
 use DavidBel\AiSearch\Indexer\Versioning;
 use Magento\Framework\Search\RequestInterface;
 
@@ -20,7 +20,7 @@ class QuickSearch
         private readonly VectorSearch $vectorSearch,
         private readonly CatalogQueryModifier $catalogQueryModifier,
         private readonly Versioning $versioning,
-        private readonly SearchConfig $searchConfig
+        private readonly StorefrontConfig $storefrontConfig
     ) {
     }
 
@@ -30,7 +30,7 @@ class QuickSearch
      */
     public function execute(RequestInterface $request, array $catalogQuery): array
     {
-        if (!$this->searchConfig->isEnabled()) {
+        if (!$this->storefrontConfig->isEnabled()) {
             return $catalogQuery;
         }
 
@@ -47,7 +47,9 @@ class QuickSearch
         $activeIndex = $this->versioning->getActiveVersionForCurrentConfiguration();
         $configurationSnapshot = null;
 
-        if ($activeIndex === null && $this->searchConfig->usePreviousSemanticIndexDuringRebuild()) {
+        if ($activeIndex === null
+            && $this->storefrontConfig->usePreviousSemanticIndexDuringRebuild()
+        ) {
             $activeIndex = $this->versioning->getActiveVersion();
             $configurationSnapshot = $activeIndex?->queryConfigurationSnapshot;
         }
