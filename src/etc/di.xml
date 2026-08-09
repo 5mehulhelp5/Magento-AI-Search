@@ -24,7 +24,7 @@
                 type="DavidBel\AiSearch\Repository\ChunkRepository"/>
     <preference for="DavidBel\AiSearch\Api\EmbeddingBacklogRepositoryInterface"
                 type="DavidBel\AiSearch\Repository\EmbeddingBacklogRepository"/>
-    <preference for="DavidBel\AiSearch\Api\EmbedderClientInterface"
+    <preference for="DavidBel\AiSearch\Client\Embedding\EmbedderClientInterface"
                 type="DavidBel\AiSearch\Client\Embedding\OpenAi"/>
     <virtualType name="DavidBel\AiSearch\Client\Embedding\HttpClient"
                  type="GuzzleHttp\Client"/>

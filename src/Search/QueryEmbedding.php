@@ -8,7 +8,8 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Search;
 
-use DavidBel\AiSearch\Api\EmbedderClientInterface;
+use DavidBel\AiSearch\Client\Embedding\EmbedderClientInterface;
+use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex\QueryConfigurationSnapshot;
 use UnexpectedValueException;
 
 class QueryEmbedding
@@ -21,9 +22,13 @@ class QueryEmbedding
     /**
      * @return list<float>
      */
-    public function execute(string $queryText): array
-    {
-        $vectors = $this->embedderClient->embedQueryAsync($queryText)->wait();
+    public function execute(
+        string $queryText,
+        ?QueryConfigurationSnapshot $configurationSnapshot = null
+    ): array {
+        $vectors = $this->embedderClient
+            ->embedQueryAsync($queryText, $configurationSnapshot)
+            ->wait();
 
         if (!is_array($vectors) || count($vectors) !== 1) {
             throw new UnexpectedValueException('Query embedding returned an unexpected vector count.');

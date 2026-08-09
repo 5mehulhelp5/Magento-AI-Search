@@ -57,7 +57,7 @@ class SourceProvider
 
     /**
      * @param list<int> $productIds
-     * @return array<int, list<ProductSource>>
+     * @return array<int, list<SourceProvider\ProductSource>>
      */
     public function getSourcesByProductIds(array $productIds): array
     {
@@ -160,9 +160,9 @@ class SourceProvider
 
     /**
      * @param list<int> $productIds
-     * @param array<int, list<ProductSource>> $directSources
-     * @param array<int, list<ProductSource>> $templateSources
-     * @return array<int, list<ProductSource>>
+     * @param array<int, list<SourceProvider\ProductSource>> $directSources
+     * @param array<int, list<SourceProvider\ProductSource>> $templateSources
+     * @return array<int, list<SourceProvider\ProductSource>>
      */
     private function mergeSources(
         array $productIds,

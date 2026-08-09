@@ -9,21 +9,19 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Search;
 
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
-use Magento\Elasticsearch\SearchAdapter\ConnectionManager;
-use Magento\OpenSearch\Model\SearchClient;
-use RuntimeException;
+use DavidBel\AiSearch\Indexer\Versioning\OpenSearchIndex;
+use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use UnexpectedValueException;
 
 use function is_finite;
 
 class VectorSearch
 {
-    private const string INDEX_NAME = 'davidbel_ai_search_chunks';
     private const int CHUNK_RESULT_LIMIT = 1000;
     private const float MINIMUM_SCORE = 0.46;
 
     public function __construct(
-        private readonly ConnectionManager $connectionManager,
+        private readonly OpenSearchIndex $openSearchIndex,
         private readonly EmbeddedAttributesConfig $embeddedAttributesConfig
     ) {
     }
@@ -31,12 +29,12 @@ class VectorSearch
     /**
      * @param list<float> $vector
      */
-    public function execute(array $vector, int $storeId): Candidates
+    public function execute(array $vector, int $storeId, PhysicalIndex $physicalIndex): Candidates
     {
-        $response = $this->getClient()->query([
-            'index' => self::INDEX_NAME,
-            'body' => $this->createQuery($vector, $storeId),
-        ]);
+        $response = $this->openSearchIndex->search(
+            $physicalIndex,
+            $this->createQuery($vector, $storeId)
+        );
 
         return new Candidates($this->getScoresByProductId($response));
     }
@@ -173,16 +171,5 @@ class VectorSearch
         }
 
         return $score;
-    }
-
-    private function getClient(): SearchClient
-    {
-        $client = $this->connectionManager->getConnection();
-
-        if (!$client instanceof SearchClient) {
-            throw new RuntimeException('Magento is not configured to use OpenSearch.');
-        }
-
-        return $client;
     }
 }

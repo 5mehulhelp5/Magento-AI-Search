@@ -208,6 +208,21 @@ class EmbeddingBacklog extends AbstractDb
         return $connection->query($query)->rowCount();
     }
 
+    public function hasPendingOrFailedItems(): bool
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->getConnection();
+        $select = $connection->select()
+            ->from($this->getMainTable(), [new Expression('COUNT(*)')])
+            ->where(
+                EmbeddingBacklogInterface::STATUS . ' IN (?)',
+                [Status::Pending->value, Status::Failed->value]
+            )
+            ->limit(1);
+
+        return (int) $connection->fetchOne($select) > 0;
+    }
+
     public function deleteExhaustedUpsertsOrExpiredResults(
         int $attemptThreshold,
         string $expiredBefore

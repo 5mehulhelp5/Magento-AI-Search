@@ -27,6 +27,7 @@ class Upsert
     public function execute(ProcessingBatch $batch, array $vectors): Result
     {
         return $this->bulk->execute(
+            $batch->physicalIndex,
             $this->createDocuments($batch, $vectors)
         );
     }

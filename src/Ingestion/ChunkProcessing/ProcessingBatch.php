@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\ChunkProcessing;
 
+use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use InvalidArgumentException;
 
 class ProcessingBatch
@@ -20,8 +21,10 @@ class ProcessingBatch
     /**
      * @param list<ProcessingItem> $items
      */
-    public function __construct(array $items)
-    {
+    public function __construct(
+        array $items,
+        public readonly PhysicalIndex $physicalIndex
+    ) {
         if ($items === []) {
             throw new InvalidArgumentException('A processing batch must contain at least one item.');
         }

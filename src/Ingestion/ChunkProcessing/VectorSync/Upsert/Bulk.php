@@ -8,16 +8,17 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Upsert;
 
-use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Index;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Item;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Result;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\ResultFactory;
+use DavidBel\AiSearch\Indexer\Versioning\OpenSearchIndex;
+use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use UnexpectedValueException;
 
 class Bulk
 {
     public function __construct(
-        private readonly Index $index,
+        private readonly OpenSearchIndex $openSearchIndex,
         private readonly ResultFactory $resultFactory
     ) {
     }
@@ -25,14 +26,14 @@ class Bulk
     /**
      * @param list<Document> $documents
      */
-    public function execute(array $documents): Result
+    public function execute(PhysicalIndex $physicalIndex, array $documents): Result
     {
         if ($documents === []) {
             return $this->createResult([], []);
         }
 
-        $response = $this->index->bulkQuery(
-            $this->createBulkBody($documents)
+        $response = $this->openSearchIndex->bulkQuery(
+            $this->createBulkBody($physicalIndex, $documents)
         );
 
         return $this->createBulkResult($response, $documents);
@@ -42,26 +43,22 @@ class Bulk
      * @param list<Document> $documents
      * @return list<array<string, mixed>>
      */
-    private function createBulkBody(array $documents): array
+    private function createBulkBody(PhysicalIndex $physicalIndex, array $documents): array
     {
         $body = [];
 
         foreach ($documents as $document) {
             $body[] = [
                 'index' => [
-                    '_index' => $this->index->getName(),
+                    '_index' => $physicalIndex->indexName,
                     '_id' => (string) $document->item->chunkId,
                 ],
             ];
             $body[] = [
-                'chunk_id' => $document->item->chunkId,
                 'source_entity_type' => $document->item->sourceEntityType,
                 'source_entity_id' => $document->item->sourceEntityId,
                 'store_id' => $document->storeId,
                 'source_code' => $document->sourceCode,
-                'chunk_index' => $document->chunkIndex,
-                'content' => $document->content,
-                'content_hash' => $document->contentHash,
                 'vector' => $document->vector,
             ];
         }

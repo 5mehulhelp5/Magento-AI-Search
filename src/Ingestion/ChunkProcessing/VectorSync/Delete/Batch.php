@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete;
 
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Item;
+use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use InvalidArgumentException;
 
 class Batch
@@ -21,8 +22,10 @@ class Batch
     /**
      * @param list<Item> $items
      */
-    public function __construct(array $items)
-    {
+    public function __construct(
+        array $items,
+        public readonly PhysicalIndex $physicalIndex
+    ) {
         if ($items === []) {
             throw new InvalidArgumentException('A deletion batch must contain at least one item.');
         }

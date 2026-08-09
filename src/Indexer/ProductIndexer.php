@@ -15,14 +15,19 @@ use Magento\Framework\Mview\ActionInterface as MviewActionInterface;
 
 class ProductIndexer implements IndexerActionInterface, MviewActionInterface
 {
+    public const string ID = 'davidbel_ai_search_product_indexer';
+
     public function __construct(
-        private readonly DocumentProcessing $documentProcessing
+        private readonly DocumentProcessing $documentProcessing,
+        private readonly Versioning $versioning
     ) {
     }
 
     public function executeFull(): void
     {
+        $this->versioning->prepareTargetForFullReindex();
         $this->documentProcessing->fullUpdate();
+        $this->versioning->markTargetDocumentProcessingComplete();
     }
 
     /**
@@ -30,6 +35,12 @@ class ProductIndexer implements IndexerActionInterface, MviewActionInterface
      */
     public function executeList(array $ids): void
     {
+        if ($this->versioning->getCurrentWriteVersion() === null) {
+            $this->versioning->invalidateProductIndexerWhenNeeded();
+
+            return;
+        }
+
         $this->documentProcessing->deltaUpdate($this->normalizeIds($ids));
     }
 

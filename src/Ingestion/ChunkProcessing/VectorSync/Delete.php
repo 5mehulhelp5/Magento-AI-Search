@@ -11,11 +11,12 @@ namespace DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\Batch;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\RequestBuilder;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\ResponseMapper;
+use DavidBel\AiSearch\Indexer\Versioning\OpenSearchIndex;
 
 class Delete
 {
     public function __construct(
-        private readonly Index $index,
+        private readonly OpenSearchIndex $openSearchIndex,
         private readonly RequestBuilder $requestBuilder,
         private readonly ResponseMapper $responseMapper
     ) {
@@ -24,9 +25,9 @@ class Delete
     public function execute(Batch $batch): Result
     {
         $items = $batch->getItems();
-        $response = $this->index->bulkQuery(
+        $response = $this->openSearchIndex->bulkQuery(
             $this->requestBuilder->build(
-                $this->index->getName(),
+                $batch->physicalIndex->indexName,
                 $batch
             )
         );

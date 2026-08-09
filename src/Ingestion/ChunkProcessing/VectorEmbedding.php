@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\ChunkProcessing;
 
-use DavidBel\AiSearch\Api\EmbedderClientInterface;
+use DavidBel\AiSearch\Client\Embedding\EmbedderClientInterface;
 use DavidBel\AiSearch\Client\Embedding\EmbeddingInput;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorEmbedding\PromisePool;
 use Generator;
