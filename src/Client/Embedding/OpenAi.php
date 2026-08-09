@@ -48,12 +48,14 @@ class OpenAi implements EmbedderClientInterface
         return $this->sendAsync(
             $requestInputs,
             $this->embedderConfig->getModel(),
-            $this->embedderConfig->getVectorDimensions()
+            $this->embedderConfig->getVectorDimensions(),
+            $this->embedderConfig->getRequestTimeoutSeconds()
         );
     }
 
     public function embedQueryAsync(
         string $queryText,
+        int $requestTimeoutSeconds,
         ?QueryConfigurationSnapshot $configurationSnapshot = null
     ): PromiseInterface {
         if ($configurationSnapshot === null) {
@@ -65,16 +67,22 @@ class OpenAi implements EmbedderClientInterface
                     ),
                 ],
                 $this->embedderConfig->getModel(),
-                $this->embedderConfig->getVectorDimensions()
+                $this->embedderConfig->getVectorDimensions(),
+                $requestTimeoutSeconds
             );
         }
 
-        return $this->sendAsync([
-            strtr(
-                $configurationSnapshot->queryTemplate,
-                ['{text}' => $queryText]
-            ),
-        ], $configurationSnapshot->embeddingModel, $configurationSnapshot->vectorDimensions);
+        return $this->sendAsync(
+            [
+                strtr(
+                    $configurationSnapshot->queryTemplate,
+                    ['{text}' => $queryText]
+                ),
+            ],
+            $configurationSnapshot->embeddingModel,
+            $configurationSnapshot->vectorDimensions,
+            $requestTimeoutSeconds
+        );
     }
 
     /**
@@ -83,7 +91,8 @@ class OpenAi implements EmbedderClientInterface
     private function sendAsync(
         array $inputs,
         string $embeddingModel,
-        int $vectorDimensions
+        int $vectorDimensions,
+        int $requestTimeoutSeconds
     ): PromiseInterface {
         if ($inputs === []) {
             return Create::promiseFor([]);
@@ -115,7 +124,7 @@ class OpenAi implements EmbedderClientInterface
                     'Content-Type' => 'application/json',
                 ],
                 RequestOptions::HTTP_ERRORS => false,
-                RequestOptions::TIMEOUT => $this->embedderConfig->getRequestTimeoutSeconds(),
+                RequestOptions::TIMEOUT => $requestTimeoutSeconds,
             ]
         )->then([$responseDecoder, 'execute']);
     }

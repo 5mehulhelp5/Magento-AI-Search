@@ -30,6 +30,10 @@ class QuickSearch
      */
     public function execute(RequestInterface $request, array $catalogQuery): array
     {
+        if (!$this->searchConfig->isEnabled()) {
+            return $catalogQuery;
+        }
+
         if (!$this->requestReader->isQuickSearch($request)) {
             return $catalogQuery;
         }

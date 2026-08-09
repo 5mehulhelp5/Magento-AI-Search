@@ -9,13 +9,15 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Search;
 
 use DavidBel\AiSearch\Client\Embedding\EmbedderClientInterface;
+use DavidBel\AiSearch\Config\SearchConfig;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex\QueryConfigurationSnapshot;
 use UnexpectedValueException;
 
 class QueryEmbedding
 {
     public function __construct(
-        private readonly EmbedderClientInterface $embedderClient
+        private readonly EmbedderClientInterface $embedderClient,
+        private readonly SearchConfig $searchConfig
     ) {
     }
 
@@ -27,7 +29,11 @@ class QueryEmbedding
         ?QueryConfigurationSnapshot $configurationSnapshot = null
     ): array {
         $vectors = $this->embedderClient
-            ->embedQueryAsync($queryText, $configurationSnapshot)
+            ->embedQueryAsync(
+                $queryText,
+                $this->searchConfig->getRequestTimeoutSeconds(),
+                $configurationSnapshot
+            )
             ->wait();
 
         if (!is_array($vectors) || count($vectors) !== 1) {
