@@ -39,14 +39,10 @@ class Versioning
         $this->productIndexerInvalidationFactory->create()->execute();
     }
 
-    public function getCurrentWriteVersion(): ?PhysicalIndex
+    public function hasTargetOrActiveForCurrentConfiguration(): bool
     {
-        return $this->physicalIndexProvider->getCurrent();
-    }
-
-    public function getWriteVersion(): ?PhysicalIndex
-    {
-        return $this->physicalIndexProvider->get();
+        return $this->physicalIndexProvider->getTargetForCurrentConfiguration() !== null
+            || $this->physicalIndexProvider->getActiveForCurrentConfiguration() !== null;
     }
 
     public function getActiveVersion(): ?PhysicalIndex
@@ -54,9 +50,9 @@ class Versioning
         return $this->physicalIndexProvider->getActive();
     }
 
-    public function getCurrentActiveVersion(): ?PhysicalIndex
+    public function getActiveVersionForCurrentConfiguration(): ?PhysicalIndex
     {
-        return $this->physicalIndexProvider->getCurrentActive();
+        return $this->physicalIndexProvider->getActiveForCurrentConfiguration();
     }
 
     public function activateTargetWhenReady(): bool

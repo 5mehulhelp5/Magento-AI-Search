@@ -21,7 +21,9 @@ class ProductIndexerInvalidation
 
     public function execute(): void
     {
-        if ($this->physicalIndexProvider->getCurrent() !== null) {
+        if ($this->physicalIndexProvider->getTargetForCurrentConfiguration() !== null
+            || $this->physicalIndexProvider->getActiveForCurrentConfiguration() !== null
+        ) {
             return;
         }
 

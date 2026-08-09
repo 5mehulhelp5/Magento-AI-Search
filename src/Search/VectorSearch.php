@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Search;
 
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
-use DavidBel\AiSearch\Indexer\Versioning\OpenSearchIndex;
+use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use UnexpectedValueException;
 
@@ -21,7 +21,7 @@ class VectorSearch
     private const float MINIMUM_SCORE = 0.46;
 
     public function __construct(
-        private readonly OpenSearchIndex $openSearchIndex,
+        private readonly OpenSearch $openSearch,
         private readonly EmbeddedAttributesConfig $embeddedAttributesConfig
     ) {
     }
@@ -31,7 +31,7 @@ class VectorSearch
      */
     public function execute(array $vector, int $storeId, PhysicalIndex $physicalIndex): Candidates
     {
-        $response = $this->openSearchIndex->search(
+        $response = $this->openSearch->search(
             $physicalIndex,
             $this->createQuery($vector, $storeId)
         );

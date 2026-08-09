@@ -6,16 +6,19 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Indexer\Versioning;
+namespace DavidBel\AiSearch\Client;
 
 use DavidBel\AiSearch\Config\EmbedderConfig;
 use DavidBel\AiSearch\Config\IndexVersionConfig;
+use DavidBel\AiSearch\Indexer\Versioning\IndexName;
+use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
+use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndexProvider;
 use Magento\Elasticsearch\SearchAdapter\ConnectionManager;
 use Magento\OpenSearch\Model\SearchClient;
 use RuntimeException;
 use UnexpectedValueException;
 
-class OpenSearchIndex
+class OpenSearch
 {
     private ?SearchClient $client = null;
 
@@ -23,7 +26,8 @@ class OpenSearchIndex
         private readonly ConnectionManager $connectionManager,
         private readonly EmbedderConfig $embedderConfig,
         private readonly IndexVersionConfig $indexVersionConfig,
-        private readonly IndexName $indexName
+        private readonly IndexName $indexName,
+        private readonly PhysicalIndexProvider $physicalIndexProvider
     ) {
     }
 
@@ -68,7 +72,15 @@ class OpenSearchIndex
      */
     public function bulkQuery(array $body): array
     {
+        $physicalIndex = $this->physicalIndexProvider->getTarget()
+            ?? $this->physicalIndexProvider->getActive();
+
+        if ($physicalIndex === null) {
+            throw new RuntimeException('A writable OpenSearch index is not available.');
+        }
+
         return $this->getClient()->bulkQuery([
+            'index' => $physicalIndex->indexName,
             'body' => $body,
             'refresh' => 'wait_for',
         ]);

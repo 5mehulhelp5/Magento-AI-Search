@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion;
 
-use DavidBel\AiSearch\Indexer\Versioning;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\CacheClean;
@@ -38,8 +37,7 @@ class ChunkDeletion
         private readonly ProcessingStateFactory $processingStateFactory,
         private readonly ProcessingResultHandlerFactory $processingResultHandlerFactory,
         private readonly VectorSync $vectorSync,
-        private readonly CacheClean $cacheClean,
-        private readonly Versioning $versioning
+        private readonly CacheClean $cacheClean
     ) {
     }
 
@@ -53,10 +51,7 @@ class ChunkDeletion
         $this->cacheClean->start();
         $this->run($processingState, $resultHandler);
 
-        $processedCount = $resultHandler->finish();
-        $this->versioning->activateTargetWhenReady();
-
-        return $processedCount;
+        return $resultHandler->finish();
     }
 
     private function run(
@@ -97,15 +92,8 @@ class ChunkDeletion
                 return;
             }
 
-            $physicalIndex = $this->versioning->getWriteVersion();
-
-            if ($physicalIndex === null) {
-                return;
-            }
-
             $batch = $this->batchFactory->create([
                 'items' => $this->itemMapper->mapRows($rows),
-                'physicalIndex' => $physicalIndex,
             ]);
             $lastItem = $batch->getLastItem();
             $cursorUpdatedAt = $lastItem->backlogUpdatedAt;

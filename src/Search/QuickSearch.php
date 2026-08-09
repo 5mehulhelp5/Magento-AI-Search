@@ -40,7 +40,7 @@ class QuickSearch
             return $catalogQuery;
         }
 
-        $activeIndex = $this->versioning->getCurrentActiveVersion();
+        $activeIndex = $this->versioning->getActiveVersionForCurrentConfiguration();
         $configurationSnapshot = null;
 
         if ($activeIndex === null && $this->searchConfig->usePreviousSemanticIndexDuringRebuild()) {

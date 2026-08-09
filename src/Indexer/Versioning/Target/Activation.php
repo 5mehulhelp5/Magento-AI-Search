@@ -8,8 +8,8 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Indexer\Versioning\Target;
 
+use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Indexer\Versioning\ConfigurationFingerprint;
-use DavidBel\AiSearch\Indexer\Versioning\OpenSearchIndex;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use DavidBel\AiSearch\Indexer\Versioning\State;
 use DavidBel\AiSearch\Indexer\Versioning\State\CacheStatus;
@@ -26,7 +26,7 @@ class Activation
     public function __construct(
         private readonly ConfigurationFingerprint $configurationFingerprint,
         private readonly Flag $stateFlag,
-        private readonly OpenSearchIndex $openSearchIndex,
+        private readonly OpenSearch $openSearch,
         private readonly Readiness $targetReadiness,
         private readonly CacheClean $cacheClean,
         private readonly VersionLock $versionLock,
@@ -72,7 +72,7 @@ class Activation
             return false;
         }
 
-        if (!$this->openSearchIndex->exists($target->physicalIndex->indexName)) {
+        if (!$this->openSearch->exists($target->physicalIndex->indexName)) {
             return false;
         }
 
@@ -87,7 +87,7 @@ class Activation
             throw new RuntimeException('A target search index version is required for activation.');
         }
 
-        $this->openSearchIndex->activate($target->physicalIndex);
+        $this->openSearch->activate($target->physicalIndex);
         $activatedState = new State($target->physicalIndex, null, CacheStatus::Required);
         $this->stateFlag->save($activatedState);
         $this->deletePreviousActiveIndex($state->active, $target->physicalIndex);
@@ -103,7 +103,7 @@ class Activation
         }
 
         try {
-            $this->openSearchIndex->delete($active->indexName);
+            $this->openSearch->delete($active->indexName);
         } catch (Throwable $throwable) {
             $this->logger->warning(
                 'The previous active search index version could not be deleted.',

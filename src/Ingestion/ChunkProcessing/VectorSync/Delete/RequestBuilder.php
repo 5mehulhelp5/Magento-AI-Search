@@ -13,14 +13,13 @@ class RequestBuilder
     /**
      * @return list<array<string, mixed>>
      */
-    public function build(string $indexName, Batch $batch): array
+    public function build(Batch $batch): array
     {
         $body = [];
 
         foreach ($batch->getItems() as $item) {
             $body[] = [
                 'delete' => [
-                    '_index' => $indexName,
                     '_id' => (string) $item->chunkId,
                 ],
             ];

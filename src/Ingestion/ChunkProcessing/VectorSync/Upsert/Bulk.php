@@ -8,17 +8,16 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Upsert;
 
+use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Item;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Result;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\ResultFactory;
-use DavidBel\AiSearch\Indexer\Versioning\OpenSearchIndex;
-use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use UnexpectedValueException;
 
 class Bulk
 {
     public function __construct(
-        private readonly OpenSearchIndex $openSearchIndex,
+        private readonly OpenSearch $openSearch,
         private readonly ResultFactory $resultFactory
     ) {
     }
@@ -26,15 +25,13 @@ class Bulk
     /**
      * @param list<Document> $documents
      */
-    public function execute(PhysicalIndex $physicalIndex, array $documents): Result
+    public function execute(array $documents): Result
     {
         if ($documents === []) {
             return $this->createResult([], []);
         }
 
-        $response = $this->openSearchIndex->bulkQuery(
-            $this->createBulkBody($physicalIndex, $documents)
-        );
+        $response = $this->openSearch->bulkQuery($this->createBulkBody($documents));
 
         return $this->createBulkResult($response, $documents);
     }
@@ -43,14 +40,13 @@ class Bulk
      * @param list<Document> $documents
      * @return list<array<string, mixed>>
      */
-    private function createBulkBody(PhysicalIndex $physicalIndex, array $documents): array
+    private function createBulkBody(array $documents): array
     {
         $body = [];
 
         foreach ($documents as $document) {
             $body[] = [
                 'index' => [
-                    '_index' => $physicalIndex->indexName,
                     '_id' => (string) $document->item->chunkId,
                 ],
             ];

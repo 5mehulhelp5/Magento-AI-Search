@@ -9,9 +9,9 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Indexer\Versioning\Target;
 
 use DavidBel\AiSearch\Config\EmbedderConfig;
+use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Indexer\Versioning\ConfigurationFingerprint;
 use DavidBel\AiSearch\Indexer\Versioning\IndexName;
-use DavidBel\AiSearch\Indexer\Versioning\OpenSearchIndex;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex\QueryConfigurationSnapshot;
 use DavidBel\AiSearch\Indexer\Versioning\State;
@@ -31,7 +31,7 @@ class Preparation
         private readonly EmbedderConfig $embedderConfig,
         private readonly IndexName $indexName,
         private readonly Flag $stateFlag,
-        private readonly OpenSearchIndex $openSearchIndex,
+        private readonly OpenSearch $openSearch,
         private readonly VersionLock $versionLock,
         private readonly LoggerInterface $logger
     ) {
@@ -99,7 +99,7 @@ class Preparation
             throw new RuntimeException('A target search index version is required for resuming.');
         }
 
-        $this->openSearchIndex->create($target->physicalIndex);
+        $this->openSearch->create($target->physicalIndex);
         $this->stateFlag->save(new State(
             $state->active,
             new Target($target->physicalIndex, false),
@@ -117,7 +117,7 @@ class Preparation
         ) + 1;
         $indexName = $this->indexName->getVersionName($versionNumber);
 
-        while ($this->openSearchIndex->exists($indexName)) {
+        while ($this->openSearch->exists($indexName)) {
             $versionNumber++;
             $indexName = $this->indexName->getVersionName($versionNumber);
         }
@@ -132,7 +132,7 @@ class Preparation
                 $this->embedderConfig->getQueryTemplate()
             )
         );
-        $this->openSearchIndex->create($physicalIndex);
+        $this->openSearch->create($physicalIndex);
 
         return $physicalIndex;
     }
@@ -144,7 +144,7 @@ class Preparation
         }
 
         try {
-            $this->openSearchIndex->delete($target->physicalIndex->indexName);
+            $this->openSearch->delete($target->physicalIndex->indexName);
         } catch (Throwable $throwable) {
             $this->logger->warning(
                 'The replaced target search index version could not be deleted.',

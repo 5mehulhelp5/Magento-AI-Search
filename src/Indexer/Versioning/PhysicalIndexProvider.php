@@ -18,9 +18,14 @@ class PhysicalIndexProvider
     ) {
     }
 
-    public function getCurrent(): ?PhysicalIndex
+    public function getTarget(): ?PhysicalIndex
     {
-        $physicalIndex = $this->get();
+        return $this->stateFlag->get()->target?->physicalIndex;
+    }
+
+    public function getTargetForCurrentConfiguration(): ?PhysicalIndex
+    {
+        $physicalIndex = $this->getTarget();
 
         if ($physicalIndex === null) {
             return null;
@@ -33,19 +38,12 @@ class PhysicalIndexProvider
         return $physicalIndex;
     }
 
-    public function get(): ?PhysicalIndex
-    {
-        $state = $this->stateFlag->get();
-
-        return $state->target->physicalIndex ?? $state->active;
-    }
-
     public function getActive(): ?PhysicalIndex
     {
         return $this->stateFlag->get()->active;
     }
 
-    public function getCurrentActive(): ?PhysicalIndex
+    public function getActiveForCurrentConfiguration(): ?PhysicalIndex
     {
         $activeIndex = $this->getActive();
 

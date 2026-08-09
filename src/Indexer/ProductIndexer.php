@@ -35,7 +35,7 @@ class ProductIndexer implements IndexerActionInterface, MviewActionInterface
      */
     public function executeList(array $ids): void
     {
-        if ($this->versioning->getCurrentWriteVersion() === null) {
+        if (!$this->versioning->hasTargetOrActiveForCurrentConfiguration()) {
             $this->versioning->invalidateProductIndexerWhenNeeded();
 
             return;

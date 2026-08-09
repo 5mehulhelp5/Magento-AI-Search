@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion;
 
-use DavidBel\AiSearch\Indexer\Versioning;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\CacheClean;
@@ -37,19 +36,12 @@ class ChunkProcessing
         private readonly ProcessingStateFactory $processingStateFactory,
         private readonly ProcessingResultHandlerFactory $processingResultHandlerFactory,
         private readonly VectorEmbedding $vectorEmbedding,
-        private readonly CacheClean $cacheClean,
-        private readonly Versioning $versioning
+        private readonly CacheClean $cacheClean
     ) {
     }
 
     public function execute(): int
     {
-        $this->versioning->invalidateProductIndexerWhenNeeded();
-
-        if ($this->versioning->getCurrentWriteVersion() === null) {
-            return 0;
-        }
-
         $processingState = $this->processingStateFactory->create();
         $resultHandler = $this->processingResultHandlerFactory->create([
             'processingState' => $processingState,
@@ -59,10 +51,7 @@ class ChunkProcessing
         $this->cacheClean->start();
         $this->runVectorEmbedding($processingState, $resultHandler);
 
-        $processedCount = $this->finish($resultHandler);
-        $this->versioning->activateTargetWhenReady();
-
-        return $processedCount;
+        return $this->finish($resultHandler);
     }
 
     private function runVectorEmbedding(
@@ -98,17 +87,8 @@ class ChunkProcessing
                 return;
             }
 
-            $physicalIndex = $this->versioning->getCurrentWriteVersion();
-
-            if ($physicalIndex === null) {
-                $this->versioning->invalidateProductIndexerWhenNeeded();
-
-                return;
-            }
-
             $batch = $this->processingBatchFactory->create([
                 'items' => $this->processingItemMapper->mapRows($rows),
-                'physicalIndex' => $physicalIndex,
             ]);
             $lastItem = $batch->getLastItem();
             $cursorUpdatedAt = $lastItem->backlogUpdatedAt;
