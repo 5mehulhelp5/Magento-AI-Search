@@ -12,7 +12,6 @@ use DavidBel\AiSearch\Config\EmbeddedAttribute;
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
 use DavidBel\AiSearch\Config\EmbedderConfig;
 use DavidBel\AiSearch\Config\IndexVersionConfig;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Chunking;
 use Magento\Framework\Serialize\SerializerInterface;
 use UnexpectedValueException;
 
@@ -32,11 +31,13 @@ class ConfigurationFingerprint
         $serializedConfiguration = $this->serializer->serialize([
             'index_alias' => $this->indexName->getAlias(),
             'index_schema_version' => $this->indexVersionConfig->getIndexSchemaVersion(),
+            'title_attribute_code' => $this->embeddedAttributesConfig->getTitleAttributeCode(),
             'embedded_attributes' => $this->getEmbeddedAttributes(),
             'chunking' => [
-                'max_tokens' => Chunking::MAX_TOKENS,
-                'overlap_tokens' => Chunking::OVERLAP_TOKENS,
-                'estimated_characters_per_token' => Chunking::ESTIMATED_CHARACTERS_PER_TOKEN,
+                'max_tokens' => $this->embedderConfig->getMaximumChunkTokens(),
+                'overlap_tokens' => $this->embedderConfig->getChunkOverlapTokens(),
+                'estimated_characters_per_token' => $this->embedderConfig
+                    ->getEstimatedCharactersPerToken(),
             ],
             'embedding' => [
                 'model' => $this->embedderConfig->getModel(),

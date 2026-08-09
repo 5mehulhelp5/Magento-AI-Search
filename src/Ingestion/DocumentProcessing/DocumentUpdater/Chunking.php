@@ -8,14 +8,11 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
 
+use DavidBel\AiSearch\Config\EmbedderConfig;
 use InvalidArgumentException;
 
 class Chunking
 {
-    public const int MAX_TOKENS = 350;
-    public const int OVERLAP_TOKENS = 50;
-    public const int ESTIMATED_CHARACTERS_PER_TOKEN = 4;
-
     /**
      * @var list<Chunking\ChunkingInterface>
      */
@@ -24,8 +21,10 @@ class Chunking
     /**
      * @param array<string, Chunking\ChunkingInterface> $chunkingStrategies
      */
-    public function __construct(array $chunkingStrategies)
-    {
+    public function __construct(
+        private readonly EmbedderConfig $embedderConfig,
+        array $chunkingStrategies
+    ) {
         if ($chunkingStrategies === []) {
             throw new InvalidArgumentException('At least one chunking strategy is required.');
         }
@@ -41,9 +40,9 @@ class Chunking
         //TODO map strategies and attributes via configuration
         return $this->chunkingStrategies[0]->chunk(
             $text,
-            self::MAX_TOKENS,
-            self::OVERLAP_TOKENS,
-            self::ESTIMATED_CHARACTERS_PER_TOKEN
+            $this->embedderConfig->getMaximumChunkTokens(),
+            $this->embedderConfig->getChunkOverlapTokens(),
+            $this->embedderConfig->getEstimatedCharactersPerToken()
         );
     }
 }

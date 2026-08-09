@@ -16,6 +16,9 @@ class EmbedderConfig
     private const int REQUEST_TIMEOUT_SECONDS = 60;
     private const string DOCUMENT_TEMPLATE = 'title: {title} | text: {text}';
     private const string QUERY_TEMPLATE = 'task: search result | query: {text}';
+    private const int MAXIMUM_CHUNK_TOKENS = 350;
+    private const int CHUNK_OVERLAP_TOKENS = 50;
+    private const int ESTIMATED_CHARACTERS_PER_TOKEN = 4;
 
     public function getBaseUrl(): string
     {
@@ -45,5 +48,20 @@ class EmbedderConfig
     public function getQueryTemplate(): string
     {
         return self::QUERY_TEMPLATE;
+    }
+
+    public function getMaximumChunkTokens(): int
+    {
+        return self::MAXIMUM_CHUNK_TOKENS;
+    }
+
+    public function getChunkOverlapTokens(): int
+    {
+        return self::CHUNK_OVERLAP_TOKENS;
+    }
+
+    public function getEstimatedCharactersPerToken(): int
+    {
+        return self::ESTIMATED_CHARACTERS_PER_TOKEN;
     }
 }

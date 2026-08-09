@@ -15,6 +15,7 @@ class IndexVersionConfig
     private const string VECTOR_METHOD = 'hnsw';
     private const string VECTOR_ENGINE = 'faiss';
     private const string VECTOR_SPACE = 'l2';
+    private const int LOCK_TIMEOUT_SECONDS = 10;
 
     public function getIndexName(): string
     {
@@ -39,5 +40,10 @@ class IndexVersionConfig
     public function getVectorSpace(): string
     {
         return self::VECTOR_SPACE;
+    }
+
+    public function getLockTimeoutSeconds(): int
+    {
+        return self::LOCK_TIMEOUT_SECONDS;
     }
 }

@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Search;
 
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
+use DavidBel\AiSearch\Config\SearchConfig;
 use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use UnexpectedValueException;
@@ -17,12 +18,10 @@ use function is_finite;
 
 class VectorSearch
 {
-    private const int CHUNK_RESULT_LIMIT = 1000;
-    private const float MINIMUM_SCORE = 0.46;
-
     public function __construct(
         private readonly OpenSearch $openSearch,
-        private readonly EmbeddedAttributesConfig $embeddedAttributesConfig
+        private readonly EmbeddedAttributesConfig $embeddedAttributesConfig,
+        private readonly SearchConfig $searchConfig
     ) {
     }
 
@@ -45,14 +44,16 @@ class VectorSearch
      */
     private function createQuery(array $vector, int $storeId): array
     {
+        $chunkResultLimit = $this->searchConfig->getChunkResultLimit();
+
         return [
-            'size' => self::CHUNK_RESULT_LIMIT,
+            'size' => $chunkResultLimit,
             '_source' => ['source_entity_id'],
             'query' => [
                 'knn' => [
                     'vector' => [
                         'vector' => $vector,
-                        'k' => self::CHUNK_RESULT_LIMIT,
+                        'k' => $chunkResultLimit,
                         'filter' => [
                             'bool' => [
                                 'filter' => [
@@ -121,7 +122,7 @@ class VectorSearch
 
     private function getHighestRelevantScore(?float $currentScore, float $candidateScore): ?float
     {
-        if ($candidateScore < self::MINIMUM_SCORE) {
+        if ($candidateScore < $this->searchConfig->getMinimumScore()) {
             return $currentScore;
         }
 

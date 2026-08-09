@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion;
 
+use DavidBel\AiSearch\Config\IngestionConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory
     as EmbeddingBacklogCollectionFactory;
@@ -22,13 +23,13 @@ use Throwable;
 
 class DocumentProcessing
 {
-    public const int BATCH_SIZE = 200;
     private const string SOURCE_ENTITY_TYPE = 'product';
 
     public function __construct(
         private readonly SourceProvider $sourceProvider,
         private readonly DocumentUpdater $documentUpdater,
-        private readonly EmbeddingBacklogCollectionFactory $embeddingBacklogCollectionFactory
+        private readonly EmbeddingBacklogCollectionFactory $embeddingBacklogCollectionFactory,
+        private readonly IngestionConfig $ingestionConfig
     ) {
     }
 
@@ -39,7 +40,7 @@ class DocumentProcessing
         while (true) {
             $productIds = $this->sourceProvider->getProductIdsAfter(
                 $lastProductId,
-                self::BATCH_SIZE
+                $this->ingestionConfig->getDocumentProcessingBatchSize()
             );
 
             if ($productIds === []) {
@@ -57,8 +58,9 @@ class DocumentProcessing
     public function deltaUpdate(array $productIds): void
     {
         $affectedProductIds = $this->getAffectedProductIds($productIds);
+        $batchSize = $this->ingestionConfig->getDocumentProcessingBatchSize();
 
-        foreach (array_chunk($affectedProductIds, self::BATCH_SIZE) as $productIdBatch) {
+        foreach (array_chunk($affectedProductIds, $batchSize) as $productIdBatch) {
             $this->processProducts($productIdBatch, UpdateMode::DeltaUpdate);
         }
     }
@@ -70,8 +72,9 @@ class DocumentProcessing
     private function getAffectedProductIds(array $productIds): array
     {
         $affectedProductIds = [];
+        $batchSize = $this->ingestionConfig->getDocumentProcessingBatchSize();
 
-        foreach (array_chunk($productIds, self::BATCH_SIZE) as $productIdBatch) {
+        foreach (array_chunk($productIds, $batchSize) as $productIdBatch) {
             $affectedProductIds += array_fill_keys(
                 $this->sourceProvider->getAffectedProductIds($productIdBatch),
                 true

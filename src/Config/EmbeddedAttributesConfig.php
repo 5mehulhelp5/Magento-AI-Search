@@ -10,7 +10,12 @@ namespace DavidBel\AiSearch\Config;
 
 class EmbeddedAttributesConfig
 {
-    // TODO Load embedded attributes and templates from Admin configuration
+    private const string TITLE_ATTRIBUTE_CODE = 'name';
+
+    public function getTitleAttributeCode(): string
+    {
+        return self::TITLE_ATTRIBUTE_CODE;
+    }
 
     /**
      * @return list<EmbeddedAttribute>

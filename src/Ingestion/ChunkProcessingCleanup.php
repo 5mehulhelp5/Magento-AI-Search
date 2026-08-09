@@ -8,29 +8,31 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion;
 
+use DavidBel\AiSearch\Config\IngestionConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 
 class ChunkProcessingCleanup
 {
-    private const int ATTEMPT_THRESHOLD = 3;
-    private const string RESULT_RETENTION = '-24 hours';
-
     public function __construct(
         private readonly CollectionFactory $collectionFactory,
-        private readonly DateTime $dateTime
+        private readonly DateTime $dateTime,
+        private readonly IngestionConfig $ingestionConfig
     ) {
     }
 
     public function execute(): int
     {
-        $expiredBefore = $this->dateTime->gmtDate(null, self::RESULT_RETENTION);
+        $expiredBefore = $this->dateTime->gmtDate(
+            null,
+            $this->ingestionConfig->getCleanupResultRetention()
+        );
 
         return $this->collectionFactory
             ->create()
             ->getResourceModel()
             ->deleteExhaustedUpsertsOrExpiredResults(
-                self::ATTEMPT_THRESHOLD,
+                $this->ingestionConfig->getCleanupAttemptThreshold(),
                 $expiredBefore
             );
     }

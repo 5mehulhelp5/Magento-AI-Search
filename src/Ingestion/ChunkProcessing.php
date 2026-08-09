@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion;
 
+use DavidBel\AiSearch\Config\IngestionConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\CacheClean;
@@ -22,9 +23,6 @@ use Generator;
 
 class ChunkProcessing
 {
-    private const int EMBEDDING_BATCH_SIZE = 100;
-    private const int CONCURRENT_EMBEDDING_REQUESTS = 3;
-    private const int MAX_RUNTIME_SECONDS = 600;
     private const int NANOSECONDS_PER_SECOND = 1_000_000_000;
 
     private ?EmbeddingBacklogResource $resource = null;
@@ -36,7 +34,8 @@ class ChunkProcessing
         private readonly ProcessingStateFactory $processingStateFactory,
         private readonly ProcessingResultHandlerFactory $processingResultHandlerFactory,
         private readonly VectorEmbedding $vectorEmbedding,
-        private readonly CacheClean $cacheClean
+        private readonly CacheClean $cacheClean,
+        private readonly IngestionConfig $ingestionConfig
     ) {
     }
 
@@ -60,7 +59,7 @@ class ChunkProcessing
     ): void {
         $this->vectorEmbedding->execute(
             $this->createProcessingBatches($processingState),
-            self::CONCURRENT_EMBEDDING_REQUESTS,
+            $this->ingestionConfig->getConcurrentEmbeddingRequests(),
             [$resultHandler, 'completed'],
             [$resultHandler, 'failed']
         );
@@ -74,11 +73,12 @@ class ChunkProcessing
         $cursorUpdatedAt = null;
         $cursorBacklogId = null;
         $batchId = 0;
-        $maxRuntimeNanoseconds = self::MAX_RUNTIME_SECONDS * self::NANOSECONDS_PER_SECOND;
+        $maxRuntimeNanoseconds = $this->ingestionConfig->getEmbeddingMaximumRuntimeSeconds()
+            * self::NANOSECONDS_PER_SECOND;
 
         while ($processingState->isWithinRuntime($maxRuntimeNanoseconds)) {
             $rows = $this->getResource()->getPendingUpsertsForEmbedding(
-                self::EMBEDDING_BATCH_SIZE,
+                $this->ingestionConfig->getEmbeddingBatchSize(),
                 $cursorUpdatedAt,
                 $cursorBacklogId
             );

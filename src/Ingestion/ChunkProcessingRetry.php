@@ -8,14 +8,14 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion;
 
+use DavidBel\AiSearch\Config\IngestionConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 
 class ChunkProcessingRetry
 {
-    private const int ATTEMPT_THRESHOLD = 3;
-
     public function __construct(
-        private readonly CollectionFactory $collectionFactory
+        private readonly CollectionFactory $collectionFactory,
+        private readonly IngestionConfig $ingestionConfig
     ) {
     }
 
@@ -24,6 +24,6 @@ class ChunkProcessingRetry
         return $this->collectionFactory
             ->create()
             ->getResourceModel()
-            ->markFailedAsPending(self::ATTEMPT_THRESHOLD);
+            ->markFailedAsPending($this->ingestionConfig->getRetryAttemptThreshold());
     }
 }

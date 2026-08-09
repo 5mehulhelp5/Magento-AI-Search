@@ -20,8 +20,6 @@ use RuntimeException;
 
 class SourceProvider
 {
-    private const string TITLE_ATTRIBUTE_CODE = 'name';
-
     public function __construct(
         private readonly CollectionFactory $collectionFactory,
         private readonly Eligibility $eligibility,
@@ -72,7 +70,9 @@ class SourceProvider
             $this->getRequiredAttributeCodes($directAttributes),
             $this->getSourceProductIds($eligibleScopes)
         );
-        $titleValues = $valuesBySourceCode[self::TITLE_ATTRIBUTE_CODE] ?? [];
+        $titleValues = $valuesBySourceCode[
+            $this->embeddedAttributesConfig->getTitleAttributeCode()
+        ] ?? [];
         $directSources = $this->directSourceBuilder->buildSourcesByProductId(
             $directAttributes,
             $productIds,
@@ -130,7 +130,7 @@ class SourceProvider
      */
     private function getRequiredAttributeCodes(array $embeddedAttributes): array
     {
-        $attributeCodes = [self::TITLE_ATTRIBUTE_CODE => true];
+        $attributeCodes = [$this->embeddedAttributesConfig->getTitleAttributeCode() => true];
 
         foreach ($embeddedAttributes as $embeddedAttribute) {
             $attributeCodes[$embeddedAttribute->attributeCode] = true;
