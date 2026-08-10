@@ -16,6 +16,7 @@ use RuntimeException;
 
 class HtmlToText implements ParsingInterface
 {
+    private const string CODE = 'html_to_text';
     private const array IGNORED_ELEMENTS = [
         'head' => true,
         'noscript' => true,
@@ -61,6 +62,11 @@ class HtmlToText implements ParsingInterface
         'tr' => "\n",
         'ul' => "\n\n",
     ];
+
+    public function getCode(): string
+    {
+        return self::CODE;
+    }
 
     public function parse(string $text): string
     {

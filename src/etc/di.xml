@@ -47,11 +47,11 @@
     <type name="DavidBel\AiSearch\Ingestion\DocumentProcessing\Parsing">
         <arguments>
             <argument name="parsingStrategies" xsi:type="array">
-                <item name="text_as_is"
+                <item name="textAsIs"
                       xsi:type="object">
                     DavidBel\AiSearch\Ingestion\DocumentProcessing\Parsing\TextAsIs
                 </item>
-                <item name="html_to_text"
+                <item name="htmlToText"
                       xsi:type="object">
                     DavidBel\AiSearch\Ingestion\DocumentProcessing\Parsing\HtmlToText
                 </item>

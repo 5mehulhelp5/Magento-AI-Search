@@ -19,7 +19,7 @@ class Parsing
     private readonly array $parsingStrategies;
 
     /**
-     * @param array<string, ParsingInterface> $parsingStrategies
+     * @param list<ParsingInterface> $parsingStrategies
      */
     public function __construct(array $parsingStrategies)
     {
@@ -27,7 +27,25 @@ class Parsing
             throw new InvalidArgumentException('At least one parsing strategy is required.');
         }
 
-        $this->parsingStrategies = $parsingStrategies;
+        $strategiesByCode = [];
+
+        foreach ($parsingStrategies as $parsingStrategy) {
+            $code = $parsingStrategy->getCode();
+
+            if (trim($code) === '') {
+                throw new InvalidArgumentException('A parsing strategy code cannot be empty.');
+            }
+
+            if (isset($strategiesByCode[$code])) {
+                throw new InvalidArgumentException(
+                    sprintf('Parsing strategy code "%s" is configured more than once.', $code)
+                );
+            }
+
+            $strategiesByCode[$code] = $parsingStrategy;
+        }
+
+        $this->parsingStrategies = $strategiesByCode;
     }
 
     public function parse(string $text, string $strategy): string
