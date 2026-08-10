@@ -23,74 +23,68 @@ class DocumentUpdater
         private readonly SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory,
         private readonly DocumentRepositoryInterface $documentRepository,
         private readonly DocumentFactory $documentFactory,
+        private readonly Parsing $parsing,
         private readonly Chunking $chunking,
         private readonly ChunkPersistence $chunkPersistence
     ) {
     }
 
-    /**
-     * @param list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\StoreScopedSource> $sources
-     */
     public function deltaUpdate(
         string $sourceEntityType,
         int $sourceEntityId,
-        string $sourceCode,
-        array $sources
+        DocumentSource $source
     ): Result {
         return $this->update(
             $sourceEntityType,
             $sourceEntityId,
-            $sourceCode,
-            $sources,
+            $source,
             UpdateMode::DeltaUpdate
         );
     }
 
-    /**
-     * @param list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\StoreScopedSource> $sources
-     */
     public function fullUpdate(
         string $sourceEntityType,
         int $sourceEntityId,
-        string $sourceCode,
-        array $sources
+        DocumentSource $source
     ): Result {
         return $this->update(
             $sourceEntityType,
             $sourceEntityId,
-            $sourceCode,
-            $sources,
+            $source,
             UpdateMode::FullUpdate
         );
     }
 
-    /**
-     * @param list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\StoreScopedSource> $sources
-     */
     private function update(
         string $sourceEntityType,
         int $sourceEntityId,
-        string $sourceCode,
-        array $sources,
+        DocumentSource $source,
         UpdateMode $updateMode
     ): Result {
-        $documentsByStoreId = $this->getDocumentsByStoreId($sourceEntityType, $sourceEntityId, $sourceCode);
+        $documentsByStoreId = $this->getDocumentsByStoreId(
+            $sourceEntityType,
+            $sourceEntityId,
+            $source->sourceCode
+        );
         $currentStoreIds = [];
         $chunksBySourceHash = [];
         $upsertChunkIds = $deletionChunkIds = [];
 
-        foreach ($sources as $source) {
-            $sourceHash = hash('sha256', $source->content);
-            $document = $documentsByStoreId[$source->storeId] ?? null;
-            $currentStoreIds[$source->storeId] = true;
+        foreach ($source->storeScopedSources as $storeScopedSource) {
+            $sourceHash = hash('sha256', $storeScopedSource->content);
+            $document = $documentsByStoreId[$storeScopedSource->storeId] ?? null;
+            $currentStoreIds[$storeScopedSource->storeId] = true;
             $sourceUnchanged = $this->hasMatchingSourceHash($document, $sourceHash);
 
-            if ($this->isUnchangedDelta($document, $sourceHash, $source->title, $updateMode)) {
+            if ($this->isUnchangedDelta($document, $sourceHash, $storeScopedSource->title, $updateMode)) {
                 continue;
             }
 
             if ($updateMode === UpdateMode::DeltaUpdate && $sourceUnchanged) {
-                array_push($upsertChunkIds, ...$this->updateDocumentTitle($document, $source->title));
+                array_push(
+                    $upsertChunkIds,
+                    ...$this->updateDocumentTitle($document, $storeScopedSource->title)
+                );
 
                 continue;
             }
@@ -99,11 +93,16 @@ class DocumentUpdater
                 $document,
                 $sourceEntityType,
                 $sourceEntityId,
-                $source->storeId,
-                $sourceCode,
-                $source->title,
+                $storeScopedSource->storeId,
+                $source->sourceCode,
+                $storeScopedSource->title,
                 $sourceHash,
-                $chunksBySourceHash[$sourceHash] ??= $this->chunking->chunk($source->content),
+                $chunksBySourceHash[$sourceHash] ??= $this->chunking->chunk(
+                    $this->parsing->parse(
+                        $storeScopedSource->content,
+                        $source->parsingStrategy
+                    )
+                ),
                 $updateMode
             );
             array_push($upsertChunkIds, ...$updateResult->upsertChunkIds);

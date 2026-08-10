@@ -9,14 +9,14 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Ingestion;
 
 use DavidBel\AiSearch\Config\IngestionConfig;
-use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
-use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory
-    as EmbeddingBacklogCollectionFactory;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Result as DocumentUpdateResult;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\ProductSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\UpdateMode;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory
+    as EmbeddingBacklogCollectionFactory;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use RuntimeException;
 use Throwable;
@@ -114,7 +114,7 @@ class DocumentProcessing
     }
 
     /**
-     * @param list<ProductSource> $sources
+     * @param list<DocumentSource> $sources
      */
     private function processProduct(
         int $productId,
@@ -127,7 +127,7 @@ class DocumentProcessing
 
         try {
             foreach ($sources as $source) {
-                $updateResult = $this->updateProductSource($productId, $source, $updateMode);
+                $updateResult = $this->updateDocumentSource($productId, $source, $updateMode);
                 $this->saveBacklog(
                     $updateResult,
                     $embeddingBacklogResource,
@@ -142,25 +142,23 @@ class DocumentProcessing
         }
     }
 
-    private function updateProductSource(
+    private function updateDocumentSource(
         int $productId,
-        ProductSource $source,
+        DocumentSource $source,
         UpdateMode $updateMode
     ): DocumentUpdateResult {
         if ($updateMode === UpdateMode::FullUpdate) {
             return $this->documentUpdater->fullUpdate(
                 self::SOURCE_ENTITY_TYPE,
                 $productId,
-                $source->sourceCode,
-                $source->storeScopedSources
+                $source
             );
         }
 
         return $this->documentUpdater->deltaUpdate(
             self::SOURCE_ENTITY_TYPE,
             $productId,
-            $source->sourceCode,
-            $source->storeScopedSources
+            $source
         );
     }
 

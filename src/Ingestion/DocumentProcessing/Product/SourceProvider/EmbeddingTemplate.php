@@ -9,6 +9,8 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 
 use DavidBel\AiSearch\Config\EmbeddedAttribute;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource\StoreScopedSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\EmbeddingTemplate\AttributeValueResolver;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\EmbeddingTemplate\TemplateRenderer;
 
@@ -26,7 +28,7 @@ class EmbeddingTemplate
      * @param list<int> $productIds
      * @param array<int, list<Eligibility\EligibleScope>> $eligibleScopes
      * @param array<string, string> $titleValues
-     * @return array<int, list<ProductSource>>
+     * @return array<int, list<DocumentSource>>
      */
     public function buildSourcesByProductId(
         array $embeddedAttributes,
@@ -43,7 +45,7 @@ class EmbeddingTemplate
         $sourcesByProductId = [];
 
         foreach ($productIds as $productId) {
-            $sourcesByProductId[$productId] = $this->buildProductSources(
+            $sourcesByProductId[$productId] = $this->buildDocumentSources(
                 $embeddingTemplates,
                 $productId,
                 $eligibleScopes[$productId] ?? [],
@@ -79,20 +81,21 @@ class EmbeddingTemplate
      * @param list<Eligibility\EligibleScope> $eligibleScopes
      * @param array<string, array<string, list<string>>> $valuesByAttributeCode
      * @param array<string, string> $titleValues
-     * @return list<ProductSource>
+     * @return list<DocumentSource>
      */
-    private function buildProductSources(
+    private function buildDocumentSources(
         array $embeddingTemplates,
         int $productId,
         array $eligibleScopes,
         array $valuesByAttributeCode,
         array $titleValues
     ): array {
-        $productSources = [];
+        $documentSources = [];
 
         foreach ($embeddingTemplates as $embeddingTemplate) {
-            $productSources[] = new ProductSource(
+            $documentSources[] = new DocumentSource(
                 $embeddingTemplate->attributeCode,
+                $embeddingTemplate->parsingStrategy,
                 $this->buildStoreScopedSources(
                     $embeddingTemplate,
                     $productId,
@@ -103,7 +106,7 @@ class EmbeddingTemplate
             );
         }
 
-        return $productSources;
+        return $documentSources;
     }
 
     /**

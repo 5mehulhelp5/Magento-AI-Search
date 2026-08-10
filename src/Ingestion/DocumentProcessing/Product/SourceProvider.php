@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product;
 
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\AttributeValueProvider;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\DirectSourceBuilder;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\Eligibility;
@@ -55,7 +56,7 @@ class SourceProvider
 
     /**
      * @param list<int> $productIds
-     * @return array<int, list<SourceProvider\ProductSource>>
+     * @return array<int, list<DocumentSource>>
      */
     public function getSourcesByProductIds(array $productIds): array
     {
@@ -160,9 +161,9 @@ class SourceProvider
 
     /**
      * @param list<int> $productIds
-     * @param array<int, list<SourceProvider\ProductSource>> $directSources
-     * @param array<int, list<SourceProvider\ProductSource>> $templateSources
-     * @return array<int, list<SourceProvider\ProductSource>>
+     * @param array<int, list<DocumentSource>> $directSources
+     * @param array<int, list<DocumentSource>> $templateSources
+     * @return array<int, list<DocumentSource>>
      */
     private function mergeSources(
         array $productIds,

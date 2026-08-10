@@ -9,13 +9,15 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\EmbeddingTemplate;
 
 use DavidBel\AiSearch\Config\EmbeddedAttribute;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Parsing;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\Eligibility\EligibleScope;
 use RuntimeException;
 
 class TemplateRenderer
 {
     public function __construct(
-        private readonly ValueFormatter $valueFormatter
+        private readonly ValueFormatter $valueFormatter,
+        private readonly Parsing $parsing
     ) {
     }
 
@@ -151,7 +153,7 @@ class TemplateRenderer
             $valueKey = $sourceProductId . ':' . $eligibleScope->storeId;
 
             foreach ($valuesByAttributeCode[$attributeCode][$valueKey] ?? [] as $value) {
-                $values[] = $value;
+                $values[] = $this->parsing->parse($value, $fragment->parsingStrategy);
             }
         }
 

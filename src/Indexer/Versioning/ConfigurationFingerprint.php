@@ -91,6 +91,7 @@ class ConfigurationFingerprint
         return [
             'attribute_code' => $attribute->attributeCode,
             'composite' => $attribute->composite,
+            'parsing_strategy' => $attribute->parsingStrategy,
             'template' => $attribute->template,
             'children' => $children,
         ];

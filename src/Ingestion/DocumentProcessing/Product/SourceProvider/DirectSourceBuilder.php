@@ -9,6 +9,8 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 
 use DavidBel\AiSearch\Config\EmbeddedAttribute;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource\StoreScopedSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\Eligibility\EligibleScope;
 
 class DirectSourceBuilder
@@ -26,7 +28,7 @@ class DirectSourceBuilder
      * @param array<int, list<EligibleScope>> $eligibleScopes
      * @param array<string, array<string, string>> $valuesBySourceCode
      * @param array<string, string> $titleValues
-     * @return array<int, list<ProductSource>>
+     * @return array<int, list<DocumentSource>>
      */
     public function buildSourcesByProductId(
         array $embeddedAttributes,
@@ -39,7 +41,7 @@ class DirectSourceBuilder
 
         foreach ($productIds as $productId) {
             $productScopes = $eligibleScopes[$productId] ?? [];
-            $sourcesByProductId[$productId] = $this->buildProductSources(
+            $sourcesByProductId[$productId] = $this->buildDocumentSources(
                 $embeddedAttributes,
                 $productId,
                 $productScopes,
@@ -56,20 +58,21 @@ class DirectSourceBuilder
      * @param list<EligibleScope> $eligibleScopes
      * @param array<string, array<string, string>> $valuesBySourceCode
      * @param array<string, string> $titleValues
-     * @return list<ProductSource>
+     * @return list<DocumentSource>
      */
-    private function buildProductSources(
+    private function buildDocumentSources(
         array $embeddedAttributes,
         int $productId,
         array $eligibleScopes,
         array $valuesBySourceCode,
         array $titleValues
     ): array {
-        $productSources = [];
+        $documentSources = [];
 
         foreach ($embeddedAttributes as $embeddedAttribute) {
-            $productSources[] = new ProductSource(
+            $documentSources[] = new DocumentSource(
                 $embeddedAttribute->attributeCode,
+                $embeddedAttribute->parsingStrategy,
                 $this->buildStoreScopedSources(
                     $embeddedAttribute,
                     $productId,
@@ -80,7 +83,7 @@ class DirectSourceBuilder
             );
         }
 
-        return $productSources;
+        return $documentSources;
     }
 
     /**

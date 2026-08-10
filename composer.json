@@ -26,6 +26,7 @@
         }
     ],
     "require": {
+        "ext-dom": "*",
         "ext-mbstring": "*",
         "guzzlehttp/guzzle": "^7.5",
         "guzzlehttp/promises": "^2.0",

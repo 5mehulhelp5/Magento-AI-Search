@@ -44,6 +44,20 @@
             </argument>
         </arguments>
     </type>
+    <type name="DavidBel\AiSearch\Ingestion\DocumentProcessing\Parsing">
+        <arguments>
+            <argument name="parsingStrategies" xsi:type="array">
+                <item name="text_as_is"
+                      xsi:type="object">
+                    DavidBel\AiSearch\Ingestion\DocumentProcessing\Parsing\TextAsIs
+                </item>
+                <item name="html_to_text"
+                      xsi:type="object">
+                    DavidBel\AiSearch\Ingestion\DocumentProcessing\Parsing\HtmlToText
+                </item>
+            </argument>
+        </arguments>
+    </type>
     <type name="Magento\OpenSearch\SearchAdapter\Mapper">
         <plugin name="davidbel_ai_search_semantic_query"
                 type="DavidBel\AiSearch\Plugin\OpenSearch\SemanticQuery"/>

@@ -16,6 +16,7 @@ readonly class EmbeddedAttribute
     public function __construct(
         public string $attributeCode,
         public bool $composite,
+        public string $parsingStrategy,
         public ?string $template,
         public ?array $children
     ) {

@@ -6,7 +6,7 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
+namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource;
 
 readonly class StoreScopedSource
 {

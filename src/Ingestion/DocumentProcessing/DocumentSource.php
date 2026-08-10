@@ -6,15 +6,18 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
+namespace DavidBel\AiSearch\Ingestion\DocumentProcessing;
 
-readonly class ProductSource
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource\StoreScopedSource;
+
+readonly class DocumentSource
 {
     /**
      * @param list<StoreScopedSource> $storeScopedSources
      */
     public function __construct(
         public string $sourceCode,
+        public string $parsingStrategy,
         public array $storeScopedSources
     ) {
     }
