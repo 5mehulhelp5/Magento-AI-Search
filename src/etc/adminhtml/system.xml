@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+<!--
+  davidbel/ai-search by David Belicza
+  SPDX-License-Identifier: MIT
+  https://github.com/DavidBelicza/Magento-AI-Search
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="davidbel" translate="label" sortOrder="500">
+            <label>AI Search</label>
+        </tab>
+        <section id="davidbel_ai_search_storefront"
+                 translate="label"
+                 type="text"
+                 sortOrder="500"
+                 showInDefault="1"
+                 showInWebsite="1"
+                 showInStore="1">
+            <label>Storefront</label>
+            <tab>davidbel</tab>
+            <resource>DavidBel_AiSearch::config_storefront</resource>
+            <group id="general"
+                   translate="label"
+                   type="text"
+                   sortOrder="10"
+                   showInDefault="1"
+                   showInWebsite="1"
+                   showInStore="1">
+                <label>General</label>
+                <field id="enabled"
+                       translate="label"
+                       type="select"
+                       sortOrder="10"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>Enabled</label>
+                    <config_path>davidbel_ai_search/storefront/enabled</config_path>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="request_timeout_seconds"
+                       translate="label"
+                       type="text"
+                       sortOrder="20"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>Request Timeout (Seconds)</label>
+                    <config_path>davidbel_ai_search/storefront/request_timeout_seconds</config_path>
+                    <validate>required-entry validate-number validate-greater-than-zero</validate>
+                </field>
+                <field id="use_previous_semantic_index_during_rebuild"
+                       translate="label"
+                       type="select"
+                       sortOrder="30"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>Use Previous Semantic Index During Rebuild</label>
+                    <config_path>davidbel_ai_search/storefront/use_previous_semantic_index_during_rebuild</config_path>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+            </group>
+            <group id="search_results"
+                   translate="label"
+                   type="text"
+                   sortOrder="20"
+                   showInDefault="1"
+                   showInWebsite="1"
+                   showInStore="1">
+                <label>Search Results</label>
+                <field id="collapse_results_by_product"
+                       translate="label"
+                       type="select"
+                       sortOrder="10"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>Collapse Results by Product</label>
+                    <config_path>davidbel_ai_search/storefront/collapse_results_by_product</config_path>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="product_result_limit"
+                       translate="label"
+                       type="text"
+                       sortOrder="20"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>Product Result Limit</label>
+                    <config_path>davidbel_ai_search/storefront/product_result_limit</config_path>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="minimum_score"
+                       translate="label"
+                       type="text"
+                       sortOrder="30"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>Minimum Score</label>
+                    <config_path>davidbel_ai_search/storefront/minimum_score</config_path>
+                    <validate>required-entry validate-number validate-zero-or-greater</validate>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

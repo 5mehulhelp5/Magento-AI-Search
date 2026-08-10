@@ -13,7 +13,9 @@ class StorefrontConfig
     private const bool ENABLED = true;
     private const int REQUEST_TIMEOUT_SECONDS = 2;
     private const bool USE_PREVIOUS_SEMANTIC_INDEX_DURING_REBUILD = true;
-    private const int CHUNK_RESULT_LIMIT = 1_000;
+    private const bool COLLAPSE_RESULTS_BY_PRODUCT = true;
+    private const int PRODUCT_RESULT_LIMIT = 1_000;
+    private const int CHUNK_CANDIDATE_LIMIT = 3_000;
     private const float MINIMUM_SCORE = 0.46;
 
     public function isEnabled(): bool
@@ -31,9 +33,19 @@ class StorefrontConfig
         return self::USE_PREVIOUS_SEMANTIC_INDEX_DURING_REBUILD;
     }
 
-    public function getChunkResultLimit(): int
+    public function shouldCollapseResultsByProduct(): bool
     {
-        return self::CHUNK_RESULT_LIMIT;
+        return self::COLLAPSE_RESULTS_BY_PRODUCT;
+    }
+
+    public function getProductResultLimit(): int
+    {
+        return self::PRODUCT_RESULT_LIMIT;
+    }
+
+    public function getChunkCandidateLimit(): int
+    {
+        return self::CHUNK_CANDIDATE_LIMIT;
     }
 
     public function getMinimumScore(): float

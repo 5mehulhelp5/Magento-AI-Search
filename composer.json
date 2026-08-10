@@ -33,6 +33,7 @@
         "magento/framework": "103.0.*",
         "magento/module-bundle": "101.0.*",
         "magento/module-catalog": "104.0.*",
+        "magento/module-config": "101.2.*",
         "magento/module-configurable-product": "100.4.*",
         "magento/module-cron": "100.4.*",
         "magento/module-elasticsearch": "101.0.*",

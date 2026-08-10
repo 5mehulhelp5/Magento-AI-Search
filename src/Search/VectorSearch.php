@@ -44,16 +44,14 @@ class VectorSearch
      */
     private function createQuery(array $vector, int $storeId): array
     {
-        $chunkResultLimit = $this->storefrontConfig->getChunkResultLimit();
-
-        return [
-            'size' => $chunkResultLimit,
+        $query = [
+            'size' => $this->storefrontConfig->getProductResultLimit(),
             '_source' => ['source_entity_id'],
             'query' => [
                 'knn' => [
                     'vector' => [
                         'vector' => $vector,
-                        'k' => $chunkResultLimit,
+                        'k' => $this->storefrontConfig->getChunkCandidateLimit(),
                         'filter' => [
                             'bool' => [
                                 'filter' => [
@@ -67,6 +65,16 @@ class VectorSearch
                 ],
             ],
         ];
+
+        if (!$this->storefrontConfig->shouldCollapseResultsByProduct()) {
+            return $query;
+        }
+
+        $query['collapse'] = [
+            'field' => 'source_entity_id',
+        ];
+
+        return $query;
     }
 
     /**

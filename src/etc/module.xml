@@ -10,6 +10,7 @@
         <sequence>
             <module name="Magento_Bundle"/>
             <module name="Magento_Catalog"/>
+            <module name="Magento_Config"/>
             <module name="Magento_ConfigurableProduct"/>
             <module name="Magento_Cron"/>
             <module name="Magento_GroupedProduct"/>

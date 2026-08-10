@@ -107,7 +107,9 @@
                 <enabled>1</enabled>
                 <request_timeout_seconds>2</request_timeout_seconds>
                 <use_previous_semantic_index_during_rebuild>1</use_previous_semantic_index_during_rebuild>
-                <chunk_result_limit>1000</chunk_result_limit>
+                <collapse_results_by_product>1</collapse_results_by_product>
+                <product_result_limit>1000</product_result_limit>
+                <chunk_candidate_limit>3000</chunk_candidate_limit>
                 <minimum_score>0.46</minimum_score>
             </storefront>
         </davidbel_ai_search>
