@@ -1,0 +1,63 @@
+# davidbel/ai-search by David Belicza
+# SPDX-License-Identifier: MIT
+# https://github.com/DavidBelicza/Magento-AI-Search
+
+name: Codex Issue Publisher
+
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: Approved issue title
+        required: true
+        type: string
+      body:
+        description: Approved issue body in Markdown
+        required: true
+        type: string
+      labels:
+        description: Optional comma-separated existing labels
+        required: false
+        default: ""
+        type: string
+      milestone:
+        description: Optional existing milestone title
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  create-issue:
+    name: Create approved issue
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create issue as GitHub Actions
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_TITLE: ${{ inputs.title }}
+          ISSUE_BODY: ${{ inputs.body }}
+          ISSUE_LABELS: ${{ inputs.labels }}
+          ISSUE_MILESTONE: ${{ inputs.milestone }}
+        run: |
+          arguments=(
+            issue create
+            --repo "${GITHUB_REPOSITORY}"
+            --title "${ISSUE_TITLE}"
+            --body "${ISSUE_BODY}"
+          )
+
+          if [[ -n "${ISSUE_LABELS}" ]]; then
+            arguments+=(--label "${ISSUE_LABELS}")
+          fi
+
+          if [[ -n "${ISSUE_MILESTONE}" ]]; then
+            arguments+=(--milestone "${ISSUE_MILESTONE}")
+          fi
+
+          issue_url="$(gh "${arguments[@]}")"
+          echo "Created issue: ${issue_url}" >> "${GITHUB_STEP_SUMMARY}"
