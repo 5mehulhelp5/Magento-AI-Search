@@ -133,6 +133,7 @@
             <label>Search Source</label>
             <tab>davidbel</tab>
             <resource>DavidBel_AiSearch::config_search_source</resource>
+            <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\SearchSource</frontend_model>
             <group id="ai_server"
                    translate="label"
                    type="text"
@@ -149,21 +150,23 @@
                     <validate>required-entry validate-url</validate>
                 </field>
                 <field id="embedding_model"
-                       translate="label"
+                       translate="label tooltip"
                        type="text"
                        sortOrder="20"
                        showInDefault="1"
                        canRestore="1">
                     <label>Embedding Model</label>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <validate>required-entry</validate>
                 </field>
                 <field id="vector_dimensions"
-                       translate="label"
+                       translate="label tooltip"
                        type="text"
                        sortOrder="30"
                        showInDefault="1"
                        canRestore="1">
                     <label>Vector Dimensions</label>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
                 <field id="request_timeout_seconds"
@@ -176,39 +179,43 @@
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
                 <field id="embedder_document_template"
-                       translate="label"
+                       translate="label tooltip"
                        type="text"
                        sortOrder="50"
                        showInDefault="1"
                        canRestore="1">
                     <label>Embedder Document Template</label>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <validate>required-entry</validate>
                 </field>
                 <field id="maximum_chunk_tokens"
-                       translate="label"
+                       translate="label tooltip"
                        type="text"
                        sortOrder="60"
                        showInDefault="1"
                        canRestore="1">
                     <label>Maximum Chunk Tokens</label>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
                 <field id="chunk_overlap_tokens"
-                       translate="label"
+                       translate="label tooltip"
                        type="text"
                        sortOrder="70"
                        showInDefault="1"
                        canRestore="1">
                     <label>Chunk Overlap Tokens</label>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <validate>required-entry validate-digits validate-zero-or-greater</validate>
                 </field>
                 <field id="estimated_characters_per_token"
-                       translate="label"
+                       translate="label tooltip"
                        type="text"
                        sortOrder="80"
                        showInDefault="1"
                        canRestore="1">
                     <label>Estimated Characters per Token</label>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <validate>required-entry validate-number validate-greater-than-zero</validate>
                 </field>
             </group>
@@ -219,21 +226,23 @@
                    showInDefault="1">
                 <label>Search Engine</label>
                 <field id="vector_engine"
-                       translate="label"
+                       translate="label tooltip"
                        type="select"
                        sortOrder="10"
                        showInDefault="1"
                        canRestore="1">
                     <label>Vector Engine</label>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <source_model>DavidBel\AiSearch\Model\Config\Source\VectorEngine</source_model>
                 </field>
                 <field id="vector_space"
-                       translate="label"
+                       translate="label tooltip"
                        type="select"
                        sortOrder="20"
                        showInDefault="1"
                        canRestore="1">
                     <label>Vector Space</label>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <source_model>DavidBel\AiSearch\Model\Config\Source\VectorSpace</source_model>
                 </field>
             </group>
@@ -244,21 +253,23 @@
                    showInDefault="1">
                 <label>Document Configuration</label>
                 <field id="enable_document_title"
-                       translate="label"
+                       translate="label tooltip"
                        type="select"
                        sortOrder="10"
                        showInDefault="1"
                        canRestore="1">
                     <label>Enable Document Title</label>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="document_title"
-                       translate="label"
+                       translate="label tooltip"
                        type="select"
                        sortOrder="20"
                        showInDefault="1"
                        canRestore="1">
                     <label>Document Title</label>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <source_model>DavidBel\AiSearch\Model\Config\Source\ProductAttribute</source_model>
                     <validate>required-entry</validate>
                     <depends>
@@ -266,29 +277,32 @@
                     </depends>
                 </field>
                 <field id="documents"
-                       translate="label"
+                       translate="label tooltip"
                        sortOrder="30"
                        showInDefault="1"
                        canRestore="1">
                     <label>Documents</label>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\Documents</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                 </field>
                 <field id="enable_dynamic_document"
-                       translate="label"
+                       translate="label tooltip"
                        type="select"
                        sortOrder="40"
                        showInDefault="1"
                        canRestore="1">
                     <label>Enable Dynamic Document</label>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="dynamic_document"
-                       translate="label"
+                       translate="label tooltip"
                        sortOrder="50"
                        showInDefault="1"
                        canRestore="1">
                     <label>Dynamic Document</label>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\DynamicDocument</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <depends>

@@ -43,7 +43,6 @@ class ConfigurationFingerprint
                 'model' => $this->embedderConfig->getModel(),
                 'vector_dimensions' => $this->embedderConfig->getVectorDimensions(),
                 'document_template' => $this->embedderConfig->getDocumentTemplate(),
-                'query_template' => $this->embedderConfig->getQueryTemplate(),
             ],
             'index' => [
                 'vector_method' => $this->searchConfig->getVectorMethod(),

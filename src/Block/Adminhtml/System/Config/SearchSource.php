@@ -1,0 +1,34 @@
+<?php
+/**
+ * davidbel/ai-search by David Belicza
+ * SPDX-License-Identifier: MIT
+ * https://github.com/DavidBelicza/Magento-AI-Search
+ */
+declare(strict_types=1);
+
+namespace DavidBel\AiSearch\Block\Adminhtml\System\Config;
+
+use Magento\Config\Block\System\Config\Form;
+
+class SearchSource extends Form
+{
+    public function getFormHtml(): string
+    {
+        $title = (string) $this->escapeHtml((string) __('Important:'));
+        $message = (string) $this->escapeHtml(
+            (string) __(
+                'Changing any setting on this page, except the AI server URL and its request timeout, requires '
+                . 'a full AI Search rebuild, which starts automatically. '
+                . 'The rebuild may reprocess and re-embed the entire catalog, send many requests to the '
+                . 'configured AI server, and take a significant amount of time.'
+            )
+        );
+
+        return sprintf(
+            '<div class="message message-warning"><strong>%s</strong> %s</div>%s',
+            $title,
+            $message,
+            parent::getFormHtml()
+        );
+    }
+}
