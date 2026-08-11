@@ -18,6 +18,10 @@
                 <chunk_overlap_tokens>50</chunk_overlap_tokens>
                 <estimated_characters_per_token>4</estimated_characters_per_token>
             </ai_server>
+            <search_engine>
+                <vector_engine>faiss</vector_engine>
+                <vector_space>l2</vector_space>
+            </search_engine>
             <document_configuration>
                 <enable_document_title>1</enable_document_title>
                 <document_title>name</document_title>
@@ -98,11 +102,6 @@
                 <cleanup_result_retention>-24 hours</cleanup_result_retention>
             </ingestion>
             <search>
-                <index_name>davidbel_ai_search_chunks</index_name>
-                <index_schema_version>1</index_schema_version>
-                <vector_method>hnsw</vector_method>
-                <vector_engine>faiss</vector_engine>
-                <vector_space>l2</vector_space>
                 <lock_timeout_seconds>10</lock_timeout_seconds>
             </search>
         </davidbel_ai_search>
