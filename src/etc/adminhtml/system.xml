@@ -311,5 +311,155 @@
                 </field>
             </group>
         </section>
+        <section id="davidbel_ai_search_data_processing"
+                 translate="label"
+                 type="text"
+                 sortOrder="520"
+                 showInDefault="1">
+            <label>Data Processing</label>
+            <tab>davidbel</tab>
+            <resource>DavidBel_AiSearch::config_data_processing</resource>
+            <group id="document_processing"
+                   translate="label"
+                   type="text"
+                   sortOrder="10"
+                   showInDefault="1">
+                <label>Document Processing</label>
+                <field id="batch_size"
+                       translate="label"
+                       type="text"
+                       sortOrder="10"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Batch Size</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+            </group>
+            <group id="vector_embedding"
+                   translate="label"
+                   type="text"
+                   sortOrder="20"
+                   showInDefault="1">
+                <label>Vector Embedding</label>
+                <field id="batch_size"
+                       translate="label"
+                       type="text"
+                       sortOrder="10"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Batch Size</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="concurrent_requests"
+                       translate="label"
+                       type="text"
+                       sortOrder="20"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Concurrent Requests</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="maximum_runtime_seconds"
+                       translate="label"
+                       type="text"
+                       sortOrder="30"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Maximum Runtime (Seconds)</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+            </group>
+            <group id="vector_deletion"
+                   translate="label"
+                   type="text"
+                   sortOrder="30"
+                   showInDefault="1">
+                <label>Vector Deletion</label>
+                <field id="batch_size"
+                       translate="label"
+                       type="text"
+                       sortOrder="10"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Batch Size</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="upsert_attempt_threshold"
+                       translate="label"
+                       type="text"
+                       sortOrder="20"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Upsert Attempt Threshold</label>
+                    <validate>required-entry validate-digits validate-zero-or-greater</validate>
+                </field>
+                <field id="maximum_runtime_seconds"
+                       translate="label"
+                       type="text"
+                       sortOrder="30"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Maximum Runtime (Seconds)</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+            </group>
+            <group id="retry"
+                   translate="label"
+                   type="text"
+                   sortOrder="40"
+                   showInDefault="1">
+                <label>Retry</label>
+                <field id="attempt_threshold"
+                       translate="label"
+                       type="text"
+                       sortOrder="10"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Attempt Threshold</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+            </group>
+            <group id="cleanup"
+                   translate="label"
+                   type="text"
+                   sortOrder="50"
+                   showInDefault="1">
+                <label>Cleanup</label>
+                <field id="attempt_threshold"
+                       translate="label"
+                       type="text"
+                       sortOrder="10"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Attempt Threshold</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="result_retention"
+                       translate="label"
+                       type="text"
+                       sortOrder="20"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Result Retention (Hours)</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+            </group>
+            <group id="indexer"
+                   translate="label"
+                   type="text"
+                   sortOrder="60"
+                   showInDefault="1">
+                <label>Indexer</label>
+                <field id="lock_timeout_seconds"
+                       translate="label"
+                       type="text"
+                       sortOrder="10"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Lock Timeout (Seconds)</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+            </group>
+        </section>
     </system>
 </config>

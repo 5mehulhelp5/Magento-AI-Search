@@ -20,6 +20,10 @@
                                       title="AI Search Source Configuration"
                                       translate="title"
                                       sortOrder="510"/>
+                            <resource id="DavidBel_AiSearch::config_data_processing"
+                                      title="AI Search Data Processing Configuration"
+                                      translate="title"
+                                      sortOrder="520"/>
                         </resource>
                     </resource>
                 </resource>

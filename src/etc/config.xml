@@ -88,23 +88,31 @@
                 ]]></dynamic_document>
             </document_configuration>
         </davidbel_ai_search_search_source>
-        <davidbel_ai_search>
-            <ingestion>
-                <document_processing_batch_size>200</document_processing_batch_size>
-                <embedding_batch_size>100</embedding_batch_size>
-                <concurrent_embedding_requests>3</concurrent_embedding_requests>
-                <embedding_maximum_runtime_seconds>600</embedding_maximum_runtime_seconds>
-                <deletion_batch_size>1000</deletion_batch_size>
-                <deletion_upsert_attempt_threshold>3</deletion_upsert_attempt_threshold>
-                <deletion_maximum_runtime_seconds>600</deletion_maximum_runtime_seconds>
-                <retry_attempt_threshold>3</retry_attempt_threshold>
-                <cleanup_attempt_threshold>3</cleanup_attempt_threshold>
-                <cleanup_result_retention>-24 hours</cleanup_result_retention>
-            </ingestion>
-            <search>
+        <davidbel_ai_search_data_processing>
+            <document_processing>
+                <batch_size>200</batch_size>
+            </document_processing>
+            <vector_embedding>
+                <batch_size>100</batch_size>
+                <concurrent_requests>3</concurrent_requests>
+                <maximum_runtime_seconds>600</maximum_runtime_seconds>
+            </vector_embedding>
+            <vector_deletion>
+                <batch_size>1000</batch_size>
+                <upsert_attempt_threshold>3</upsert_attempt_threshold>
+                <maximum_runtime_seconds>600</maximum_runtime_seconds>
+            </vector_deletion>
+            <retry>
+                <attempt_threshold>3</attempt_threshold>
+            </retry>
+            <cleanup>
+                <attempt_threshold>3</attempt_threshold>
+                <result_retention>24</result_retention>
+            </cleanup>
+            <indexer>
                 <lock_timeout_seconds>10</lock_timeout_seconds>
-            </search>
-        </davidbel_ai_search>
+            </indexer>
+        </davidbel_ai_search_data_processing>
         <davidbel_ai_search_search_result>
             <general>
                 <enabled>1</enabled>
