@@ -8,9 +8,10 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/config.xsd">
     <default>
         <davidbel_ai_search_search_source>
-            <vector_configuration>
-                <title_attribute_code>name</title_attribute_code>
-                <product_attributes><![CDATA[
+            <document_configuration>
+                <enable_document_title>1</enable_document_title>
+                <document_title>name</document_title>
+                <documents><![CDATA[
                     {
                         "description": {
                             "attribute_code": "description",
@@ -23,9 +24,9 @@
                             "parsing_strategy": "text_as_is"
                         }
                     }
-                ]]></product_attributes>
-                <alternative_product_description_enabled>0</alternative_product_description_enabled>
-                <alternative_product_description><![CDATA[
+                ]]></documents>
+                <enable_dynamic_document>0</enable_dynamic_document>
+                <dynamic_document><![CDATA[
                     {
                         "name": {
                             "attribute_code": ["name"],
@@ -70,8 +71,8 @@
                             "template": "Here is a brief description: {short_description}"
                         }
                     }
-                ]]></alternative_product_description>
-            </vector_configuration>
+                ]]></dynamic_document>
+            </document_configuration>
         </davidbel_ai_search_search_source>
         <davidbel_ai_search>
             <embedder>

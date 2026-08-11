@@ -133,40 +133,62 @@
             <label>Search Source</label>
             <tab>davidbel</tab>
             <resource>DavidBel_AiSearch::config_search_source</resource>
-            <group id="vector_configuration"
+            <group id="document_configuration"
                    translate="label"
                    type="text"
                    sortOrder="10"
                    showInDefault="1">
-                <label>Vector Configuration</label>
-                <field id="product_attributes"
+                <label>Document Configuration</label>
+                <field id="enable_document_title"
                        translate="label"
+                       type="select"
                        sortOrder="10"
                        showInDefault="1"
                        canRestore="1">
-                    <label>Product Attributes</label>
-                    <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\ProductAttributes</frontend_model>
-                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <label>Enable Document Title</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="alternative_product_description_enabled"
+                <field id="document_title"
                        translate="label"
                        type="select"
                        sortOrder="20"
                        showInDefault="1"
                        canRestore="1">
-                    <label>Enable Alternative Product Description</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <label>Document Title</label>
+                    <source_model>DavidBel\AiSearch\Model\Config\Source\ProductAttribute</source_model>
+                    <validate>required-entry</validate>
+                    <depends>
+                        <field id="enable_document_title">1</field>
+                    </depends>
                 </field>
-                <field id="alternative_product_description"
+                <field id="documents"
                        translate="label"
                        sortOrder="30"
                        showInDefault="1"
                        canRestore="1">
-                    <label>Alternative Product Description</label>
-                    <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\AlternativeProductDescription</frontend_model>
+                    <label>Documents</label>
+                    <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\Documents</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                </field>
+                <field id="enable_dynamic_document"
+                       translate="label"
+                       type="select"
+                       sortOrder="40"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Enable Dynamic Document</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="dynamic_document"
+                       translate="label"
+                       sortOrder="50"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Dynamic Document</label>
+                    <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\DynamicDocument</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <depends>
-                        <field id="alternative_product_description_enabled">1</field>
+                        <field id="enable_dynamic_document">1</field>
                     </depends>
                 </field>
             </group>

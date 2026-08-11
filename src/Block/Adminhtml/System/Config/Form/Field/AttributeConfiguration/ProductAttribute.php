@@ -8,8 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\AttributeConfiguration;
 
-use Magento\Catalog\Model\ResourceModel\Eav\Attribute;
-use Magento\Catalog\Model\ResourceModel\Product\Attribute\CollectionFactory;
+use DavidBel\AiSearch\Model\Config\Source\ProductAttribute as ProductAttributeSource;
 use Magento\Framework\View\Element\Context;
 use Magento\Framework\View\Element\Html\Select;
 
@@ -20,7 +19,7 @@ class ProductAttribute extends Select
      */
     public function __construct(
         Context $context,
-        private readonly CollectionFactory $attributeCollectionFactory,
+        private readonly ProductAttributeSource $productAttributeSource,
         array $data = []
     ) {
         parent::__construct($context, $data);
@@ -53,36 +52,13 @@ class ProductAttribute extends Select
 
     private function prepareOptions(): void
     {
-        if (!$this->isMultiple()) {
-            $this->addOption('', (string) __('-- Select Attribute --'));
+        foreach ($this->productAttributeSource->toOptionArray() as $option) {
+            if ($this->isMultiple() && $option['value'] === '') {
+                continue;
+            }
+
+            $this->addOption($option['value'], $option['label']);
         }
-
-        $attributes = $this->attributeCollectionFactory->create();
-        $attributes->setOrder('frontend_label', 'ASC');
-        $attributes->setOrder('attribute_code', 'ASC');
-
-        foreach ($attributes as $attribute) {
-            /** @var Attribute $attribute */
-            $this->addAttributeOption($attribute);
-        }
-    }
-
-    private function addAttributeOption(Attribute $attribute): void
-    {
-        $attributeCode = $attribute->getAttributeCode();
-
-        if ($attributeCode === '') {
-            return;
-        }
-
-        $frontendLabelValue = $attribute->getFrontendLabel();
-        $frontendLabel = is_string($frontendLabelValue) ? trim($frontendLabelValue) : '';
-        $this->addOption(
-            $attributeCode,
-            $frontendLabel === ''
-                ? $attributeCode
-                : sprintf('%s (%s)', $frontendLabel, $attributeCode)
-        );
     }
 
     private function prepareElement(): void

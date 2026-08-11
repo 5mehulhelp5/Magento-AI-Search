@@ -15,7 +15,7 @@ use Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray;
 use Magento\Framework\DataObject;
 use Magento\Framework\View\Element\Html\Select;
 
-class AlternativeProductDescription extends AbstractFieldArray
+class DynamicDocument extends AbstractFieldArray
 {
     private ?ProductAttribute $productAttributeRenderer = null;
     private ?Composition $compositionRenderer = null;
@@ -53,7 +53,7 @@ class AlternativeProductDescription extends AbstractFieldArray
             ]
         );
         $this->_addAfter = false;
-        $this->_addButtonLabel = (string) __('Add Description Part');
+        $this->_addButtonLabel = (string) __('Add Document Part');
     }
 
     protected function _prepareArrayRow(DataObject $row): void
