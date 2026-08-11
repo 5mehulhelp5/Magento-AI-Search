@@ -45,14 +45,9 @@ class Versioning
             || $this->physicalIndexProvider->getActiveForCurrentConfiguration() !== null;
     }
 
-    public function getActiveVersion(): ?PhysicalIndex
+    public function getSearchIndex(bool $usePreviousDuringRebuild): ?PhysicalIndex
     {
-        return $this->physicalIndexProvider->getActive();
-    }
-
-    public function getActiveVersionForCurrentConfiguration(): ?PhysicalIndex
-    {
-        return $this->physicalIndexProvider->getActiveForCurrentConfiguration();
+        return $this->physicalIndexProvider->getForSearch($usePreviousDuringRebuild);
     }
 
     public function activateTargetWhenReady(): bool

@@ -46,29 +46,23 @@ class QuickSearch
             return $catalogQuery;
         }
 
-        $activeIndex = $this->versioning->getActiveVersionForCurrentConfiguration();
-        $configurationSnapshot = null;
+        $searchIndex = $this->versioning->getSearchIndex(
+            $this->searchResultConfig->usePreviousSemanticIndexDuringRebuild($storeId)
+        );
 
-        if ($activeIndex === null
-            && $this->searchResultConfig->usePreviousSemanticIndexDuringRebuild($storeId)
-        ) {
-            $activeIndex = $this->versioning->getActiveVersion();
-            $configurationSnapshot = $activeIndex?->queryConfigurationSnapshot;
-        }
-
-        if ($activeIndex === null) {
+        if ($searchIndex === null) {
             return $catalogQuery;
         }
 
         $vector = $this->queryEmbedding->execute(
             $queryText,
             $storeId,
-            $configurationSnapshot
+            $searchIndex->queryConfigurationSnapshot
         );
         $candidates = $this->vectorSearch->execute(
             $vector,
             $storeId,
-            $activeIndex
+            $searchIndex
         );
 
         return $this->catalogQueryModifier->execute($catalogQuery, $candidates);

@@ -55,4 +55,15 @@ class PhysicalIndexProvider
 
         return $activeIndex;
     }
+
+    public function getForSearch(bool $usePreviousDuringRebuild): ?PhysicalIndex
+    {
+        $state = $this->stateFlag->get();
+
+        if (!$usePreviousDuringRebuild && $state->target !== null) {
+            return null;
+        }
+
+        return $state->active;
+    }
 }
