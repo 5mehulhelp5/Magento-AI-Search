@@ -37,7 +37,7 @@
                        showInStore="1"
                        canRestore="1">
                     <label>Enabled</label>
-                    <config_path>davidbel_ai_search/storefront/enabled</config_path>
+                    <config_path>davidbel_ai_search/search_result/enabled</config_path>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="request_timeout_seconds"
@@ -49,7 +49,7 @@
                        showInStore="1"
                        canRestore="1">
                     <label>Request Timeout (Seconds)</label>
-                    <config_path>davidbel_ai_search/storefront/request_timeout_seconds</config_path>
+                    <config_path>davidbel_ai_search/search_result/request_timeout_seconds</config_path>
                     <validate>required-entry validate-number validate-greater-than-zero</validate>
                 </field>
                 <field id="use_previous_semantic_index_during_rebuild"
@@ -61,7 +61,7 @@
                        showInStore="1"
                        canRestore="1">
                     <label>Use Previous Semantic Index During Rebuild</label>
-                    <config_path>davidbel_ai_search/storefront/use_previous_semantic_index_during_rebuild</config_path>
+                    <config_path>davidbel_ai_search/search_result/use_previous_semantic_index_during_rebuild</config_path>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
             </group>
@@ -82,7 +82,7 @@
                        showInStore="1"
                        canRestore="1">
                     <label>Collapse Results by Product</label>
-                    <config_path>davidbel_ai_search/storefront/collapse_results_by_product</config_path>
+                    <config_path>davidbel_ai_search/search_result/collapse_results_by_product</config_path>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="product_result_limit"
@@ -94,7 +94,7 @@
                        showInStore="1"
                        canRestore="1">
                     <label>Product Result Limit</label>
-                    <config_path>davidbel_ai_search/storefront/product_result_limit</config_path>
+                    <config_path>davidbel_ai_search/search_result/product_result_limit</config_path>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
                 <field id="minimum_score"
@@ -106,7 +106,7 @@
                        showInStore="1"
                        canRestore="1">
                     <label>Minimum Score</label>
-                    <config_path>davidbel_ai_search/storefront/minimum_score</config_path>
+                    <config_path>davidbel_ai_search/search_result/minimum_score</config_path>
                     <validate>required-entry validate-number validate-zero-or-greater</validate>
                 </field>
             </group>
@@ -131,7 +131,7 @@
                        showInDefault="1"
                        canRestore="1">
                     <label>Product Attributes</label>
-                    <config_path>davidbel_ai_search/embedded_attributes/product_attributes</config_path>
+                    <config_path>davidbel_ai_search/search_source/product_attributes</config_path>
                     <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\ProductAttributes</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                 </field>
@@ -142,7 +142,7 @@
                        showInDefault="1"
                        canRestore="1">
                     <label>Enable Alternative Product Description</label>
-                    <config_path>davidbel_ai_search/embedded_attributes/alternative_product_description_enabled</config_path>
+                    <config_path>davidbel_ai_search/search_source/alternative_product_description_enabled</config_path>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="alternative_product_description"
@@ -151,7 +151,7 @@
                        showInDefault="1"
                        canRestore="1">
                     <label>Alternative Product Description</label>
-                    <config_path>davidbel_ai_search/embedded_attributes/alternative_product_description</config_path>
+                    <config_path>davidbel_ai_search/search_source/alternative_product_description</config_path>
                     <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\AlternativeProductDescription</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <depends>
