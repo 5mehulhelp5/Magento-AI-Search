@@ -62,4 +62,12 @@
         <plugin name="davidbel_ai_search_semantic_query"
                 type="DavidBel\AiSearch\Plugin\OpenSearch\SemanticQuery"/>
     </type>
+    <type name="Magento\Config\Model\Config\Importer">
+        <plugin name="davidbel_ai_search_config_import_indexer_invalidation"
+                type="DavidBel\AiSearch\Plugin\Config\Importer\InvalidateProductIndexer"/>
+    </type>
+    <type name="Magento\Config\Console\Command\ConfigSet\ProcessorFacade">
+        <plugin name="davidbel_ai_search_config_set_indexer_invalidation"
+                type="DavidBel\AiSearch\Plugin\Config\ProcessorFacade\InvalidateProductIndexer"/>
+    </type>
 </config>
