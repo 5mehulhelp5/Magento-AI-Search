@@ -48,6 +48,14 @@ class Parsing
         $this->parsingStrategies = $strategiesByCode;
     }
 
+    /**
+     * @return list<ParsingInterface>
+     */
+    public function getAvailableStrategies(): array
+    {
+        return array_values($this->parsingStrategies);
+    }
+
     public function parse(string $text, string $strategy): string
     {
         $parsingStrategy = $this->parsingStrategies[$strategy] ?? null;

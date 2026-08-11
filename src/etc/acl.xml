@@ -13,9 +13,13 @@
                     <resource id="Magento_Backend::stores_settings">
                         <resource id="Magento_Config::config">
                             <resource id="DavidBel_AiSearch::config_storefront"
-                                      title="AI Search Storefront Configuration"
+                                      title="AI Search Result Configuration"
                                       translate="title"
                                       sortOrder="500"/>
+                            <resource id="DavidBel_AiSearch::config_search_source"
+                                      title="AI Search Source Configuration"
+                                      translate="title"
+                                      sortOrder="510"/>
                         </resource>
                     </resource>
                 </resource>

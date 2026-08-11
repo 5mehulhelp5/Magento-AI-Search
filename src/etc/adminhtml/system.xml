@@ -17,7 +17,7 @@
                  showInDefault="1"
                  showInWebsite="1"
                  showInStore="1">
-            <label>Storefront</label>
+            <label>Search Result</label>
             <tab>davidbel</tab>
             <resource>DavidBel_AiSearch::config_storefront</resource>
             <group id="general"
@@ -108,6 +108,32 @@
                     <label>Minimum Score</label>
                     <config_path>davidbel_ai_search/storefront/minimum_score</config_path>
                     <validate>required-entry validate-number validate-zero-or-greater</validate>
+                </field>
+            </group>
+        </section>
+        <section id="davidbel_ai_search_search_source"
+                 translate="label"
+                 type="text"
+                 sortOrder="510"
+                 showInDefault="1">
+            <label>Search Source</label>
+            <tab>davidbel</tab>
+            <resource>DavidBel_AiSearch::config_search_source</resource>
+            <group id="vector_configuration"
+                   translate="label"
+                   type="text"
+                   sortOrder="10"
+                   showInDefault="1">
+                <label>Vector Configuration</label>
+                <field id="product_attributes"
+                       translate="label"
+                       sortOrder="10"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Product Attributes</label>
+                    <config_path>davidbel_ai_search/embedded_attributes/product_attributes</config_path>
+                    <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\ProductAttributes</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                 </field>
             </group>
         </section>
