@@ -6,7 +6,7 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\ProductAttributes;
+namespace DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\AttributeConfiguration;
 
 use Magento\Framework\View\Element\Html\Select;
 
@@ -31,8 +31,8 @@ class Composition extends Select
         $this->setClass('required-entry admin__control-select');
 
         if ($this->getOptions() === []) {
-            $this->addOption('0', __('No — Current Product Only'));
-            $this->addOption('1', __('Yes — Include Child Products'));
+            $this->addOption('0', (string) __('No — Current Product Only'));
+            $this->addOption('1', (string) __('Yes — Include Child Products'));
         }
 
         return parent::_toHtml();

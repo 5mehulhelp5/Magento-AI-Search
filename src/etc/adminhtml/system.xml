@@ -135,6 +135,29 @@
                     <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\ProductAttributes</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                 </field>
+                <field id="alternative_product_description_enabled"
+                       translate="label"
+                       type="select"
+                       sortOrder="20"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Enable Alternative Product Description</label>
+                    <config_path>davidbel_ai_search/embedded_attributes/alternative_product_description_enabled</config_path>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="alternative_product_description"
+                       translate="label"
+                       sortOrder="30"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Alternative Product Description</label>
+                    <config_path>davidbel_ai_search/embedded_attributes/alternative_product_description</config_path>
+                    <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\AlternativeProductDescription</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <depends>
+                        <field id="alternative_product_description_enabled">1</field>
+                    </depends>
+                </field>
             </group>
         </section>
     </system>

@@ -6,7 +6,7 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\ProductAttributes;
+namespace DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\AttributeConfiguration;
 
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Parsing;
 use Magento\Framework\View\Element\Context;
@@ -14,6 +14,9 @@ use Magento\Framework\View\Element\Html\Select;
 
 class ParsingStrategy extends Select
 {
+    /**
+     * @param array<string, mixed> $data
+     */
     public function __construct(
         Context $context,
         private readonly Parsing $parsing,
@@ -44,7 +47,7 @@ class ParsingStrategy extends Select
             return parent::_toHtml();
         }
 
-        $this->addOption('', __('-- Select Parsing Strategy --'));
+        $this->addOption('', (string) __('-- Select Parsing Strategy --'));
 
         foreach ($this->parsing->getAvailableStrategies() as $parsingStrategy) {
             $this->addOption(

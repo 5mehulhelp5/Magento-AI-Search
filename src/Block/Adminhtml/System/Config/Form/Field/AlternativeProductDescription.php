@@ -15,7 +15,7 @@ use Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray;
 use Magento\Framework\DataObject;
 use Magento\Framework\View\Element\Html\Select;
 
-class ProductAttributes extends AbstractFieldArray
+class AlternativeProductDescription extends AbstractFieldArray
 {
     private ?ProductAttribute $productAttributeRenderer = null;
     private ?Composition $compositionRenderer = null;
@@ -26,7 +26,7 @@ class ProductAttributes extends AbstractFieldArray
         $this->addColumn(
             'attribute_code',
             [
-                'label' => __('Attribute'),
+                'label' => __('Attributes'),
                 'renderer' => $this->getProductAttributeRenderer(),
             ]
         );
@@ -44,29 +44,41 @@ class ProductAttributes extends AbstractFieldArray
                 'renderer' => $this->getParsingStrategyRenderer(),
             ]
         );
+        $this->addColumn(
+            'template',
+            [
+                'label' => __('Template'),
+                'class' => 'input-text required-entry',
+                'style' => 'width: 320px;',
+            ]
+        );
         $this->_addAfter = false;
-        $this->_addButtonLabel = (string) __('Add Product Attribute');
+        $this->_addButtonLabel = (string) __('Add Description Part');
     }
 
     protected function _prepareArrayRow(DataObject $row): void
     {
-        $row->setData(
-            'option_extra_attrs',
-            [
-                $this->getOptionKey(
-                    $this->getProductAttributeRenderer(),
-                    $this->getStringData($row, 'attribute_code')
-                ) => 'selected="selected"',
-                $this->getOptionKey(
-                    $this->getCompositionRenderer(),
-                    $this->getStringData($row, 'composite')
-                ) => 'selected="selected"',
-                $this->getOptionKey(
-                    $this->getParsingStrategyRenderer(),
-                    $this->getStringData($row, 'parsing_strategy')
-                ) => 'selected="selected"',
-            ]
-        );
+        $optionAttributes = [];
+
+        foreach ($this->getAttributeCodes($row) as $attributeCode) {
+            $optionAttributes[$this->getOptionKey($this->getProductAttributeRenderer(), $attributeCode)] =
+                'selected="selected"';
+        }
+
+        $optionAttributes[
+            $this->getOptionKey(
+                $this->getCompositionRenderer(),
+                $this->getStringData($row, 'composite')
+            )
+        ] = 'selected="selected"';
+        $optionAttributes[
+            $this->getOptionKey(
+                $this->getParsingStrategyRenderer(),
+                $this->getStringData($row, 'parsing_strategy')
+            )
+        ] = 'selected="selected"';
+
+        $row->setData('option_extra_attrs', $optionAttributes);
     }
 
     private function getProductAttributeRenderer(): ProductAttribute
@@ -74,7 +86,12 @@ class ProductAttributes extends AbstractFieldArray
         $this->productAttributeRenderer ??= $this->getLayout()->createBlock(
             ProductAttribute::class,
             '',
-            ['data' => ['is_render_to_js_template' => true]]
+            [
+                'data' => [
+                    'is_render_to_js_template' => true,
+                    'is_multiple' => true,
+                ],
+            ]
         );
 
         return $this->productAttributeRenderer;
@@ -105,6 +122,41 @@ class ProductAttributes extends AbstractFieldArray
     private function getOptionKey(Select $renderer, string $value): string
     {
         return 'option_' . $renderer->calcOptionHash($value);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function getAttributeCodes(DataObject $row): array
+    {
+        $value = $row->getData('attribute_code');
+        $attributeCodes = [];
+
+        if (is_array($value)) {
+            $attributeCodes = $value;
+        }
+
+        if (is_string($value)) {
+            $attributeCodes = explode(',', $value);
+        }
+
+        $result = [];
+
+        foreach ($attributeCodes as $attributeCode) {
+            if (!is_string($attributeCode)) {
+                continue;
+            }
+
+            $attributeCode = trim($attributeCode);
+
+            if ($attributeCode === '') {
+                continue;
+            }
+
+            $result[] = $attributeCode;
+        }
+
+        return $result;
     }
 
     private function getStringData(DataObject $row, string $key): string

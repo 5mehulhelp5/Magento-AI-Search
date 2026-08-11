@@ -24,55 +24,53 @@
                         }
                     }
                 ]]></product_attributes>
-                <embedding_template>
-                    <attribute_code>embedding_template</attribute_code>
-                    <composite>0</composite>
-                    <parsing_strategy>text_as_is</parsing_strategy>
-                    <children>
-                        <name>
-                            <attribute_code>name</attribute_code>
-                            <composite>0</composite>
-                            <parsing_strategy>text_as_is</parsing_strategy>
-                            <template>This product is called {name}.</template>
-                        </name>
-                        <color_size>
-                            <attribute_code>color,size</attribute_code>
-                            <composite>1</composite>
-                            <parsing_strategy>text_as_is</parsing_strategy>
-                            <template>It is available in {color}, with size options including {size}.</template>
-                        </color_size>
-                        <material>
-                            <attribute_code>material</attribute_code>
-                            <composite>1</composite>
-                            <parsing_strategy>text_as_is</parsing_strategy>
-                            <template>It is made from {material}.</template>
-                        </material>
-                        <pattern>
-                            <attribute_code>pattern</attribute_code>
-                            <composite>1</composite>
-                            <parsing_strategy>text_as_is</parsing_strategy>
-                            <template>Its design features a {pattern} pattern.</template>
-                        </pattern>
-                        <activity>
-                            <attribute_code>activity</attribute_code>
-                            <composite>1</composite>
-                            <parsing_strategy>text_as_is</parsing_strategy>
-                            <template>It is designed for {activity}.</template>
-                        </activity>
-                        <climate>
-                            <attribute_code>climate</attribute_code>
-                            <composite>1</composite>
-                            <parsing_strategy>text_as_is</parsing_strategy>
-                            <template>It is well suited to {climate} conditions.</template>
-                        </climate>
-                        <short_description>
-                            <attribute_code>short_description</attribute_code>
-                            <composite>1</composite>
-                            <parsing_strategy>html_to_text</parsing_strategy>
-                            <template>Here is a brief description: {short_description}</template>
-                        </short_description>
-                    </children>
-                </embedding_template>
+                <alternative_product_description_enabled>0</alternative_product_description_enabled>
+                <alternative_product_description><![CDATA[
+                    {
+                        "name": {
+                            "attribute_code": ["name"],
+                            "composite": "0",
+                            "parsing_strategy": "text_as_is",
+                            "template": "This product is called {name}."
+                        },
+                        "color_size": {
+                            "attribute_code": ["color", "size"],
+                            "composite": "1",
+                            "parsing_strategy": "text_as_is",
+                            "template": "It is available in {color}, with size options including {size}."
+                        },
+                        "material": {
+                            "attribute_code": ["material"],
+                            "composite": "1",
+                            "parsing_strategy": "text_as_is",
+                            "template": "It is made from {material}."
+                        },
+                        "pattern": {
+                            "attribute_code": ["pattern"],
+                            "composite": "1",
+                            "parsing_strategy": "text_as_is",
+                            "template": "Its design features a {pattern} pattern."
+                        },
+                        "activity": {
+                            "attribute_code": ["activity"],
+                            "composite": "1",
+                            "parsing_strategy": "text_as_is",
+                            "template": "It is designed for {activity}."
+                        },
+                        "climate": {
+                            "attribute_code": ["climate"],
+                            "composite": "1",
+                            "parsing_strategy": "text_as_is",
+                            "template": "It is well suited to {climate} conditions."
+                        },
+                        "short_description": {
+                            "attribute_code": ["short_description"],
+                            "composite": "1",
+                            "parsing_strategy": "html_to_text",
+                            "template": "Here is a brief description: {short_description}"
+                        }
+                    }
+                ]]></alternative_product_description>
             </embedded_attributes>
             <embedder>
                 <base_url>http://host.docker.internal:1234</base_url>
