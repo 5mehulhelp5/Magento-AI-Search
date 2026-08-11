@@ -7,8 +7,8 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/config.xsd">
     <default>
-        <davidbel_ai_search>
-            <search_source>
+        <davidbel_ai_search_search_source>
+            <vector_configuration>
                 <title_attribute_code>name</title_attribute_code>
                 <product_attributes><![CDATA[
                     {
@@ -71,14 +71,15 @@
                         }
                     }
                 ]]></alternative_product_description>
-            </search_source>
+            </vector_configuration>
+        </davidbel_ai_search_search_source>
+        <davidbel_ai_search>
             <embedder>
                 <base_url>http://host.docker.internal:1234</base_url>
                 <model>text-embedding-embeddinggemma-300m-qat</model>
                 <vector_dimensions>768</vector_dimensions>
                 <request_timeout_seconds>60</request_timeout_seconds>
                 <document_template>title: {title} | text: {text}</document_template>
-                <query_template>task: search result | query: {text}</query_template>
                 <maximum_chunk_tokens>350</maximum_chunk_tokens>
                 <chunk_overlap_tokens>50</chunk_overlap_tokens>
                 <estimated_characters_per_token>4</estimated_characters_per_token>
@@ -103,15 +104,22 @@
                 <vector_space>l2</vector_space>
                 <lock_timeout_seconds>10</lock_timeout_seconds>
             </search>
-            <search_result>
+        </davidbel_ai_search>
+        <davidbel_ai_search_search_result>
+            <general>
                 <enabled>1</enabled>
                 <request_timeout_seconds>2</request_timeout_seconds>
                 <use_previous_semantic_index_during_rebuild>1</use_previous_semantic_index_during_rebuild>
+            </general>
+            <search_relevance>
                 <collapse_results_by_product>1</collapse_results_by_product>
                 <product_result_limit>1000</product_result_limit>
                 <chunk_candidate_limit>3000</chunk_candidate_limit>
                 <minimum_score>0.46</minimum_score>
-            </search_result>
-        </davidbel_ai_search>
+            </search_relevance>
+            <embedding>
+                <embedder_query_template>task: search result | query: {text}</embedder_query_template>
+            </embedding>
+        </davidbel_ai_search_search_result>
     </default>
 </config>
