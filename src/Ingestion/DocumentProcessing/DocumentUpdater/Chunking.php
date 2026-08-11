@@ -18,11 +18,17 @@ class Chunking
      */
     private readonly array $chunkingStrategies;
 
+    private readonly int $maximumChunkTokens;
+
+    private readonly int $chunkOverlapTokens;
+
+    private readonly int $estimatedCharactersPerToken;
+
     /**
      * @param array<string, Chunking\ChunkingInterface> $chunkingStrategies
      */
     public function __construct(
-        private readonly EmbedderConfig $embedderConfig,
+        EmbedderConfig $embedderConfig,
         array $chunkingStrategies
     ) {
         if ($chunkingStrategies === []) {
@@ -30,6 +36,10 @@ class Chunking
         }
 
         $this->chunkingStrategies = array_values($chunkingStrategies);
+        $this->maximumChunkTokens = $embedderConfig->getMaximumChunkTokens();
+        $this->chunkOverlapTokens = $embedderConfig->getChunkOverlapTokens();
+        $this->estimatedCharactersPerToken = $embedderConfig
+            ->getEstimatedCharactersPerToken();
     }
 
     /**
@@ -37,12 +47,11 @@ class Chunking
      */
     public function chunk(string $text): array
     {
-        //TODO map strategies and attributes via configuration
         return $this->chunkingStrategies[0]->chunk(
             $text,
-            $this->embedderConfig->getMaximumChunkTokens(),
-            $this->embedderConfig->getChunkOverlapTokens(),
-            $this->embedderConfig->getEstimatedCharactersPerToken()
+            $this->maximumChunkTokens,
+            $this->chunkOverlapTokens,
+            $this->estimatedCharactersPerToken
         );
     }
 }

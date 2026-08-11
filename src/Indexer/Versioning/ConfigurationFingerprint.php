@@ -31,7 +31,7 @@ class ConfigurationFingerprint
         $serializedConfiguration = $this->serializer->serialize([
             'index_alias' => $this->indexName->getAlias(),
             'index_schema_version' => $this->searchConfig->getIndexSchemaVersion(),
-            'title_attribute_code' => $this->embeddedAttributesConfig->getTitleAttributeCode(),
+            'title_attribute_code' => $this->getDocumentTitleAttributeCode(),
             'embedded_attributes' => $this->getEmbeddedAttributes(),
             'chunking' => [
                 'max_tokens' => $this->embedderConfig->getMaximumChunkTokens(),
@@ -40,9 +40,9 @@ class ConfigurationFingerprint
                     ->getEstimatedCharactersPerToken(),
             ],
             'embedding' => [
-                'model' => $this->embedderConfig->getModel(),
+                'model' => $this->embedderConfig->getEmbeddingModel(),
                 'vector_dimensions' => $this->embedderConfig->getVectorDimensions(),
-                'document_template' => $this->embedderConfig->getDocumentTemplate(),
+                'document_template' => $this->embedderConfig->getEmbedderDocumentTemplate(),
             ],
             'index' => [
                 'vector_method' => $this->searchConfig->getVectorMethod(),
@@ -56,6 +56,15 @@ class ConfigurationFingerprint
         }
 
         return hash('sha256', $serializedConfiguration);
+    }
+
+    private function getDocumentTitleAttributeCode(): ?string
+    {
+        if (!$this->embeddedAttributesConfig->isDocumentTitleEnabled()) {
+            return null;
+        }
+
+        return $this->embeddedAttributesConfig->getDocumentTitleAttributeCode();
     }
 
     /**

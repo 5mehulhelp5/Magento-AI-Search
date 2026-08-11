@@ -8,14 +8,23 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Config;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use UnexpectedValueException;
+
 class SearchConfig
 {
     private const string INDEX_NAME = 'davidbel_ai_search_chunks';
     private const int INDEX_SCHEMA_VERSION = 1;
     private const string VECTOR_METHOD = 'hnsw';
-    private const string VECTOR_ENGINE = 'faiss';
-    private const string VECTOR_SPACE = 'l2';
-    private const int LOCK_TIMEOUT_SECONDS = 10;
+    private const string XML_PATH_VECTOR_ENGINE =
+        'davidbel_ai_search_search_source/search_engine/vector_engine';
+    private const string XML_PATH_VECTOR_SPACE =
+        'davidbel_ai_search_search_source/search_engine/vector_space';
+
+    public function __construct(
+        private readonly ScopeConfigInterface $scopeConfig
+    ) {
+    }
 
     public function getIndexName(): string
     {
@@ -34,16 +43,24 @@ class SearchConfig
 
     public function getVectorEngine(): string
     {
-        return self::VECTOR_ENGINE;
+        return $this->getStringValue(self::XML_PATH_VECTOR_ENGINE);
     }
 
     public function getVectorSpace(): string
     {
-        return self::VECTOR_SPACE;
+        return $this->getStringValue(self::XML_PATH_VECTOR_SPACE);
     }
 
-    public function getLockTimeoutSeconds(): int
+    private function getStringValue(string $path): string
     {
-        return self::LOCK_TIMEOUT_SECONDS;
+        $value = $this->scopeConfig->getValue($path);
+
+        if (!is_string($value)) {
+            throw new UnexpectedValueException(
+                sprintf('Configuration path "%s" must contain a string.', $path)
+            );
+        }
+
+        return $value;
     }
 }

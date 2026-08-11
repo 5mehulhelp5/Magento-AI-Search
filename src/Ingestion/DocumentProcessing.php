@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion;
 
-use DavidBel\AiSearch\Config\IngestionConfig;
+use DavidBel\AiSearch\Config\DataProcessingConfig;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Result as DocumentUpdateResult;
@@ -29,18 +29,19 @@ class DocumentProcessing
         private readonly SourceProvider $sourceProvider,
         private readonly DocumentUpdater $documentUpdater,
         private readonly EmbeddingBacklogCollectionFactory $embeddingBacklogCollectionFactory,
-        private readonly IngestionConfig $ingestionConfig
+        private readonly DataProcessingConfig $dataProcessingConfig
     ) {
     }
 
     public function fullUpdate(): void
     {
         $lastProductId = 0;
+        $batchSize = $this->dataProcessingConfig->getDocumentProcessingBatchSize();
 
         while (true) {
             $productIds = $this->sourceProvider->getProductIdsAfter(
                 $lastProductId,
-                $this->ingestionConfig->getDocumentProcessingBatchSize()
+                $batchSize
             );
 
             if ($productIds === []) {
@@ -57,8 +58,8 @@ class DocumentProcessing
      */
     public function deltaUpdate(array $productIds): void
     {
-        $affectedProductIds = $this->getAffectedProductIds($productIds);
-        $batchSize = $this->ingestionConfig->getDocumentProcessingBatchSize();
+        $batchSize = $this->dataProcessingConfig->getDocumentProcessingBatchSize();
+        $affectedProductIds = $this->getAffectedProductIds($productIds, $batchSize);
 
         foreach (array_chunk($affectedProductIds, $batchSize) as $productIdBatch) {
             $this->processProducts($productIdBatch, UpdateMode::DeltaUpdate);
@@ -67,12 +68,12 @@ class DocumentProcessing
 
     /**
      * @param list<int> $productIds
+     * @param positive-int $batchSize
      * @return list<int>
      */
-    private function getAffectedProductIds(array $productIds): array
+    private function getAffectedProductIds(array $productIds, int $batchSize): array
     {
         $affectedProductIds = [];
-        $batchSize = $this->ingestionConfig->getDocumentProcessingBatchSize();
 
         foreach (array_chunk($productIds, $batchSize) as $productIdBatch) {
             $affectedProductIds += array_fill_keys(

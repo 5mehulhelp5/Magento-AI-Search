@@ -34,10 +34,11 @@ class OpenAi implements EmbedderClientInterface
     public function embedDocumentsAsync(array $inputs): PromiseInterface
     {
         $requestInputs = [];
+        $documentTemplate = $this->embedderConfig->getEmbedderDocumentTemplate();
 
         foreach ($inputs as $input) {
             $requestInputs[] = strtr(
-                $this->embedderConfig->getDocumentTemplate(),
+                $documentTemplate,
                 [
                     '{title}' => $input->title ?? 'none',
                     '{text}' => $input->text,
@@ -47,7 +48,7 @@ class OpenAi implements EmbedderClientInterface
 
         return $this->sendAsync(
             $requestInputs,
-            $this->embedderConfig->getModel(),
+            $this->embedderConfig->getEmbeddingModel(),
             $this->embedderConfig->getVectorDimensions(),
             $this->embedderConfig->getRequestTimeoutSeconds()
         );
@@ -56,22 +57,8 @@ class OpenAi implements EmbedderClientInterface
     public function embedQueryAsync(
         string $queryText,
         int $requestTimeoutSeconds,
-        ?QueryConfigurationSnapshot $configurationSnapshot = null
+        QueryConfigurationSnapshot $configurationSnapshot
     ): PromiseInterface {
-        if ($configurationSnapshot === null) {
-            return $this->sendAsync(
-                [
-                    strtr(
-                        $this->embedderConfig->getQueryTemplate(),
-                        ['{text}' => $queryText]
-                    ),
-                ],
-                $this->embedderConfig->getModel(),
-                $this->embedderConfig->getVectorDimensions(),
-                $requestTimeoutSeconds
-            );
-        }
-
         return $this->sendAsync(
             [
                 strtr(

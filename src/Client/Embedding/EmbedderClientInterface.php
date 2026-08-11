@@ -21,6 +21,6 @@ interface EmbedderClientInterface
     public function embedQueryAsync(
         string $queryText,
         int $requestTimeoutSeconds,
-        ?QueryConfigurationSnapshot $configurationSnapshot = null
+        QueryConfigurationSnapshot $configurationSnapshot
     ): PromiseInterface;
 }

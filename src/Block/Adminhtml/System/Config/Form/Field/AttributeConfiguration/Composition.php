@@ -31,8 +31,8 @@ class Composition extends Select
         $this->setClass('required-entry admin__control-select');
 
         if ($this->getOptions() === []) {
-            $this->addOption('0', (string) __('No — Current Product Only'));
-            $this->addOption('1', (string) __('Yes — Include Child Products'));
+            $this->addOption('0', (string) __('No: Current Product Only'));
+            $this->addOption('1', (string) __('Yes: Include Child Products'));
         }
 
         return parent::_toHtml();

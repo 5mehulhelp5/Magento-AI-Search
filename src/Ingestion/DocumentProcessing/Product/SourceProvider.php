@@ -9,7 +9,6 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product;
 
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\AttributeValueProvider;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\DirectSourceBuilder;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\Eligibility;
@@ -56,7 +55,7 @@ class SourceProvider
 
     /**
      * @param list<int> $productIds
-     * @return array<int, list<DocumentSource>>
+     * @return array<int, list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource>>
      */
     public function getSourcesByProductIds(array $productIds): array
     {
@@ -67,13 +66,14 @@ class SourceProvider
         $eligibleScopes = $this->eligibility->getEligibleScopesByProductIds($productIds);
         $embeddedAttributes = $this->embeddedAttributesConfig->getAttributes();
         $directAttributes = $this->getDirectAttributes($embeddedAttributes);
+        $titleAttributeCode = $this->getDocumentTitleAttributeCode();
         $valuesBySourceCode = $this->attributeValueProvider->getValuesBySourceCode(
-            $this->getRequiredAttributeCodes($directAttributes),
+            $this->getRequiredAttributeCodes($directAttributes, $titleAttributeCode),
             $this->getSourceProductIds($eligibleScopes)
         );
-        $titleValues = $valuesBySourceCode[
-            $this->embeddedAttributesConfig->getTitleAttributeCode()
-        ] ?? [];
+        $titleValues = $titleAttributeCode === null
+            ? []
+            : ($valuesBySourceCode[$titleAttributeCode] ?? []);
         $directSources = $this->directSourceBuilder->buildSourcesByProductId(
             $directAttributes,
             $productIds,
@@ -129,15 +129,26 @@ class SourceProvider
      * @param list<\DavidBel\AiSearch\Config\EmbeddedAttribute> $embeddedAttributes
      * @return list<string>
      */
-    private function getRequiredAttributeCodes(array $embeddedAttributes): array
-    {
-        $attributeCodes = [$this->embeddedAttributesConfig->getTitleAttributeCode() => true];
+    private function getRequiredAttributeCodes(
+        array $embeddedAttributes,
+        ?string $titleAttributeCode
+    ): array {
+        $attributeCodes = $titleAttributeCode === null ? [] : [$titleAttributeCode => true];
 
         foreach ($embeddedAttributes as $embeddedAttribute) {
             $attributeCodes[$embeddedAttribute->attributeCode] = true;
         }
 
         return array_keys($attributeCodes);
+    }
+
+    private function getDocumentTitleAttributeCode(): ?string
+    {
+        if (!$this->embeddedAttributesConfig->isDocumentTitleEnabled()) {
+            return null;
+        }
+
+        return $this->embeddedAttributesConfig->getDocumentTitleAttributeCode();
     }
 
     /**
@@ -161,9 +172,9 @@ class SourceProvider
 
     /**
      * @param list<int> $productIds
-     * @param array<int, list<DocumentSource>> $directSources
-     * @param array<int, list<DocumentSource>> $templateSources
-     * @return array<int, list<DocumentSource>>
+     * @param array<int, list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource>> $directSources
+     * @param array<int, list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource>> $templateSources
+     * @return array<int, list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource>>
      */
     private function mergeSources(
         array $productIds,

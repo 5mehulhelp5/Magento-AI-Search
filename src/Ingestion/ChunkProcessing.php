@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion;
 
-use DavidBel\AiSearch\Config\IngestionConfig;
+use DavidBel\AiSearch\Config\DataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\CacheClean;
@@ -35,7 +35,7 @@ class ChunkProcessing
         private readonly ProcessingResultHandlerFactory $processingResultHandlerFactory,
         private readonly VectorEmbedding $vectorEmbedding,
         private readonly CacheClean $cacheClean,
-        private readonly IngestionConfig $ingestionConfig
+        private readonly DataProcessingConfig $dataProcessingConfig
     ) {
     }
 
@@ -59,7 +59,7 @@ class ChunkProcessing
     ): void {
         $this->vectorEmbedding->execute(
             $this->createProcessingBatches($processingState),
-            $this->ingestionConfig->getConcurrentEmbeddingRequests(),
+            $this->dataProcessingConfig->getVectorEmbeddingConcurrentRequests(),
             [$resultHandler, 'completed'],
             [$resultHandler, 'failed']
         );
@@ -73,12 +73,13 @@ class ChunkProcessing
         $cursorUpdatedAt = null;
         $cursorBacklogId = null;
         $batchId = 0;
-        $maxRuntimeNanoseconds = $this->ingestionConfig->getEmbeddingMaximumRuntimeSeconds()
-            * self::NANOSECONDS_PER_SECOND;
+        $batchSize = $this->dataProcessingConfig->getVectorEmbeddingBatchSize();
+        $maxRuntimeNanoseconds = $this->dataProcessingConfig
+            ->getVectorEmbeddingMaximumRuntimeSeconds() * self::NANOSECONDS_PER_SECOND;
 
         while ($processingState->isWithinRuntime($maxRuntimeNanoseconds)) {
             $rows = $this->getResource()->getPendingUpsertsForEmbedding(
-                $this->ingestionConfig->getEmbeddingBatchSize(),
+                $batchSize,
                 $cursorUpdatedAt,
                 $cursorBacklogId
             );

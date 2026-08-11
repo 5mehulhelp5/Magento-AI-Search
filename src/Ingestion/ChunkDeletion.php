@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion;
 
-use DavidBel\AiSearch\Config\IngestionConfig;
+use DavidBel\AiSearch\Config\DataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\CacheClean;
@@ -36,7 +36,7 @@ class ChunkDeletion
         private readonly ProcessingResultHandlerFactory $processingResultHandlerFactory,
         private readonly VectorSync $vectorSync,
         private readonly CacheClean $cacheClean,
-        private readonly IngestionConfig $ingestionConfig
+        private readonly DataProcessingConfig $dataProcessingConfig
     ) {
     }
 
@@ -77,13 +77,16 @@ class ChunkDeletion
     {
         $cursorUpdatedAt = null;
         $cursorBacklogId = null;
-        $maxRuntimeNanoseconds = $this->ingestionConfig->getDeletionMaximumRuntimeSeconds()
-            * self::NANOSECONDS_PER_SECOND;
+        $batchSize = $this->dataProcessingConfig->getVectorDeletionBatchSize();
+        $upsertAttemptThreshold = $this->dataProcessingConfig
+            ->getVectorDeletionUpsertAttemptThreshold();
+        $maxRuntimeNanoseconds = $this->dataProcessingConfig
+            ->getVectorDeletionMaximumRuntimeSeconds() * self::NANOSECONDS_PER_SECOND;
 
         while ($processingState->isWithinRuntime($maxRuntimeNanoseconds)) {
             $rows = $this->getResource()->getItemsForDeletion(
-                $this->ingestionConfig->getDeletionBatchSize(),
-                $this->ingestionConfig->getDeletionUpsertAttemptThreshold(),
+                $batchSize,
+                $upsertAttemptThreshold,
                 $cursorUpdatedAt,
                 $cursorBacklogId
             );

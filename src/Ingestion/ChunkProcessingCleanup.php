@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion;
 
-use DavidBel\AiSearch\Config\IngestionConfig;
+use DavidBel\AiSearch\Config\DataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 
@@ -17,7 +17,7 @@ class ChunkProcessingCleanup
     public function __construct(
         private readonly CollectionFactory $collectionFactory,
         private readonly DateTime $dateTime,
-        private readonly IngestionConfig $ingestionConfig
+        private readonly DataProcessingConfig $dataProcessingConfig
     ) {
     }
 
@@ -25,14 +25,17 @@ class ChunkProcessingCleanup
     {
         $expiredBefore = $this->dateTime->gmtDate(
             null,
-            $this->ingestionConfig->getCleanupResultRetention()
+            sprintf(
+                '-%d hours',
+                $this->dataProcessingConfig->getCleanupResultRetentionHours()
+            )
         );
 
         return $this->collectionFactory
             ->create()
             ->getResourceModel()
             ->deleteExhaustedUpsertsOrExpiredResults(
-                $this->ingestionConfig->getCleanupAttemptThreshold(),
+                $this->dataProcessingConfig->getCleanupAttemptThreshold(),
                 $expiredBefore
             );
     }

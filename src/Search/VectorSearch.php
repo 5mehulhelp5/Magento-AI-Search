@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Search;
 
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
-use DavidBel\AiSearch\Config\StorefrontConfig;
+use DavidBel\AiSearch\Config\SearchResultConfig;
 use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use UnexpectedValueException;
@@ -21,7 +21,7 @@ class VectorSearch
     public function __construct(
         private readonly OpenSearch $openSearch,
         private readonly EmbeddedAttributesConfig $embeddedAttributesConfig,
-        private readonly StorefrontConfig $storefrontConfig
+        private readonly SearchResultConfig $searchResultConfig
     ) {
     }
 
@@ -35,7 +35,12 @@ class VectorSearch
             $this->createQuery($vector, $storeId)
         );
 
-        return new Candidates($this->getScoresByProductId($response));
+        return new Candidates(
+            $this->getScoresByProductId(
+                $response,
+                $this->searchResultConfig->getMinimumScore($storeId)
+            )
+        );
     }
 
     /**
@@ -45,13 +50,13 @@ class VectorSearch
     private function createQuery(array $vector, int $storeId): array
     {
         $query = [
-            'size' => $this->storefrontConfig->getProductResultLimit(),
+            'size' => $this->searchResultConfig->getProductResultLimit($storeId),
             '_source' => ['source_entity_id'],
             'query' => [
                 'knn' => [
                     'vector' => [
                         'vector' => $vector,
-                        'k' => $this->storefrontConfig->getChunkCandidateLimit(),
+                        'k' => $this->searchResultConfig->getChunkCandidateLimit($storeId),
                         'filter' => [
                             'bool' => [
                                 'filter' => [
@@ -66,7 +71,7 @@ class VectorSearch
             ],
         ];
 
-        if (!$this->storefrontConfig->shouldCollapseResultsByProduct()) {
+        if (!$this->searchResultConfig->shouldCollapseResultsByProduct($storeId)) {
             return $query;
         }
 
@@ -95,7 +100,7 @@ class VectorSearch
      * @param array<array-key, mixed> $response
      * @return array<int, float>
      */
-    private function getScoresByProductId(array $response): array
+    private function getScoresByProductId(array $response, float $minimumScore): array
     {
         $hitContainer = $response['hits'] ?? null;
 
@@ -115,7 +120,8 @@ class VectorSearch
             [$productId, $score] = $this->getProductScore($hit);
             $highestScore = $this->getHighestRelevantScore(
                 $scoresByProductId[$productId] ?? null,
-                $score
+                $score,
+                $minimumScore
             );
 
             if ($highestScore === null) {
@@ -128,9 +134,12 @@ class VectorSearch
         return $scoresByProductId;
     }
 
-    private function getHighestRelevantScore(?float $currentScore, float $candidateScore): ?float
-    {
-        if ($candidateScore < $this->storefrontConfig->getMinimumScore()) {
+    private function getHighestRelevantScore(
+        ?float $currentScore,
+        float $candidateScore,
+        float $minimumScore
+    ): ?float {
+        if ($candidateScore < $minimumScore) {
             return $currentScore;
         }
 

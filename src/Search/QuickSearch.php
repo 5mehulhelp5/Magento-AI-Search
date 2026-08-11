@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Search;
 
-use DavidBel\AiSearch\Config\StorefrontConfig;
+use DavidBel\AiSearch\Config\SearchResultConfig;
 use DavidBel\AiSearch\Indexer\Versioning;
 use Magento\Framework\Search\RequestInterface;
 
@@ -20,7 +20,7 @@ class QuickSearch
         private readonly VectorSearch $vectorSearch,
         private readonly CatalogQueryModifier $catalogQueryModifier,
         private readonly Versioning $versioning,
-        private readonly StorefrontConfig $storefrontConfig
+        private readonly SearchResultConfig $searchResultConfig
     ) {
     }
 
@@ -30,11 +30,13 @@ class QuickSearch
      */
     public function execute(RequestInterface $request, array $catalogQuery): array
     {
-        if (!$this->storefrontConfig->isEnabled()) {
+        if (!$this->requestReader->isQuickSearch($request)) {
             return $catalogQuery;
         }
 
-        if (!$this->requestReader->isQuickSearch($request)) {
+        $storeId = $this->requestReader->getStoreId($request);
+
+        if (!$this->searchResultConfig->isEnabled($storeId)) {
             return $catalogQuery;
         }
 
@@ -48,7 +50,7 @@ class QuickSearch
         $configurationSnapshot = null;
 
         if ($activeIndex === null
-            && $this->storefrontConfig->usePreviousSemanticIndexDuringRebuild()
+            && $this->searchResultConfig->usePreviousSemanticIndexDuringRebuild($storeId)
         ) {
             $activeIndex = $this->versioning->getActiveVersion();
             $configurationSnapshot = $activeIndex?->queryConfigurationSnapshot;
@@ -58,10 +60,14 @@ class QuickSearch
             return $catalogQuery;
         }
 
-        $vector = $this->queryEmbedding->execute($queryText, $configurationSnapshot);
+        $vector = $this->queryEmbedding->execute(
+            $queryText,
+            $storeId,
+            $configurationSnapshot
+        );
         $candidates = $this->vectorSearch->execute(
             $vector,
-            $this->requestReader->getStoreId($request),
+            $storeId,
             $activeIndex
         );
 
