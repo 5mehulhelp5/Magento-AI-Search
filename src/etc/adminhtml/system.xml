@@ -133,10 +133,89 @@
             <label>Search Source</label>
             <tab>davidbel</tab>
             <resource>DavidBel_AiSearch::config_search_source</resource>
-            <group id="document_configuration"
+            <group id="ai_server"
                    translate="label"
                    type="text"
                    sortOrder="10"
+                   showInDefault="1">
+                <label>AI Server</label>
+                <field id="base_url"
+                       translate="label"
+                       type="text"
+                       sortOrder="10"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Base URL</label>
+                    <validate>required-entry validate-url</validate>
+                </field>
+                <field id="embedding_model"
+                       translate="label"
+                       type="text"
+                       sortOrder="20"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Embedding Model</label>
+                    <validate>required-entry</validate>
+                </field>
+                <field id="vector_dimensions"
+                       translate="label"
+                       type="text"
+                       sortOrder="30"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Vector Dimensions</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="request_timeout_seconds"
+                       translate="label"
+                       type="text"
+                       sortOrder="40"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Request Timeout (Seconds)</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="embedder_document_template"
+                       translate="label"
+                       type="text"
+                       sortOrder="50"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Embedder Document Template</label>
+                    <validate>required-entry</validate>
+                </field>
+                <field id="maximum_chunk_tokens"
+                       translate="label"
+                       type="text"
+                       sortOrder="60"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Maximum Chunk Tokens</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="chunk_overlap_tokens"
+                       translate="label"
+                       type="text"
+                       sortOrder="70"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Chunk Overlap Tokens</label>
+                    <validate>required-entry validate-digits validate-zero-or-greater</validate>
+                </field>
+                <field id="estimated_characters_per_token"
+                       translate="label"
+                       type="text"
+                       sortOrder="80"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Estimated Characters per Token</label>
+                    <validate>required-entry validate-number validate-greater-than-zero</validate>
+                </field>
+            </group>
+            <group id="document_configuration"
+                   translate="label"
+                   type="text"
+                   sortOrder="20"
                    showInDefault="1">
                 <label>Document Configuration</label>
                 <field id="enable_document_title"

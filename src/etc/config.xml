@@ -8,6 +8,16 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/config.xsd">
     <default>
         <davidbel_ai_search_search_source>
+            <ai_server>
+                <base_url>http://host.docker.internal:1234</base_url>
+                <embedding_model>text-embedding-embeddinggemma-300m-qat</embedding_model>
+                <vector_dimensions>768</vector_dimensions>
+                <request_timeout_seconds>60</request_timeout_seconds>
+                <embedder_document_template>title: {title} | text: {text}</embedder_document_template>
+                <maximum_chunk_tokens>350</maximum_chunk_tokens>
+                <chunk_overlap_tokens>50</chunk_overlap_tokens>
+                <estimated_characters_per_token>4</estimated_characters_per_token>
+            </ai_server>
             <document_configuration>
                 <enable_document_title>1</enable_document_title>
                 <document_title>name</document_title>
@@ -75,16 +85,6 @@
             </document_configuration>
         </davidbel_ai_search_search_source>
         <davidbel_ai_search>
-            <embedder>
-                <base_url>http://host.docker.internal:1234</base_url>
-                <model>text-embedding-embeddinggemma-300m-qat</model>
-                <vector_dimensions>768</vector_dimensions>
-                <request_timeout_seconds>60</request_timeout_seconds>
-                <document_template>title: {title} | text: {text}</document_template>
-                <maximum_chunk_tokens>350</maximum_chunk_tokens>
-                <chunk_overlap_tokens>50</chunk_overlap_tokens>
-                <estimated_characters_per_token>4</estimated_characters_per_token>
-            </embedder>
             <ingestion>
                 <document_processing_batch_size>200</document_processing_batch_size>
                 <embedding_batch_size>100</embedding_batch_size>
