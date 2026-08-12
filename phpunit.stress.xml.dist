@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  davidbel/ai-search by David Belicza
+  SPDX-License-Identifier: MIT
+  https://github.com/DavidBelicza/Magento-AI-Search
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.0/phpunit.xsd"
+         bootstrap="tests/Stress/bootstrap.php"
+         cacheDirectory=".phpunit.stress.cache"
+         colors="true"
+         failOnRisky="true"
+         failOnWarning="true">
+    <testsuites>
+        <testsuite name="AI Search Stress Dataset">
+            <file>tests/Stress/DatasetCreationTest.php</file>
+        </testsuite>
+        <testsuite name="AI Search Stress Timeline One">
+            <file>tests/Stress/TimelineOneTest.php</file>
+        </testsuite>
+        <testsuite name="AI Search Stress Timeline Two">
+            <file>tests/Stress/TimelineTwoTest.php</file>
+        </testsuite>
+        <testsuite name="AI Search Stress Cleanup">
+            <file>tests/Stress/CleanupTest.php</file>
+        </testsuite>
+    </testsuites>
+</phpunit>
