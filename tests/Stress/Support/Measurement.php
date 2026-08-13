@@ -1,6 +1,6 @@
 <?php
 /**
- * davidbel/ai-search by David Belicza
+ * davidbel/magento-ai-search by David Belicza
  * SPDX-License-Identifier: MIT
  * https://github.com/DavidBelicza/Magento-AI-Search
  */
@@ -115,7 +115,7 @@ class Measurement
         if (!is_file($path)) {
             return [
                 'header' => [
-                    'package' => 'davidbel/ai-search by David Belicza',
+                    'package' => 'davidbel/magento-ai-search by David Belicza',
                     'license' => 'SPDX-License-Identifier: MIT',
                     'repository' => 'https://github.com/DavidBelicza/Magento-AI-Search',
                 ],

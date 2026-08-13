@@ -109,7 +109,7 @@ distribution normally used with Magento.
 ## 📦 Install
 
 ```shell
-composer require davidbel/ai-search
+composer require davidbel/magento-ai-search
 bin/magento module:enable DavidBel_AiSearch
 bin/magento setup:upgrade
 ```

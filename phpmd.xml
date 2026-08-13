@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-  davidbel/ai-search by David Belicza
+  davidbel/magento-ai-search by David Belicza
   SPDX-License-Identifier: MIT
   https://github.com/DavidBelicza/Magento-AI-Search
 -->
@@ -10,7 +10,7 @@
          xsi:schemaLocation="http://pmd.sf.net/ruleset/1.0.0
                              https://pmd.sourceforge.io/ruleset_xml_schema.xsd"
          xsi:noNamespaceSchemaLocation="https://pmd.sourceforge.io/ruleset_xml_schema.xsd">
-    <description>Mess detection rules for davidbel/ai-search.</description>
+    <description>Mess detection rules for davidbel/magento-ai-search.</description>
 
     <rule ref="rulesets/cleancode.xml/BooleanArgumentFlag"/>
     <rule ref="rulesets/cleancode.xml/DuplicatedArrayKey"/>

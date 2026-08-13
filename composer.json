@@ -1,10 +1,10 @@
 {
     "_comment": [
-        "davidbel/ai-search by David Belicza",
+        "davidbel/magento-ai-search by David Belicza",
         "SPDX-License-Identifier: MIT",
         "https://github.com/DavidBelicza/Magento-AI-Search"
     ],
-    "name": "davidbel/ai-search",
+    "name": "davidbel/magento-ai-search",
     "description": "AI search module for Magento 2.",
     "type": "magento2-module",
     "license": "MIT",

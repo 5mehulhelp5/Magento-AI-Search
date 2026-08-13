@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <!--
-  davidbel/ai-search by David Belicza
+  davidbel/magento-ai-search by David Belicza
   SPDX-License-Identifier: MIT
   https://github.com/DavidBelicza/Magento-AI-Search
 -->
 <ruleset name="DavidBel AiSearch">
-    <description>Code quality rules for davidbel/ai-search.</description>
+    <description>Code quality rules for davidbel/magento-ai-search.</description>
 
     <arg name="basepath" value="."/>
     <arg name="cache" value=".phpcs-cache"/>
