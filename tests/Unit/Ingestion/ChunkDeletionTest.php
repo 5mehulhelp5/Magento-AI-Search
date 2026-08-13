@@ -1,6 +1,6 @@
 <?php
 /**
- * davidbel/ai-search by David Belicza
+ * davidbel/magento-ai-search by David Belicza
  * SPDX-License-Identifier: MIT
  * https://github.com/DavidBelicza/Magento-AI-Search
  */
@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Ingestion;
 
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
+use DavidBel\AiSearch\Config\DataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
@@ -80,7 +81,8 @@ class ChunkDeletionTest extends TestCase
             $this->createStateFactory($state),
             $this->createHandlerFactory($state, $handler),
             $vectorSync,
-            $cacheClean
+            $cacheClean,
+            $this->createDataProcessingConfig()
         );
 
         self::assertSame(1, $workflow->execute());
@@ -95,6 +97,16 @@ class ChunkDeletionTest extends TestCase
         $factory->method('create')->willReturn($collection);
 
         return $factory;
+    }
+
+    private function createDataProcessingConfig(): DataProcessingConfig
+    {
+        $config = self::createStub(DataProcessingConfig::class);
+        $config->method('getVectorDeletionBatchSize')->willReturn(1000);
+        $config->method('getVectorDeletionUpsertAttemptThreshold')->willReturn(3);
+        $config->method('getVectorDeletionMaximumRuntimeSeconds')->willReturn(600);
+
+        return $config;
     }
 
     private function createBatchFactory(): BatchFactory

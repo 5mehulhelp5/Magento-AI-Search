@@ -1,6 +1,6 @@
 <?php
 /**
- * davidbel/ai-search by David Belicza
+ * davidbel/magento-ai-search by David Belicza
  * SPDX-License-Identifier: MIT
  * https://github.com/DavidBelicza/Magento-AI-Search
  */
@@ -8,21 +8,26 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Unit\Ingestion;
 
+use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource\StoreScopedSource;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Result;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdateResult;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\ScopedSource;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 use Magento\Framework\DB\Adapter\AdapterInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 class DocumentProcessingTest extends TestCase
 {
+    private const int BATCH_SIZE = 100;
+
     public static function setUpBeforeClass(): void
     {
         GeneratedFactoryStub::register(CollectionFactory::class);
@@ -30,227 +35,226 @@ class DocumentProcessingTest extends TestCase
 
     public function testPerformsAFullUpdateAndQueuesChunkChanges(): void
     {
-        $sources = [new ScopedSource(2, 'Description')];
+        $source = $this->createSource(2, 'Description');
         $sourceProvider = $this->createMock(SourceProvider::class);
-        $batch = 0;
         $sourceProvider->expects(self::exactly(2))
             ->method('getProductIdsAfter')
-            ->willReturnCallback(
-                static function (int $lastProductId, int $limit) use (&$batch): array {
-                    self::assertSame(DocumentProcessing::BATCH_SIZE, $limit);
+            ->willReturnCallback(static function (int $lastProductId, int $limit): array {
+                self::assertSame(self::BATCH_SIZE, $limit);
 
-                    if ($batch === 0) {
-                        self::assertSame(0, $lastProductId);
-                        ++$batch;
-
-                        return [30];
-                    }
-
-                    self::assertSame(30, $lastProductId);
-
-                    return [];
-                }
-            );
+                return $lastProductId === 0 ? [30] : [];
+            });
         $sourceProvider->expects(self::once())
-            ->method('getByProductIds')
+            ->method('getSourcesByProductIds')
             ->with([30])
-            ->willReturn([30 => $sources]);
+            ->willReturn([30 => [$source]]);
         $documentUpdater = $this->createMock(DocumentUpdater::class);
         $documentUpdater->expects(self::once())
             ->method('fullUpdate')
-            ->with('product', 30, 'description', $sources)
-            ->willReturn(new DocumentUpdateResult([101], [102]));
-        $connection = $this->createTransactionConnection();
-        $resource = $this->createMock(EmbeddingBacklogResource::class);
-        $resource->method('getConnection')
-            ->willReturn($connection);
-        $resource->expects(self::once())
-            ->method('saveByChunkId')
-            ->with(101);
-        $resource->expects(self::once())
-            ->method('deleteByChunkId')
-            ->with(102);
+            ->with('product', 30, $source)
+            ->willReturn(new Result([101], [102]));
+        $resource = $this->createBacklogResource($this->createTransactionConnection());
+        $resource->expects(self::once())->method('saveByChunkId')->with(101, 'product', 30);
+        $resource->expects(self::once())->method('deleteByChunkId')->with(102, 'product', 30);
 
-        (new DocumentProcessing(
+        $this->createProcessing(
             $sourceProvider,
             $documentUpdater,
             $this->createCollectionFactory($resource)
-        ))->fullUpdate();
+        )->fullUpdate();
     }
 
-    public function testDeltaUpdatesSourcesAndMissingProductsInTransactions(): void
+    public function testDeltaUpdatesAffectedProductsInTransactions(): void
     {
-        $firstProductSources = [new ScopedSource(1, 'First description')];
+        $firstSource = $this->createSource(1, 'First description');
+        $secondSource = $this->createSource(1, 'Second description');
         $sourceProvider = $this->createMock(SourceProvider::class);
         $sourceProvider->expects(self::once())
-            ->method('getByProductIds')
+            ->method('getAffectedProductIds')
             ->with([10, 20])
-            ->willReturn([10 => $firstProductSources]);
+            ->willReturn([10, 20]);
+        $sourceProvider->expects(self::once())
+            ->method('getSourcesByProductIds')
+            ->with([10, 20])
+            ->willReturn([10 => [$firstSource], 20 => [$secondSource]]);
         $documentUpdater = $this->createMock(DocumentUpdater::class);
-        $updatedProducts = [];
         $documentUpdater->expects(self::exactly(2))
             ->method('deltaUpdate')
             ->willReturnCallback(
                 static function (
-                    string $sourceEntityType,
-                    int $sourceEntityId,
-                    string $sourceCode,
-                    array $sources
-                ) use (&$updatedProducts): DocumentUpdateResult {
-                    self::assertSame('product', $sourceEntityType);
-                    self::assertSame('description', $sourceCode);
-                    $updatedProducts[$sourceEntityId] = $sources;
+                    string $entityType,
+                    int $entityId,
+                    DocumentSource $source
+                ) use (
+                    $firstSource,
+                    $secondSource
+                ): Result {
+                    self::assertSame('product', $entityType);
+                    self::assertSame($entityId === 10 ? $firstSource : $secondSource, $source);
 
-                    return $sourceEntityId === 10
-                        ? new DocumentUpdateResult([201], [])
-                        : new DocumentUpdateResult([], [202]);
+                    return $entityId === 10 ? new Result([201], []) : new Result([], [202]);
                 }
             );
-        $connection = $this->createTransactionConnection(2);
-        $resource = $this->createMock(EmbeddingBacklogResource::class);
-        $resource->method('getConnection')
-            ->willReturn($connection);
-        $resource->expects(self::once())
-            ->method('saveByChunkId')
-            ->with(201);
-        $resource->expects(self::once())
-            ->method('deleteByChunkId')
-            ->with(202);
+        $resource = $this->createBacklogResource($this->createTransactionConnection(2));
+        $resource->expects(self::once())->method('saveByChunkId')->with(201, 'product', 10);
+        $resource->expects(self::once())->method('deleteByChunkId')->with(202, 'product', 20);
 
-        (new DocumentProcessing(
+        $this->createProcessing(
             $sourceProvider,
             $documentUpdater,
             $this->createCollectionFactory($resource)
-        ))->deltaUpdate([10, 20]);
-
-        self::assertSame($firstProductSources, $updatedProducts[10]);
-        self::assertSame([], $updatedProducts[20]);
+        )->deltaUpdate([10, 20]);
     }
 
     public function testCommitsAnUpdateWithoutBacklogChanges(): void
     {
-        $sourceProvider = self::createStub(SourceProvider::class);
-        $sourceProvider->method('getByProductIds')
-            ->willReturn([]);
+        $source = $this->createSource(1, 'Description');
+        $sourceProvider = $this->createDeltaSourceProvider([10], [10 => [$source]]);
         $documentUpdater = $this->createMock(DocumentUpdater::class);
         $documentUpdater->expects(self::once())
             ->method('deltaUpdate')
-            ->willReturn(new DocumentUpdateResult([], []));
-        $connection = $this->createTransactionConnection();
-        $resource = $this->createMock(EmbeddingBacklogResource::class);
-        $resource->method('getConnection')
-            ->willReturn($connection);
-        $resource->expects(self::never())
-            ->method('saveByChunkId');
-        $resource->expects(self::never())
-            ->method('deleteByChunkId');
+            ->willReturn(new Result([], []));
+        $resource = $this->createBacklogResource($this->createTransactionConnection());
+        $resource->expects(self::never())->method('saveByChunkId');
+        $resource->expects(self::never())->method('deleteByChunkId');
 
-        (new DocumentProcessing(
+        $this->createProcessing(
             $sourceProvider,
             $documentUpdater,
             $this->createCollectionFactory($resource)
-        ))->deltaUpdate([10]);
+        )->deltaUpdate([10]);
     }
 
     public function testRollsBackAFailedProductUpdate(): void
     {
-        $sourceProvider = self::createStub(SourceProvider::class);
-        $sourceProvider->method('getByProductIds')
-            ->willReturn([]);
+        $source = $this->createSource(1, 'Description');
+        $sourceProvider = $this->createDeltaSourceProvider([10], [10 => [$source]]);
         $failure = new RuntimeException('update failed');
         $documentUpdater = $this->createMock(DocumentUpdater::class);
         $documentUpdater->expects(self::once())
             ->method('deltaUpdate')
             ->willThrowException($failure);
         $connection = $this->createMock(AdapterInterface::class);
-        $connection->expects(self::once())
-            ->method('beginTransaction');
-        $connection->expects(self::never())
-            ->method('commit');
-        $connection->expects(self::once())
-            ->method('rollBack');
-        $resource = $this->createMock(EmbeddingBacklogResource::class);
-        $resource->method('getConnection')
-            ->willReturn($connection);
-        $resource->expects(self::never())
-            ->method('saveByChunkId');
-        $resource->expects(self::never())
-            ->method('deleteByChunkId');
+        $connection->expects(self::once())->method('beginTransaction');
+        $connection->expects(self::never())->method('commit');
+        $connection->expects(self::once())->method('rollBack');
+        $resource = $this->createBacklogResourceStub($connection);
 
         $this->expectExceptionObject($failure);
 
-        (new DocumentProcessing(
+        $this->createProcessing(
             $sourceProvider,
             $documentUpdater,
             $this->createCollectionFactory($resource)
-        ))->deltaUpdate([10]);
+        )->deltaUpdate([10]);
     }
 
     public function testDoesNotLoadAnEmptyDeltaUpdate(): void
     {
         $sourceProvider = $this->createMock(SourceProvider::class);
-        $sourceProvider->expects(self::never())
-            ->method('getByProductIds');
-        $documentUpdater = self::createStub(DocumentUpdater::class);
+        $sourceProvider->expects(self::never())->method('getAffectedProductIds');
+        $sourceProvider->expects(self::never())->method('getSourcesByProductIds');
         $collectionFactory = $this->createMock(CollectionFactory::class);
-        $collectionFactory->expects(self::never())
-            ->method('create');
+        $collectionFactory->expects(self::never())->method('create');
 
-        (new DocumentProcessing(
+        $this->createProcessing(
             $sourceProvider,
-            $documentUpdater,
+            self::createStub(DocumentUpdater::class),
             $collectionFactory
-        ))->deltaUpdate([]);
+        )->deltaUpdate([]);
     }
 
     public function testLoadsDeltaUpdatesInBoundedBatches(): void
     {
-        $productIds = range(1, DocumentProcessing::BATCH_SIZE + 1);
+        $productIds = range(1, self::BATCH_SIZE + 1);
         $loadedBatches = [];
         $sourceProvider = $this->createMock(SourceProvider::class);
         $sourceProvider->expects(self::exactly(2))
-            ->method('getByProductIds')
+            ->method('getAffectedProductIds')
+            ->willReturnArgument(0);
+        $sourceProvider->expects(self::exactly(2))
+            ->method('getSourcesByProductIds')
             ->willReturnCallback(
-                static function (array $productIdBatch) use (&$loadedBatches): array {
-                    $loadedBatches[] = $productIdBatch;
+                static function (array $batch) use (&$loadedBatches): array {
+                    /** @var list<int> $batch */
+                    $loadedBatches[] = $batch;
 
-                    return [];
+                    return array_fill_keys($batch, []);
                 }
             );
-        $documentUpdater = self::createStub(DocumentUpdater::class);
-        $documentUpdater->method('deltaUpdate')
-            ->willReturn(new DocumentUpdateResult([], []));
-        $connection = self::createStub(AdapterInterface::class);
-        $resource = self::createStub(EmbeddingBacklogResource::class);
-        $resource->method('getConnection')
-            ->willReturn($connection);
+        $resource = $this->createBacklogResourceStub(
+            $this->createTransactionConnection(count($productIds))
+        );
 
-        (new DocumentProcessing(
+        $this->createProcessing(
             $sourceProvider,
-            $documentUpdater,
+            self::createStub(DocumentUpdater::class),
             $this->createCollectionFactory($resource, 2)
-        ))->deltaUpdate($productIds);
+        )->deltaUpdate($productIds);
 
         self::assertSame(
-            [
-                range(1, DocumentProcessing::BATCH_SIZE),
-                [DocumentProcessing::BATCH_SIZE + 1],
-            ],
+            [range(1, self::BATCH_SIZE), [self::BATCH_SIZE + 1]],
             $loadedBatches
         );
+    }
+
+    private function createProcessing(
+        SourceProvider $sourceProvider,
+        DocumentUpdater $documentUpdater,
+        CollectionFactory $collectionFactory
+    ): DocumentProcessing {
+        $config = self::createStub(DataProcessingConfig::class);
+        $config->method('getDocumentProcessingBatchSize')->willReturn(self::BATCH_SIZE);
+
+        return new DocumentProcessing(
+            $sourceProvider,
+            $documentUpdater,
+            $collectionFactory,
+            $config
+        );
+    }
+
+    /**
+     * @param list<int> $affectedProductIds
+     * @param array<int, list<DocumentSource>> $sources
+     */
+    private function createDeltaSourceProvider(
+        array $affectedProductIds,
+        array $sources
+    ): SourceProvider {
+        $sourceProvider = self::createStub(SourceProvider::class);
+        $sourceProvider->method('getAffectedProductIds')->willReturn($affectedProductIds);
+        $sourceProvider->method('getSourcesByProductIds')->willReturn($sources);
+
+        return $sourceProvider;
     }
 
     private function createTransactionConnection(int $transactions = 1): AdapterInterface
     {
         $connection = $this->createMock(AdapterInterface::class);
-        $connection->expects(self::exactly($transactions))
-            ->method('beginTransaction');
-        $connection->expects(self::exactly($transactions))
-            ->method('commit');
-        $connection->expects(self::never())
-            ->method('rollBack');
+        $connection->expects(self::exactly($transactions))->method('beginTransaction');
+        $connection->expects(self::exactly($transactions))->method('commit');
+        $connection->expects(self::never())->method('rollBack');
 
         return $connection;
+    }
+
+    private function createBacklogResource(
+        AdapterInterface $connection
+    ): EmbeddingBacklogResource&MockObject {
+        $resource = $this->createMock(EmbeddingBacklogResource::class);
+        $resource->method('getConnection')->willReturn($connection);
+
+        return $resource;
+    }
+
+    private function createBacklogResourceStub(
+        AdapterInterface $connection
+    ): EmbeddingBacklogResource {
+        $resource = self::createStub(EmbeddingBacklogResource::class);
+        $resource->method('getConnection')->willReturn($connection);
+
+        return $resource;
     }
 
     private function createCollectionFactory(
@@ -267,5 +271,14 @@ class DocumentProcessingTest extends TestCase
             ->willReturn($collection);
 
         return $collectionFactory;
+    }
+
+    private function createSource(int $storeId, string $content): DocumentSource
+    {
+        return new DocumentSource(
+            'description',
+            'text_as_is',
+            [new StoreScopedSource($storeId, $content)]
+        );
     }
 }

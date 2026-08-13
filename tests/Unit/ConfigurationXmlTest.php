@@ -1,6 +1,6 @@
 <?php
 /**
- * davidbel/ai-search by David Belicza
+ * davidbel/magento-ai-search by David Belicza
  * SPDX-License-Identifier: MIT
  * https://github.com/DavidBelicza/Magento-AI-Search
  */
@@ -154,7 +154,7 @@ class ConfigurationXmlTest extends TestCase
             1.0,
             $dependencyInjectionXPath->evaluate(
                 'count(/config/preference'
-                . '[@for="DavidBel\AiSearch\Api\EmbedderClientInterface"]'
+                . '[@for="DavidBel\AiSearch\Client\Embedding\EmbedderClientInterface"]'
                 . '[@type="DavidBel\AiSearch\Client\Embedding\OpenAi"])'
             )
         );

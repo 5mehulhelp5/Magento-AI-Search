@@ -1,6 +1,6 @@
 <?php
 /**
- * davidbel/ai-search by David Belicza
+ * davidbel/magento-ai-search by David Belicza
  * SPDX-License-Identifier: MIT
  * https://github.com/DavidBelicza/Magento-AI-Search
  */
@@ -8,8 +8,9 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Unit\Ingestion\DocumentProcessing;
 
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Chunking;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Chunking\ChunkingInterface;
+use DavidBel\AiSearch\Config\EmbedderConfig;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Chunking;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Chunking\ChunkingInterface;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -22,13 +23,16 @@ class ChunkingTest extends TestCase
             ->method('chunk')
             ->with(
                 'Product description',
-                Chunking::MAX_TOKENS,
-                Chunking::OVERLAP_TOKENS,
-                Chunking::ESTIMATED_CHARACTERS_PER_TOKEN
+                100,
+                10,
+                4
             )
             ->willReturn(['Product description']);
 
-        $chunking = new Chunking(['general' => $strategy]);
+        $chunking = new Chunking(
+            $this->createEmbedderConfig(),
+            ['general' => $strategy]
+        );
 
         self::assertSame(['Product description'], $chunking->chunk('Product description'));
     }
@@ -37,6 +41,16 @@ class ChunkingTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        new Chunking([]);
+        new Chunking($this->createEmbedderConfig(), []);
+    }
+
+    private function createEmbedderConfig(): EmbedderConfig
+    {
+        $config = self::createStub(EmbedderConfig::class);
+        $config->method('getMaximumChunkTokens')->willReturn(100);
+        $config->method('getChunkOverlapTokens')->willReturn(10);
+        $config->method('getEstimatedCharactersPerToken')->willReturn(4);
+
+        return $config;
     }
 }

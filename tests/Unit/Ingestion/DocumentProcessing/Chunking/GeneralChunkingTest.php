@@ -1,6 +1,6 @@
 <?php
 /**
- * davidbel/ai-search by David Belicza
+ * davidbel/magento-ai-search by David Belicza
  * SPDX-License-Identifier: MIT
  * https://github.com/DavidBelicza/Magento-AI-Search
  */
@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Unit\Ingestion\DocumentProcessing\Chunking;
 
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Chunking\GeneralChunking;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Chunking\GeneralChunking;
 use PHPUnit\Framework\TestCase;
 
 class GeneralChunkingTest extends TestCase

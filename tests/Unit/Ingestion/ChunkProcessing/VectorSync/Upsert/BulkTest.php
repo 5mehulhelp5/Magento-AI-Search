@@ -1,6 +1,6 @@
 <?php
 /**
- * davidbel/ai-search by David Belicza
+ * davidbel/magento-ai-search by David Belicza
  * SPDX-License-Identifier: MIT
  * https://github.com/DavidBelicza/Magento-AI-Search
  */
@@ -8,8 +8,8 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Unit\Ingestion\ChunkProcessing\VectorSync\Upsert;
 
+use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
-use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Index;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Item;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Result;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\ResultFactory;
@@ -30,15 +30,14 @@ class BulkTest extends TestCase
     {
         $first = $this->createDocument(10, 42);
         $second = $this->createDocument(20, 43);
-        $index = $this->createMock(Index::class);
-        $index->expects(self::exactly(2))->method('getName')->willReturn('ai-search');
-        $index->expects(self::once())
+        $openSearch = $this->createMock(OpenSearch::class);
+        $openSearch->expects(self::once())
             ->method('bulkQuery')
             ->with([
-                ['index' => ['_index' => 'ai-search', '_id' => '42']],
-                $this->documentBody(42),
-                ['index' => ['_index' => 'ai-search', '_id' => '43']],
-                $this->documentBody(43),
+                ['index' => ['_id' => '42']],
+                $this->documentBody(),
+                ['index' => ['_id' => '43']],
+                $this->documentBody(),
             ])
             ->willReturn([
                 'errors' => true,
@@ -57,7 +56,10 @@ class BulkTest extends TestCase
             ])
             ->willReturn($result);
 
-        self::assertSame($result, (new Bulk($index, $factory))->execute([$first, $second]));
+        self::assertSame(
+            $result,
+            (new Bulk($openSearch, $factory))->execute([$first, $second])
+        );
     }
 
     /**
@@ -89,15 +91,14 @@ class BulkTest extends TestCase
     #[DataProvider('invalidResponses')]
     public function testRejectsInvalidResponses(array $response, string $message): void
     {
-        $index = self::createStub(Index::class);
-        $index->method('getName')->willReturn('ai-search');
-        $index->method('bulkQuery')->willReturn($response);
+        $openSearch = self::createStub(OpenSearch::class);
+        $openSearch->method('bulkQuery')->willReturn($response);
         $factory = $this->createMock(ResultFactory::class);
         $factory->expects(self::never())->method('create');
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage($message);
 
-        (new Bulk($index, $factory))->execute([$this->createDocument(10, 42)]);
+        (new Bulk($openSearch, $factory))->execute([$this->createDocument(10, 42)]);
     }
 
     private function createDocument(int $backlogId, int $chunkId): Document
@@ -123,17 +124,13 @@ class BulkTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function documentBody(int $chunkId): array
+    private function documentBody(): array
     {
         return [
-            'chunk_id' => $chunkId,
             'source_entity_type' => 'product',
             'source_entity_id' => 99,
             'store_id' => 1,
             'source_code' => 'catalog_product_99',
-            'chunk_index' => 0,
-            'content' => 'text',
-            'content_hash' => 'hash',
             'vector' => [0.1, 0.2],
         ];
     }

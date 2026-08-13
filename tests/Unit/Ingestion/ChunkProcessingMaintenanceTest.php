@@ -1,6 +1,6 @@
 <?php
 /**
- * davidbel/ai-search by David Belicza
+ * davidbel/magento-ai-search by David Belicza
  * SPDX-License-Identifier: MIT
  * https://github.com/DavidBelicza/Magento-AI-Search
  */
@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Unit\Ingestion;
 
+use DavidBel\AiSearch\Config\DataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
@@ -35,7 +36,8 @@ class ChunkProcessingMaintenanceTest extends TestCase
         self::assertSame(
             7,
             (new ChunkProcessingRetry(
-                $this->createCollectionFactory($resource)
+                $this->createCollectionFactory($resource),
+                $this->createDataProcessingConfig()
             ))->execute()
         );
     }
@@ -57,7 +59,8 @@ class ChunkProcessingMaintenanceTest extends TestCase
             5,
             (new ChunkProcessingCleanup(
                 $this->createCollectionFactory($resource),
-                $dateTime
+                $dateTime,
+                $this->createDataProcessingConfig()
             ))->execute()
         );
     }
@@ -71,5 +74,15 @@ class ChunkProcessingMaintenanceTest extends TestCase
         $factory->method('create')->willReturn($collection);
 
         return $factory;
+    }
+
+    private function createDataProcessingConfig(): DataProcessingConfig
+    {
+        $config = self::createStub(DataProcessingConfig::class);
+        $config->method('getRetryAttemptThreshold')->willReturn(3);
+        $config->method('getCleanupAttemptThreshold')->willReturn(3);
+        $config->method('getCleanupResultRetentionHours')->willReturn(24);
+
+        return $config;
     }
 }

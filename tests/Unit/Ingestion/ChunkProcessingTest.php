@@ -1,6 +1,6 @@
 <?php
 /**
- * davidbel/ai-search by David Belicza
+ * davidbel/magento-ai-search by David Belicza
  * SPDX-License-Identifier: MIT
  * https://github.com/DavidBelicza/Magento-AI-Search
  */
@@ -11,6 +11,7 @@ namespace DavidBel\AiSearch\Tests\Unit\Ingestion;
 use DavidBel\AiSearch\Api\Data\ChunkInterface;
 use DavidBel\AiSearch\Api\Data\DocumentInterface;
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
+use DavidBel\AiSearch\Config\DataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
@@ -60,7 +61,8 @@ class ChunkProcessingTest extends TestCase
             $this->createStateFactory($state),
             $this->createHandlerFactory($state, $handler),
             $this->createVectorEmbedding($handler),
-            $cacheClean
+            $cacheClean,
+            $this->createDataProcessingConfig()
         );
 
         self::assertSame(1, $workflow->execute());
@@ -130,6 +132,16 @@ class ChunkProcessingTest extends TestCase
         $factory->method('create')->willReturn($collection);
 
         return $factory;
+    }
+
+    private function createDataProcessingConfig(): DataProcessingConfig
+    {
+        $config = self::createStub(DataProcessingConfig::class);
+        $config->method('getVectorEmbeddingBatchSize')->willReturn(100);
+        $config->method('getVectorEmbeddingConcurrentRequests')->willReturn(3);
+        $config->method('getVectorEmbeddingMaximumRuntimeSeconds')->willReturn(600);
+
+        return $config;
     }
 
     private function createBatchFactory(): ProcessingBatchFactory

@@ -1,6 +1,6 @@
 <?php
 /**
- * davidbel/ai-search by David Belicza
+ * davidbel/magento-ai-search by David Belicza
  * SPDX-License-Identifier: MIT
  * https://github.com/DavidBelicza/Magento-AI-Search
  */
@@ -9,6 +9,11 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Client\Embedding;
 
 use DavidBel\AiSearch\Client\Embedding\OpenAi;
+use DavidBel\AiSearch\Client\Embedding\EmbeddingInput;
+use DavidBel\AiSearch\Client\Embedding\OpenAi\ResponseDecoder;
+use DavidBel\AiSearch\Client\Embedding\OpenAi\ResponseDecoderFactory;
+use DavidBel\AiSearch\Config\EmbedderConfig;
+use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\RequestOptions;
@@ -26,6 +31,11 @@ class OpenAiTest extends TestCase
     private const string MODEL = 'text-embedding-embeddinggemma-300m-qat';
     private const int VECTOR_DIMENSIONS = 768;
 
+    public static function setUpBeforeClass(): void
+    {
+        GeneratedFactoryStub::register(ResponseDecoderFactory::class);
+    }
+
     public function testReturnsAResolvedPromiseForEmptyInputs(): void
     {
         $httpClient = $this->createMock(ClientInterface::class);
@@ -35,7 +45,8 @@ class OpenAiTest extends TestCase
         $serializer->expects(self::never())
             ->method('serialize');
 
-        $promise = (new OpenAi($httpClient, $serializer))->embedAsync([]);
+        $promise = $this->createOpenAi($httpClient, $serializer)
+            ->embedDocumentsAsync([]);
 
         self::assertSame([], $promise->wait());
     }
@@ -43,12 +54,14 @@ class OpenAiTest extends TestCase
     public function testRequestsEmbeddingsAsynchronouslyAndMapsThemToInputOrder(): void
     {
         $promise = (
-            new OpenAi(
+            $this->createOpenAi(
                 $this->createSuccessfulHttpClient(),
                 $this->createSuccessfulSerializer()
             )
         )
-            ->embedAsync(['first input', 'second input']);
+            ->embedDocumentsAsync(
+                $this->createInputs(['first input', 'second input'])
+            );
 
         self::assertSame(
             [
@@ -129,7 +142,8 @@ class OpenAiTest extends TestCase
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('Embedding request could not be serialized.');
 
-        (new OpenAi($httpClient, $serializer))->embedAsync(['input']);
+        $this->createOpenAi($httpClient, $serializer)
+            ->embedDocumentsAsync($this->createInputs(['input']));
     }
 
     /**
@@ -158,8 +172,8 @@ class OpenAiTest extends TestCase
             sprintf('Embedding request failed with HTTP status %d.', $status)
         );
 
-        (new OpenAi($httpClient, $serializer))
-            ->embedAsync(['input'])
+        $this->createOpenAi($httpClient, $serializer)
+            ->embedDocumentsAsync($this->createInputs(['input']))
             ->wait();
     }
 
@@ -299,9 +313,60 @@ class OpenAiTest extends TestCase
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage($exceptionMessage);
 
-        (new OpenAi($httpClient, $serializer))
-            ->embedAsync($inputs)
+        $this->createOpenAi($httpClient, $serializer)
+            ->embedDocumentsAsync($this->createInputs($inputs))
             ->wait();
+    }
+
+    private function createOpenAi(
+        ClientInterface $httpClient,
+        SerializerInterface $serializer
+    ): OpenAi {
+        $config = self::createStub(EmbedderConfig::class);
+        $config->method('getBaseUrl')
+            ->willReturn('http://host.docker.internal:1234');
+        $config->method('getEmbeddingModel')->willReturn(self::MODEL);
+        $config->method('getVectorDimensions')->willReturn(self::VECTOR_DIMENSIONS);
+        $config->method('getRequestTimeoutSeconds')->willReturn(60);
+        $config->method('getEmbedderDocumentTemplate')->willReturn('{text}');
+        $responseDecoderFactory = self::createStub(ResponseDecoderFactory::class);
+        $responseDecoderFactory->method('create')
+            ->willReturnCallback(
+                static function (array $arguments) use ($serializer): ResponseDecoder {
+                    $embeddingModel = $arguments['embeddingModel'] ?? null;
+                    $vectorDimensions = $arguments['vectorDimensions'] ?? null;
+                    $inputCount = $arguments['inputCount'] ?? null;
+                    self::assertIsString($embeddingModel);
+                    self::assertIsInt($vectorDimensions);
+                    self::assertIsInt($inputCount);
+
+                    return new ResponseDecoder(
+                        $serializer,
+                        $embeddingModel,
+                        $vectorDimensions,
+                        $inputCount
+                    );
+                }
+            );
+
+        return new OpenAi(
+            $httpClient,
+            $serializer,
+            $config,
+            $responseDecoderFactory
+        );
+    }
+
+    /**
+     * @param list<string> $texts
+     * @return list<EmbeddingInput>
+     */
+    private function createInputs(array $texts): array
+    {
+        return array_map(
+            static fn (string $text): EmbeddingInput => new EmbeddingInput(null, $text),
+            $texts
+        );
     }
 
     private function createHttpClientForResponse(
