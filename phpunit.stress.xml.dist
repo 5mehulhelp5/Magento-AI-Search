@@ -12,6 +12,9 @@
          failOnRisky="true"
          failOnWarning="true">
     <testsuites>
+        <testsuite name="AI Search Stress Reset">
+            <file>tests/Stress/ResetTest.php</file>
+        </testsuite>
         <testsuite name="AI Search Stress Dataset">
             <file>tests/Stress/DatasetCreationTest.php</file>
         </testsuite>

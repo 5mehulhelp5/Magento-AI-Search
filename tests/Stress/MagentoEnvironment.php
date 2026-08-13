@@ -50,7 +50,7 @@ class MagentoEnvironment
         return self::$objectManager;
     }
 
-    private static function getMagentoRoot(): string
+    public static function getMagentoRoot(): string
     {
         $configuredRoot = getenv('MAGENTO_ROOT');
 

@@ -4,6 +4,7 @@
 
 /.phpcs-cache
 /.phpunit.cache/
+/.phpunit.stress.cache/
 /.phpstan.cache/
 /auth.json
 /composer.lock

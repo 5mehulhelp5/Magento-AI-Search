@@ -11,27 +11,31 @@ namespace DavidBel\AiSearch\Tests\Stress;
 use DavidBel\AiSearch\Indexer\ProductIndexer;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use DavidBel\AiSearch\Tests\Stress\Support\CatalogDataset;
+use DavidBel\AiSearch\Tests\Stress\Support\Measurement;
 use DavidBel\AiSearch\Tests\Stress\Support\PipelineState;
+use DavidBel\AiSearch\Tests\Stress\Support\StressConfiguration;
 use Magento\Framework\Indexer\IndexerRegistry;
 
 class TimelineOneTest extends StressTestCase
 {
     public function testProcessesProductsIntoDocumentsChunksAndBacklog(): void
     {
+        $startedAt = microtime(true);
         $dataset = $this->create(CatalogDataset::class);
+        $configuration = $this->create(StressConfiguration::class);
         $pipelineState = $this->create(PipelineState::class);
         $parentIds = $dataset->getConfigurableProductIds();
         $childIds = $dataset->getSimpleProductIds();
 
-        self::assertCount(CatalogDataset::CONFIGURABLE_PRODUCT_COUNT, $parentIds);
-        self::assertCount(100, $childIds);
-        self::assertTrue(
-            $pipelineState->hasWritableIndexForCurrentConfiguration(),
-            'Run an initial full AI Search reindex before the local stress test.'
+        self::assertCount($configuration->getConfigurableProductCount(), $parentIds);
+        self::assertCount(
+            $configuration->getConfigurableProductCount()
+                * $configuration->getSimpleProductsPerConfigurable(),
+            $childIds
         );
 
         $indexer = $this->get(IndexerRegistry::class)->get(ProductIndexer::ID);
-        $indexer->reindexList($dataset->getAllProductIds());
+        $indexer->reindexAll();
 
         self::assertTrue($indexer->isValid());
         self::assertGreaterThanOrEqual(20, $pipelineState->getDocumentCount($parentIds));
@@ -47,5 +51,16 @@ class TimelineOneTest extends StressTestCase
             $totalChunkCount,
             $pipelineState->getBacklogCount($parentIds, Operation::Upsert)
         );
+        $duration = microtime(true) - $startedAt;
+        $this->create(Measurement::class)->recordStage('timeline_one', [
+            'duration_seconds' => round($duration, 3),
+            'stress_documents' => $pipelineState->getDocumentCount($parentIds),
+            'stress_chunks' => $totalChunkCount,
+            'stress_chunks_per_second' => round($totalChunkCount / $duration, 3),
+            'all_documents' => $pipelineState->getAllDocumentCount(),
+            'all_chunks' => $pipelineState->getAllChunkCount(),
+            'all_backlog' => $pipelineState->getAllBacklogCount(),
+            'peak_memory_bytes' => memory_get_peak_usage(true),
+        ]);
     }
 }

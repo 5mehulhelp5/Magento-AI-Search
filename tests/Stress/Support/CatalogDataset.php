@@ -20,9 +20,6 @@ use RuntimeException;
 
 class CatalogDataset
 {
-    public const int CONFIGURABLE_PRODUCT_COUNT = 10;
-    public const int SIMPLE_PRODUCTS_PER_CONFIGURABLE = 10;
-    public const int TOTAL_PRODUCT_COUNT = 110;
     public const string SKU_PREFIX = 'ai-search-stress-';
 
     public function __construct(
@@ -30,7 +27,8 @@ class CatalogDataset
         private readonly ProductCreator $productCreator,
         private readonly CollectionFactory $productCollectionFactory,
         private readonly ProductRepositoryInterface $productRepository,
-        private readonly Registry $registry
+        private readonly Registry $registry,
+        private readonly StressConfiguration $configuration
     ) {
     }
 
@@ -42,8 +40,9 @@ class CatalogDataset
 
         $attribute = $this->configurableAttribute->create();
         $optionIds = $this->configurableAttribute->getOptionIds($attribute);
+        $configurableProductCount = $this->configuration->getConfigurableProductCount();
 
-        for ($parentNumber = 1; $parentNumber <= self::CONFIGURABLE_PRODUCT_COUNT; $parentNumber++) {
+        for ($parentNumber = 1; $parentNumber <= $configurableProductCount; $parentNumber++) {
             $childIds = [];
 
             foreach ($optionIds as $childPosition => $optionId) {
@@ -214,11 +213,11 @@ class CatalogDataset
 
     private function getConfigurableSku(int $parentNumber): string
     {
-        return sprintf('%sconfigurable-%02d', self::SKU_PREFIX, $parentNumber);
+        return sprintf('%sconfigurable-%04d', self::SKU_PREFIX, $parentNumber);
     }
 
     private function getSimpleSku(int $parentNumber, int $childNumber): string
     {
-        return sprintf('%ssimple-%02d-%02d', self::SKU_PREFIX, $parentNumber, $childNumber);
+        return sprintf('%ssimple-%04d-%02d', self::SKU_PREFIX, $parentNumber, $childNumber);
     }
 }

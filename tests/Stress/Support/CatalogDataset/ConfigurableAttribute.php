@@ -23,7 +23,7 @@ class ConfigurableAttribute
     public const string CODE = 'ai_search_stress_variant';
 
     private const string LABEL = 'AI Search Stress Variant';
-    private const int OPTION_COUNT = 10;
+    private const int OPTION_COUNT = 9;
 
     public function __construct(
         private readonly CategorySetupFactory $categorySetupFactory,
@@ -111,7 +111,7 @@ class ConfigurableAttribute
         }
 
         if (count($optionIds) !== self::OPTION_COUNT) {
-            throw new RuntimeException('The stress configurable attribute does not have ten options.');
+            throw new RuntimeException('The stress configurable attribute does not have the expected options.');
         }
 
         return $optionIds;

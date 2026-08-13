@@ -108,10 +108,40 @@ class PipelineState
         return $collection->getSize();
     }
 
+    public function getAllDocumentCount(): int
+    {
+        return $this->documentCollectionFactory->create()->getSize();
+    }
+
+    public function getAllChunkCount(): int
+    {
+        return $this->chunkCollectionFactory->create()->getSize();
+    }
+
+    public function getAllBacklogCount(?Operation $operation = null, ?Status $status = null): int
+    {
+        $collection = $this->backlogCollectionFactory->create();
+
+        if ($operation !== null) {
+            $collection->addFieldToFilter('operation', $operation->value);
+        }
+
+        if ($status !== null) {
+            $collection->addFieldToFilter('status', $status->value);
+        }
+
+        return $collection->getSize();
+    }
+
     public function hasWritableIndexForCurrentConfiguration(): bool
     {
         return $this->physicalIndexProvider->getTargetForCurrentConfiguration() !== null
             || $this->physicalIndexProvider->getActiveForCurrentConfiguration() !== null;
+    }
+
+    public function hasActiveIndexForCurrentConfiguration(): bool
+    {
+        return $this->physicalIndexProvider->getActiveForCurrentConfiguration() !== null;
     }
 
     /**

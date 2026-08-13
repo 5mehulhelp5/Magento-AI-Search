@@ -46,15 +46,18 @@ class DescriptionGenerator
     {
         $identityHash = hash('sha256', $identity);
         $description = sprintf('Stress product %s has identity %s.', $identity, $identityHash);
+        $characterCount = strlen($description);
         $state = (int) hexdec(substr($identityHash, 0, 8));
         $wordCount = 0;
 
-        while (mb_strlen($description) < self::TARGET_CHARACTER_COUNT) {
+        while ($characterCount < self::TARGET_CHARACTER_COUNT) {
             $state = ($state * 1_103_515_245 + 12_345) & 0x7fffffff;
             $separator = $wordCount > 0 && $wordCount % self::WORDS_PER_PARAGRAPH === 0
                 ? "\n\n"
                 : ' ';
-            $description .= $separator . self::WORDS[$state % count(self::WORDS)];
+            $addition = $separator . self::WORDS[$state % count(self::WORDS)];
+            $description .= $addition;
+            $characterCount += strlen($addition);
             $wordCount++;
         }
 

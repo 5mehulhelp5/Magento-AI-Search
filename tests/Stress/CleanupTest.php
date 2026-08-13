@@ -13,12 +13,13 @@ use DavidBel\AiSearch\Indexer\ProductIndexer;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Status;
 use DavidBel\AiSearch\Tests\Stress\Support\CatalogDataset;
+use DavidBel\AiSearch\Tests\Stress\Support\CronSchedule;
 use DavidBel\AiSearch\Tests\Stress\Support\PipelineState;
 use Magento\Framework\Indexer\IndexerRegistry;
 
 class CleanupTest extends StressTestCase
 {
-    private const int MAXIMUM_RUNTIME_SECONDS = 300;
+    private const int MAXIMUM_RUNTIME_SECONDS = 3_600;
 
     public function testRemovesCatalogLocalAndRemoteStressData(): void
     {
@@ -54,6 +55,7 @@ class CleanupTest extends StressTestCase
         self::assertSame([], $dataset->getAllProductIds());
         self::assertSame(0, $pipelineState->getBacklogCount($productIds, Operation::Upsert));
         self::assertSame(0, $pipelineState->getBacklogCount($productIds, Operation::Deletion));
+        $this->create(CronSchedule::class)->reset();
     }
 
     /**
@@ -71,7 +73,7 @@ class CleanupTest extends StressTestCase
                 continue;
             }
 
-            self::fail('Stress-data deletion did not finish within five minutes.');
+            self::fail('Stress-data deletion did not finish within one hour.');
         }
     }
 }
