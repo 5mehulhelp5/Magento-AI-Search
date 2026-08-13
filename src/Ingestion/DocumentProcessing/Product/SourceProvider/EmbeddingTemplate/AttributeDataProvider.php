@@ -258,7 +258,7 @@ class AttributeDataProvider
 
         return [
             'attribute_code' => $attribute['code'],
-            'key' => $this->getValueKey($productId, $storeId),
+            'key' => $productId . ':' . $storeId,
             'value' => $this->toScalarString($rawValue, 'value'),
         ];
     }
@@ -324,11 +324,6 @@ class AttributeDataProvider
         }
 
         return $labels;
-    }
-
-    private function getValueKey(int $productId, int $storeId): string
-    {
-        return $productId . ':' . $storeId;
     }
 
     private function toNonEmptyString(mixed $value, string $field): string

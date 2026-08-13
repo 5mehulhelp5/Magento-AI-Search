@@ -61,11 +61,7 @@ class DocumentUpdater
         DocumentSource $source,
         UpdateMode $updateMode
     ): Result {
-        $documentsByStoreId = $this->getDocumentsByStoreId(
-            $sourceEntityType,
-            $sourceEntityId,
-            $source->sourceCode
-        );
+        $documentsByStoreId = $this->getDocumentsByStoreId($sourceEntityType, $sourceEntityId, $source->sourceCode);
         $currentStoreIds = [];
         $chunksBySourceHash = [];
         $upsertChunkIds = $deletionChunkIds = [];
@@ -81,10 +77,7 @@ class DocumentUpdater
             }
 
             if ($updateMode === UpdateMode::DeltaUpdate && $sourceUnchanged) {
-                array_push(
-                    $upsertChunkIds,
-                    ...$this->updateDocumentTitle($document, $storeScopedSource->title)
-                );
+                array_push($upsertChunkIds, ...$this->updateDocumentTitle($document, $storeScopedSource->title));
 
                 continue;
             }
@@ -97,11 +90,9 @@ class DocumentUpdater
                 $source->sourceCode,
                 $storeScopedSource->title,
                 $sourceHash,
-                $chunksBySourceHash[$sourceHash] ??= $this->chunking->chunk(
-                    $this->parsing->parse(
-                        $storeScopedSource->content,
-                        $source->parsingStrategy
-                    )
+                $chunksBySourceHash[$sourceHash] ??= $this->getChunks(
+                    $storeScopedSource->content,
+                    $source->parsingStrategy
                 ),
                 $updateMode
             );
@@ -112,6 +103,14 @@ class DocumentUpdater
         array_push($deletionChunkIds, ...$this->deleteStaleDocuments($documentsByStoreId, $currentStoreIds));
 
         return new Result($upsertChunkIds, $deletionChunkIds);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function getChunks(string $content, string $parsingStrategy): array
+    {
+        return $this->chunking->chunk($this->parsing->parse($content, $parsingStrategy));
     }
 
     private function isUnchangedDelta(

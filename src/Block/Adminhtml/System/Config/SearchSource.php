@@ -14,8 +14,8 @@ class SearchSource extends Form
 {
     public function getFormHtml(): string
     {
-        $title = (string) $this->escapeHtml((string) __('Important:'));
-        $message = (string) $this->escapeHtml(
+        $title = $this->escapeHtml((string) __('Important:'));
+        $message = $this->escapeHtml(
             (string) __(
                 'Changing any setting on this page, except the AI server URL and its request timeout, requires '
                 . 'a full AI Search rebuild, which starts automatically. '
