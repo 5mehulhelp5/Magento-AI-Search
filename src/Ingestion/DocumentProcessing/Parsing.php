@@ -8,18 +8,17 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\DocumentProcessing;
 
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\Parsing\ParsingInterface;
 use InvalidArgumentException;
 
 class Parsing
 {
     /**
-     * @var array<string, ParsingInterface>
+     * @var array<string, Parsing\ParsingInterface>
      */
     private readonly array $parsingStrategies;
 
     /**
-     * @param list<ParsingInterface> $parsingStrategies
+     * @param list<Parsing\ParsingInterface> $parsingStrategies
      */
     public function __construct(array $parsingStrategies)
     {
@@ -49,7 +48,7 @@ class Parsing
     }
 
     /**
-     * @return list<ParsingInterface>
+     * @return list<Parsing\ParsingInterface>
      */
     public function getAvailableStrategies(): array
     {

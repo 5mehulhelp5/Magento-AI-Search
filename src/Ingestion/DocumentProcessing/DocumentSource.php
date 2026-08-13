@@ -8,12 +8,10 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\DocumentProcessing;
 
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource\StoreScopedSource;
-
 readonly class DocumentSource
 {
     /**
-     * @param list<StoreScopedSource> $storeScopedSources
+     * @param list<DocumentSource\StoreScopedSource> $storeScopedSources
      */
     public function __construct(
         public string $sourceCode,

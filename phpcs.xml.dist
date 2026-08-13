@@ -25,6 +25,7 @@
         <exclude name="Magento2.Annotation.MethodArguments"/>
         <exclude name="Magento2.Commenting.ClassPropertyPHPDocFormatting"/>
         <exclude name="Magento2.PHP.FinalImplementation"/>
+        <exclude name="Squiz.CSS.NamedColours"/>
     </rule>
 
     <config name="testVersion" value="8.3-"/>
@@ -59,4 +60,8 @@
         <exclude-pattern>src/Api/*</exclude-pattern>
     </rule>
     <rule ref="SlevomatCodingStandard.Variables.UnusedVariable"/>
+
+    <rule ref="Generic.Files.LineLength">
+        <exclude-pattern>src/etc/adminhtml/system.xml</exclude-pattern>
+    </rule>
 </ruleset>

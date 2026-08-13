@@ -6,6 +6,19 @@
     ],
     "name": "davidbel/magento-ai-search",
     "description": "AI search module for Magento 2.",
+    "keywords": [
+        "adobe commerce",
+        "ai",
+        "ai search",
+        "catalog search",
+        "embeddings",
+        "magento",
+        "magento2",
+        "opensearch",
+        "product search",
+        "semantic search",
+        "vector search"
+    ],
     "type": "magento2-module",
     "license": "MIT",
     "authors": [

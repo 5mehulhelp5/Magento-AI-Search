@@ -12,6 +12,9 @@ use Magento\Framework\Data\OptionSourceInterface;
 
 class VectorSpace implements OptionSourceInterface
 {
+    /**
+     * @return list<array{value: string, label: string}>
+     */
     public function toOptionArray(): array
     {
         return [
