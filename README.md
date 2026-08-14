@@ -1,5 +1,10 @@
 # Magento AI Search
 
+[![Quality](https://github.com/DavidBelicza/Magento-AI-Search/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/DavidBelicza/Magento-AI-Search/actions/workflows/quality.yml)
+[![Codecov](https://codecov.io/gh/DavidBelicza/Magento-AI-Search/branch/main/graph/badge.svg)](https://codecov.io/gh/DavidBelicza/Magento-AI-Search)
+[![Latest Stable Version](https://img.shields.io/packagist/v/davidbel/magento-ai-search)](https://packagist.org/packages/davidbel/magento-ai-search)
+[![MIT License](https://img.shields.io/github/license/DavidBelicza/Magento-AI-Search)](LICENSE)
+
 What if there was a module using **Magento's default search engine** to provide **actual meaning-based AI search without breaking the default one**? This is that module.
 
 Inspired by Google Cloud's Commerce AI Search, the module reads and chunks product descriptions, uses a remote AI server to **convert the text chunks into vectors**, then saves those vectors to **Magento's default search engine, OpenSearch**. This enables **intelligent search based on meaning rather than keyword or synonym matching**.
