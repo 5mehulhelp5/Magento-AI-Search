@@ -96,15 +96,23 @@
         "lint": "@php vendor/bin/parallel-lint --exclude vendor src tests",
         "mess": "@php vendor/bin/phpmd src,tests text phpmd.xml",
         "qa": [
+            "@qa:checks",
+            "@test"
+        ],
+        "qa:checks": [
             "@composer validate --strict",
             "@security",
             "@lint",
             "@cs",
             "@analyse",
-            "@mess",
-            "@test"
+            "@mess"
+        ],
+        "qa:coverage": [
+            "@qa:checks",
+            "@test:coverage"
         ],
         "security": "@composer audit --locked --abandoned=report",
-        "test": "@php vendor/bin/phpunit --configuration=phpunit.xml.dist"
+        "test": "@php vendor/bin/phpunit --configuration=phpunit.xml.dist",
+        "test:coverage": "@test --coverage-filter=src --coverage-clover=coverage.xml"
     }
 }
