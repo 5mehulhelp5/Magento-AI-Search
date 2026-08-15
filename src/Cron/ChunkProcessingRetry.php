@@ -21,12 +21,12 @@ class ChunkProcessingRetry
 
     public function execute(): void
     {
-        $indexVersion = $this->versioning->getOptionalIngestionIndexVersion();
-
-        if ($indexVersion === null) {
+        if (!$this->versioning->hasIngestionIndexVersion()) {
             return;
         }
 
-        $this->chunkProcessingRetry->execute($indexVersion);
+        $this->chunkProcessingRetry->execute(
+            $this->versioning->getIngestionIndexVersion()
+        );
     }
 }

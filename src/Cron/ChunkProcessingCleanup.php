@@ -21,9 +21,21 @@ class ChunkProcessingCleanup
 
     public function execute(): void
     {
+        $ingestionIndexVersion = null;
+
+        if ($this->versioning->hasIngestionIndexVersion()) {
+            $ingestionIndexVersion = $this->versioning->getIngestionIndexVersion();
+        }
+
+        $targetIndexVersion = null;
+
+        if ($this->versioning->hasTargetIndexVersion()) {
+            $targetIndexVersion = $this->versioning->getTargetIndexVersion();
+        }
+
         $this->chunkProcessingCleanup->execute(
-            $this->versioning->getOptionalIngestionIndexVersion(),
-            $this->versioning->getOptionalTargetIndexVersion()
+            $ingestionIndexVersion,
+            $targetIndexVersion
         );
         $this->versioning->cleanupPhysicalIndexes();
     }

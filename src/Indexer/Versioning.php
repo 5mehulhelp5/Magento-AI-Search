@@ -39,7 +39,7 @@ class Versioning
 
     public function getTargetIndexVersion(): int
     {
-        $target = $this->physicalIndexProvider->getTargetForCurrentConfiguration();
+        $target = $this->physicalIndexProvider->getTarget();
 
         if ($target === null) {
             throw new RuntimeException('A target search index version is not available.');
@@ -59,14 +59,14 @@ class Versioning
         return $physicalIndex->number;
     }
 
-    public function getOptionalTargetIndexVersion(): ?int
+    public function hasTargetIndexVersion(): bool
     {
-        return $this->physicalIndexProvider->getTarget()?->number;
+        return $this->physicalIndexProvider->getTarget() !== null;
     }
 
-    public function getOptionalIngestionIndexVersion(): ?int
+    public function hasIngestionIndexVersion(): bool
     {
-        return $this->physicalIndexProvider->getForIngestion()?->number;
+        return $this->physicalIndexProvider->getForIngestion() !== null;
     }
 
     public function invalidateProductIndexerWhenNeeded(): void

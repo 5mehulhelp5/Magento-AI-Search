@@ -21,12 +21,12 @@ class ChunkDeletion
 
     public function execute(): void
     {
-        $indexVersion = $this->versioning->getOptionalIngestionIndexVersion();
-
-        if ($indexVersion === null) {
+        if (!$this->versioning->hasIngestionIndexVersion()) {
             return;
         }
 
-        $this->chunkDeletionFactory->create()->execute($indexVersion);
+        $this->chunkDeletionFactory->create()->execute(
+            $this->versioning->getIngestionIndexVersion()
+        );
     }
 }
