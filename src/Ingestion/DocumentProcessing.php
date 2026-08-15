@@ -178,7 +178,7 @@ class DocumentProcessing
         int $indexVersion,
         UpdateMode $updateMode
     ): void {
-        if ($updateResult->upsertChunkIds === [] && $updateResult->deletionChunkIds === []) {
+        if ($updateResult->upsertChunkIds === [] && $updateResult->deleteChunkIds === []) {
             return;
         }
 
@@ -196,7 +196,7 @@ class DocumentProcessing
             );
         }
 
-        foreach ($updateResult->deletionChunkIds as $chunkId) {
+        foreach ($updateResult->deleteChunkIds as $chunkId) {
             $embeddingBacklogResource->deleteByChunkId(
                 $chunkId,
                 self::SOURCE_ENTITY_TYPE,

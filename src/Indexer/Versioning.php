@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Indexer;
 
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
-use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndexCleanupFactory;
+use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndexDeleteFactory;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndexProvider;
 use DavidBel\AiSearch\Indexer\Versioning\ProductIndexerInvalidationFactory;
 use DavidBel\AiSearch\Indexer\Versioning\Target\ActivationFactory;
@@ -23,7 +23,7 @@ class Versioning
         private readonly ActivationFactory $targetActivationFactory,
         private readonly ProductIndexerInvalidationFactory $productIndexerInvalidationFactory,
         private readonly PhysicalIndexProvider $physicalIndexProvider,
-        private readonly PhysicalIndexCleanupFactory $physicalIndexCleanupFactory
+        private readonly PhysicalIndexDeleteFactory $physicalIndexDeleteFactory
     ) {
     }
 
@@ -90,8 +90,8 @@ class Versioning
         return $this->targetActivationFactory->create()->execute();
     }
 
-    public function cleanupPhysicalIndexes(): int
+    public function deleteObsoletePhysicalIndexes(): int
     {
-        return $this->physicalIndexCleanupFactory->create()->execute();
+        return $this->physicalIndexDeleteFactory->create()->execute();
     }
 }

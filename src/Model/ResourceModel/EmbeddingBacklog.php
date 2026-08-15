@@ -50,7 +50,7 @@ class EmbeddingBacklog extends AbstractDb
             $chunkId,
             $sourceEntityType,
             $sourceEntityId,
-            Operation::Deletion,
+            Operation::Delete,
             $indexVersion,
             $fullReindexStatus
         );
@@ -98,7 +98,7 @@ class EmbeddingBacklog extends AbstractDb
     /**
      * @return list<array<string, mixed>>
      */
-    public function getItemsForDeletion(
+    public function getItemsToDelete(
         int $indexVersion,
         int $limit,
         int $upsertAttemptThreshold,
@@ -108,7 +108,7 @@ class EmbeddingBacklog extends AbstractDb
         $this->validateIndexVersion($indexVersion);
 
         if ($limit < 1) {
-            throw new InvalidArgumentException('The deletion backlog batch limit must be positive.');
+            throw new InvalidArgumentException('The delete backlog batch limit must be positive.');
         }
 
         if ($upsertAttemptThreshold < 1) {
@@ -116,18 +116,18 @@ class EmbeddingBacklog extends AbstractDb
         }
 
         if (($cursorUpdatedAt === null) !== ($cursorBacklogId === null)) {
-            throw new InvalidArgumentException('Both deletion backlog cursor values must be provided together.');
+            throw new InvalidArgumentException('Both delete backlog cursor values must be provided together.');
         }
 
         if ($cursorBacklogId !== null && $cursorBacklogId < 0) {
-            throw new InvalidArgumentException('The deletion backlog cursor ID must be non-negative.');
+            throw new InvalidArgumentException('The delete backlog cursor ID must be non-negative.');
         }
 
         /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
         /** @var list<array<string, mixed>> $rows */
         $rows = $connection->fetchAll(
-            $this->createDeletionSelect(
+            $this->createDeleteSelect(
                 $connection,
                 $indexVersion,
                 $limit,
@@ -214,7 +214,7 @@ class EmbeddingBacklog extends AbstractDb
         return $select;
     }
 
-    private function createDeletionSelect(
+    private function createDeleteSelect(
         AdapterInterface $connection,
         int $indexVersion,
         int $limit,
@@ -231,7 +231,7 @@ class EmbeddingBacklog extends AbstractDb
                 ['backlog' => $this->getMainTable()],
                 [
                     EmbeddingBacklogInterface::BACKLOG_ID,
-                    EmbeddingBacklogInterface::VERSION,
+                    EmbeddingBacklogInterface::BACKLOG_VERSION,
                     EmbeddingBacklogInterface::INDEX_VERSION,
                     EmbeddingBacklogInterface::CHUNK_ID,
                     EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE,
@@ -240,7 +240,7 @@ class EmbeddingBacklog extends AbstractDb
                 ]
             )
             ->where('backlog.index_version = ?', $indexVersion)
-            ->where('backlog.operation = ?', Operation::Deletion->value)
+            ->where('backlog.operation = ?', Operation::Delete->value)
             ->where('backlog.status = ?', Status::Pending->value)
             ->where(
                 sprintf('NOT EXISTS (%s)', $blockingUpsertSelect->assemble())
@@ -299,7 +299,7 @@ class EmbeddingBacklog extends AbstractDb
                 ['backlog' => $this->getMainTable()],
                 [
                     EmbeddingBacklogInterface::BACKLOG_ID,
-                    EmbeddingBacklogInterface::VERSION,
+                    EmbeddingBacklogInterface::BACKLOG_VERSION,
                     EmbeddingBacklogInterface::INDEX_VERSION,
                     EmbeddingBacklogInterface::CHUNK_ID,
                     EmbeddingBacklogInterface::UPDATED_AT,
@@ -385,7 +385,7 @@ class EmbeddingBacklog extends AbstractDb
             EmbeddingBacklogInterface::STATUS => Status::Pending->value,
             EmbeddingBacklogInterface::INDEX_VERSION => $indexVersion,
             EmbeddingBacklogInterface::FULL_REINDEX_STATUS => $fullReindexStatus->value,
-            EmbeddingBacklogInterface::VERSION => 1,
+            EmbeddingBacklogInterface::BACKLOG_VERSION => 1,
             EmbeddingBacklogInterface::ATTEMPT_COUNT => 0,
             EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
         ];
@@ -414,8 +414,8 @@ class EmbeddingBacklog extends AbstractDb
                 $fullReindexStatusField
             )),
             EmbeddingBacklogInterface::INDEX_VERSION,
-            EmbeddingBacklogInterface::VERSION => new Expression(
-                EmbeddingBacklogInterface::VERSION . ' + 1'
+            EmbeddingBacklogInterface::BACKLOG_VERSION => new Expression(
+                EmbeddingBacklogInterface::BACKLOG_VERSION . ' + 1'
             ),
             EmbeddingBacklogInterface::ATTEMPT_COUNT,
             EmbeddingBacklogInterface::LAST_ERROR_CATEGORY,
@@ -431,12 +431,12 @@ class EmbeddingBacklog extends AbstractDb
         /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
 
-        foreach (array_chunk($backlogVersions, 1_000, true) as $versionBatch) {
+        foreach (array_chunk($backlogVersions, 1_000, true) as $backlogVersionBatch) {
             $connection->update(
                 $this->getMainTable(),
                 $values,
                 [
-                    $this->createVersionCondition($connection, $versionBatch),
+                    $this->createBacklogVersionCondition($connection, $backlogVersionBatch),
                     EmbeddingBacklogInterface::STATUS . ' IN (?)' => [
                         Status::Pending->value,
                         Status::Failed->value,
@@ -449,7 +449,7 @@ class EmbeddingBacklog extends AbstractDb
     /**
      * @param array<int, int> $backlogVersions
      */
-    private function createVersionCondition(
+    private function createBacklogVersionCondition(
         AdapterInterface $connection,
         array $backlogVersions
     ): string {
@@ -466,7 +466,7 @@ class EmbeddingBacklog extends AbstractDb
         return sprintf(
             '(%s, %s) IN (%s)',
             $connection->quoteIdentifier(EmbeddingBacklogInterface::BACKLOG_ID),
-            $connection->quoteIdentifier(EmbeddingBacklogInterface::VERSION),
+            $connection->quoteIdentifier(EmbeddingBacklogInterface::BACKLOG_VERSION),
             implode(', ', $pairs)
         );
     }

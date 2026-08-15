@@ -97,7 +97,7 @@ class Preparation
             throw new RuntimeException('A target search index version is required for resuming.');
         }
 
-        $this->openSearch->create($target->physicalIndex);
+        $this->openSearch->createIndex($target->physicalIndex);
         $this->stateFlag->save(new State(
             $state->active,
             new Target($target->physicalIndex, false),
@@ -115,7 +115,7 @@ class Preparation
         ) + 1;
         $indexName = $this->indexName->getVersionName($versionNumber);
 
-        while ($this->openSearch->exists($indexName)) {
+        while ($this->openSearch->indexExists($indexName)) {
             $versionNumber++;
             $indexName = $this->indexName->getVersionName($versionNumber);
         }
@@ -130,7 +130,7 @@ class Preparation
                 $this->searchResultConfig->getEmbedderQueryTemplate()
             )
         );
-        $this->openSearch->create($physicalIndex);
+        $this->openSearch->createIndex($physicalIndex);
 
         return $physicalIndex;
     }

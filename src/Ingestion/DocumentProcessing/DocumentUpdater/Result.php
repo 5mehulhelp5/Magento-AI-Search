@@ -12,11 +12,11 @@ readonly class Result
 {
     /**
      * @param list<int> $upsertChunkIds
-     * @param list<int> $deletionChunkIds
+     * @param list<int> $deleteChunkIds
      */
     public function __construct(
         public array $upsertChunkIds,
-        public array $deletionChunkIds
+        public array $deleteChunkIds
     ) {
     }
 }

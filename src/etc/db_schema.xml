@@ -180,11 +180,11 @@
                 default="0"
                 comment="Full Reindex Status"/>
         <column xsi:type="bigint"
-                name="version"
+                name="backlog_version"
                 unsigned="true"
                 nullable="false"
                 default="1"
-                comment="Version"/>
+                comment="Backlog Version"/>
         <column xsi:type="smallint"
                 name="attempt_count"
                 unsigned="true"

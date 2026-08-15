@@ -68,7 +68,7 @@ class Activation
             return false;
         }
 
-        if (!$this->openSearch->exists($target->physicalIndex->indexName)) {
+        if (!$this->openSearch->indexExists($target->physicalIndex->indexName)) {
             return false;
         }
 
@@ -83,7 +83,7 @@ class Activation
             throw new RuntimeException('A target search index version is required for activation.');
         }
 
-        $this->openSearch->activate($target->physicalIndex);
+        $this->openSearch->activateIndex($target->physicalIndex);
         $activatedState = new State($target->physicalIndex, null, CacheStatus::Required);
         $this->stateFlag->save($activatedState);
         $this->completeCacheClean($activatedState);

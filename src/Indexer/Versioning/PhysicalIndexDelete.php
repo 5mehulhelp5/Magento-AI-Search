@@ -13,7 +13,7 @@ use DavidBel\AiSearch\Indexer\Versioning\State\Flag;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
-class PhysicalIndexCleanup
+class PhysicalIndexDelete
 {
     public function __construct(
         private readonly Flag $stateFlag,
@@ -24,7 +24,7 @@ class PhysicalIndexCleanup
 
     public function execute(): int
     {
-        $activeIndexName = $this->getActiveIndexNameForCleanup();
+        $activeIndexName = $this->getActiveIndexName();
 
         if ($activeIndexName === null) {
             return 0;
@@ -39,7 +39,7 @@ class PhysicalIndexCleanup
         return $deletedCount;
     }
 
-    private function getActiveIndexNameForCleanup(): ?string
+    private function getActiveIndexName(): ?string
     {
         $state = $this->stateFlag->get();
 
@@ -74,7 +74,7 @@ class PhysicalIndexCleanup
         }
 
         try {
-            $this->openSearch->delete($indexName);
+            $this->openSearch->deleteIndex($indexName);
         } catch (Throwable $throwable) {
             $this->logger->warning(
                 'An obsolete OpenSearch index version could not be deleted.',

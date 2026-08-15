@@ -26,7 +26,7 @@ class Batch
     public function __construct(array $items)
     {
         if ($items === []) {
-            throw new InvalidArgumentException('A deletion batch must contain at least one item.');
+            throw new InvalidArgumentException('A delete batch must contain at least one item.');
         }
 
         $this->items = $items;
@@ -35,7 +35,7 @@ class Batch
         foreach ($items as $item) {
             if ($item->indexVersion !== $this->indexVersion) {
                 throw new InvalidArgumentException(
-                    'A deletion batch must contain one OpenSearch index version.'
+                    'A delete batch must contain one OpenSearch index version.'
                 );
             }
         }

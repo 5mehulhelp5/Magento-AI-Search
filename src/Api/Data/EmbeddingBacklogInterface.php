@@ -28,7 +28,7 @@ interface EmbeddingBacklogInterface extends ExtensibleDataInterface
     public const string STATUS = 'status';
     public const string INDEX_VERSION = 'index_version';
     public const string FULL_REINDEX_STATUS = 'full_reindex_status';
-    public const string VERSION = 'version';
+    public const string BACKLOG_VERSION = 'backlog_version';
     public const string ATTEMPT_COUNT = 'attempt_count';
     public const string LAST_ERROR_CATEGORY = 'last_error_category';
     public const string CREATED_AT = 'created_at';
@@ -54,15 +54,15 @@ interface EmbeddingBacklogInterface extends ExtensibleDataInterface
      *
      * @return int
      */
-    public function getVersion(): int;
+    public function getBacklogVersion(): int;
 
     /**
      * Set the backlog version.
      *
-     * @param int $version
+     * @param int $backlogVersion
      * @return \DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface
      */
-    public function setVersion(int $version): EmbeddingBacklogInterface;
+    public function setBacklogVersion(int $backlogVersion): EmbeddingBacklogInterface;
 
     /**
      * Get the assigned OpenSearch index version.

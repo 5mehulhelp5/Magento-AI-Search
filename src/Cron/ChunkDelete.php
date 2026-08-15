@@ -9,12 +9,12 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Cron;
 
 use DavidBel\AiSearch\Indexer\Versioning;
-use DavidBel\AiSearch\Ingestion\ChunkDeletionFactory;
+use DavidBel\AiSearch\Ingestion\ChunkDeleteFactory;
 
-class ChunkDeletion
+class ChunkDelete
 {
     public function __construct(
-        private readonly ChunkDeletionFactory $chunkDeletionFactory,
+        private readonly ChunkDeleteFactory $chunkDeleteFactory,
         private readonly Versioning $versioning
     ) {
     }
@@ -25,7 +25,7 @@ class ChunkDeletion
             return;
         }
 
-        $this->chunkDeletionFactory->create()->execute(
+        $this->chunkDeleteFactory->create()->execute(
             $this->versioning->getIngestionIndexVersion()
         );
     }

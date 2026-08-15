@@ -30,11 +30,11 @@ class ResponseMapper
         $responseItems = $response['items'] ?? null;
 
         if (!is_bool($errors) || !is_array($responseItems) || !array_is_list($responseItems)) {
-            throw new UnexpectedValueException('OpenSearch returned an invalid bulk deletion response.');
+            throw new UnexpectedValueException('OpenSearch returned an invalid bulk delete response.');
         }
 
         if (count($responseItems) !== count($items)) {
-            throw new UnexpectedValueException('OpenSearch returned an unexpected bulk deletion item count.');
+            throw new UnexpectedValueException('OpenSearch returned an unexpected bulk delete item count.');
         }
 
         [$successfulItems, $failedItems] = $this->categorize(
@@ -77,7 +77,7 @@ class ResponseMapper
         if (!is_array($operation)
             || ($operation['_id'] ?? null) !== (string) $item->chunkId
         ) {
-            throw new UnexpectedValueException('OpenSearch returned an invalid bulk deletion item.');
+            throw new UnexpectedValueException('OpenSearch returned an invalid bulk delete item.');
         }
 
         $status = $operation['status'] ?? null;

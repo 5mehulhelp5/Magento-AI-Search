@@ -11,5 +11,5 @@ namespace DavidBel\AiSearch\Model\EmbeddingBacklog;
 enum Operation: string
 {
     case Upsert = 'upsert';
-    case Deletion = 'deletion';
+    case Delete = 'delete';
 }

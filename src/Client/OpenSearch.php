@@ -31,9 +31,9 @@ class OpenSearch
     ) {
     }
 
-    public function create(PhysicalIndex $physicalIndex): void
+    public function createIndex(PhysicalIndex $physicalIndex): void
     {
-        if ($this->exists($physicalIndex->indexName)) {
+        if ($this->indexExists($physicalIndex->indexName)) {
             $this->assertMatchingFingerprint($physicalIndex);
 
             return;
@@ -61,7 +61,7 @@ class OpenSearch
         );
     }
 
-    public function exists(string $indexName): bool
+    public function indexExists(string $indexName): bool
     {
         return $this->getClient()->indexExists($indexName);
     }
@@ -103,7 +103,7 @@ class OpenSearch
         ]);
     }
 
-    public function activate(PhysicalIndex $physicalIndex): void
+    public function activateIndex(PhysicalIndex $physicalIndex): void
     {
         $alias = $this->indexName->getAlias();
         $currentIndexNames = $this->getAliasIndexNames($alias);
@@ -135,9 +135,9 @@ class OpenSearch
         ]);
     }
 
-    public function delete(string $indexName): void
+    public function deleteIndex(string $indexName): void
     {
-        if (!$this->exists($indexName)) {
+        if (!$this->indexExists($indexName)) {
             return;
         }
 

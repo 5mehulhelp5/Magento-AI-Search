@@ -67,7 +67,7 @@ class ProcessingResultHandler
         }
     }
 
-    public function completeDeletion(Result $result): void
+    public function completeDelete(Result $result): void
     {
         $this->handleVectorSyncResult($result);
     }

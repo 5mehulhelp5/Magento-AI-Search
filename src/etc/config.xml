@@ -97,11 +97,11 @@
                 <concurrent_requests>3</concurrent_requests>
                 <maximum_runtime_seconds>600</maximum_runtime_seconds>
             </vector_embedding>
-            <vector_deletion>
+            <vector_delete>
                 <batch_size>1000</batch_size>
                 <upsert_attempt_threshold>3</upsert_attempt_threshold>
                 <maximum_runtime_seconds>600</maximum_runtime_seconds>
-            </vector_deletion>
+            </vector_delete>
             <retry>
                 <attempt_threshold>3</attempt_threshold>
             </retry>

@@ -21,12 +21,12 @@ class DataProcessingConfig
         'davidbel_ai_search_data_processing/vector_embedding/concurrent_requests';
     private const string XML_PATH_EMBEDDING_MAXIMUM_RUNTIME_SECONDS =
         'davidbel_ai_search_data_processing/vector_embedding/maximum_runtime_seconds';
-    private const string XML_PATH_VECTOR_DELETION_BATCH_SIZE =
-        'davidbel_ai_search_data_processing/vector_deletion/batch_size';
-    private const string XML_PATH_DELETION_UPSERT_ATTEMPT_THRESHOLD =
-        'davidbel_ai_search_data_processing/vector_deletion/upsert_attempt_threshold';
-    private const string XML_PATH_DELETION_MAXIMUM_RUNTIME_SECONDS =
-        'davidbel_ai_search_data_processing/vector_deletion/maximum_runtime_seconds';
+    private const string XML_PATH_VECTOR_DELETE_BATCH_SIZE =
+        'davidbel_ai_search_data_processing/vector_delete/batch_size';
+    private const string XML_PATH_DELETE_UPSERT_ATTEMPT_THRESHOLD =
+        'davidbel_ai_search_data_processing/vector_delete/upsert_attempt_threshold';
+    private const string XML_PATH_DELETE_MAXIMUM_RUNTIME_SECONDS =
+        'davidbel_ai_search_data_processing/vector_delete/maximum_runtime_seconds';
     private const string XML_PATH_RETRY_ATTEMPT_THRESHOLD =
         'davidbel_ai_search_data_processing/retry/attempt_threshold';
     private const string XML_PATH_CLEANUP_ATTEMPT_THRESHOLD =
@@ -66,19 +66,19 @@ class DataProcessingConfig
         return $this->getPositiveInteger(self::XML_PATH_EMBEDDING_MAXIMUM_RUNTIME_SECONDS);
     }
 
-    public function getVectorDeletionBatchSize(): int
+    public function getVectorDeleteBatchSize(): int
     {
-        return $this->getPositiveInteger(self::XML_PATH_VECTOR_DELETION_BATCH_SIZE);
+        return $this->getPositiveInteger(self::XML_PATH_VECTOR_DELETE_BATCH_SIZE);
     }
 
-    public function getVectorDeletionUpsertAttemptThreshold(): int
+    public function getVectorDeleteUpsertAttemptThreshold(): int
     {
-        return $this->getPositiveInteger(self::XML_PATH_DELETION_UPSERT_ATTEMPT_THRESHOLD);
+        return $this->getPositiveInteger(self::XML_PATH_DELETE_UPSERT_ATTEMPT_THRESHOLD);
     }
 
-    public function getVectorDeletionMaximumRuntimeSeconds(): int
+    public function getVectorDeleteMaximumRuntimeSeconds(): int
     {
-        return $this->getPositiveInteger(self::XML_PATH_DELETION_MAXIMUM_RUNTIME_SECONDS);
+        return $this->getPositiveInteger(self::XML_PATH_DELETE_MAXIMUM_RUNTIME_SECONDS);
     }
 
     public function getRetryAttemptThreshold(): int

@@ -22,7 +22,7 @@ use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\ItemMapper;
 use Generator;
 use Throwable;
 
-class ChunkDeletion
+class ChunkDelete
 {
     private const int NANOSECONDS_PER_SECOND = 1_000_000_000;
 
@@ -67,7 +67,7 @@ class ChunkDeletion
                 break;
             }
 
-            $resultHandler->completeDeletion($result);
+            $resultHandler->completeDelete($result);
         }
     }
 
@@ -80,14 +80,14 @@ class ChunkDeletion
     ): Generator {
         $cursorUpdatedAt = null;
         $cursorBacklogId = null;
-        $batchSize = $this->dataProcessingConfig->getVectorDeletionBatchSize();
+        $batchSize = $this->dataProcessingConfig->getVectorDeleteBatchSize();
         $upsertAttemptThreshold = $this->dataProcessingConfig
-            ->getVectorDeletionUpsertAttemptThreshold();
+            ->getVectorDeleteUpsertAttemptThreshold();
         $maxRuntimeNanoseconds = $this->dataProcessingConfig
-            ->getVectorDeletionMaximumRuntimeSeconds() * self::NANOSECONDS_PER_SECOND;
+            ->getVectorDeleteMaximumRuntimeSeconds() * self::NANOSECONDS_PER_SECOND;
 
         while ($processingState->isWithinRuntime($maxRuntimeNanoseconds)) {
-            $rows = $this->getResource()->getItemsForDeletion(
+            $rows = $this->getResource()->getItemsToDelete(
                 $indexVersion,
                 $batchSize,
                 $upsertAttemptThreshold,

@@ -37,6 +37,6 @@ class ChunkProcessingCleanup
             $ingestionIndexVersion,
             $targetIndexVersion
         );
-        $this->versioning->cleanupPhysicalIndexes();
+        $this->versioning->deleteObsoletePhysicalIndexes();
     }
 }

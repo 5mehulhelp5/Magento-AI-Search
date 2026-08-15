@@ -26,7 +26,10 @@ class ProcessingItemMapper
         foreach ($rows as $row) {
             $items[] = new ProcessingItem(
                 $this->toInteger($row[EmbeddingBacklogInterface::BACKLOG_ID] ?? null, 'backlog_id'),
-                $this->toPositiveInteger($row[EmbeddingBacklogInterface::VERSION] ?? null, 'version'),
+                $this->toPositiveInteger(
+                    $row[EmbeddingBacklogInterface::BACKLOG_VERSION] ?? null,
+                    'backlog_version'
+                ),
                 $this->toString($row[EmbeddingBacklogInterface::UPDATED_AT] ?? null, 'updated_at'),
                 $this->toInteger($row[EmbeddingBacklogInterface::CHUNK_ID] ?? null, 'chunk_id'),
                 $this->toString($row[DocumentInterface::SOURCE_ENTITY_TYPE] ?? null, 'source_entity_type'),

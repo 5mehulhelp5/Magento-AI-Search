@@ -64,7 +64,7 @@ class DocumentUpdater
         $documentsByStoreId = $this->getDocumentsByStoreId($sourceEntityType, $sourceEntityId, $source->sourceCode);
         $currentStoreIds = [];
         $chunksBySourceHash = [];
-        $upsertChunkIds = $deletionChunkIds = [];
+        $upsertChunkIds = $deleteChunkIds = [];
 
         foreach ($source->storeScopedSources as $storeScopedSource) {
             $sourceHash = hash('sha256', $storeScopedSource->content);
@@ -97,12 +97,12 @@ class DocumentUpdater
                 $updateMode
             );
             array_push($upsertChunkIds, ...$updateResult->upsertChunkIds);
-            array_push($deletionChunkIds, ...$updateResult->deletionChunkIds);
+            array_push($deleteChunkIds, ...$updateResult->deleteChunkIds);
         }
 
-        array_push($deletionChunkIds, ...$this->deleteStaleDocuments($documentsByStoreId, $currentStoreIds));
+        array_push($deleteChunkIds, ...$this->deleteStaleDocuments($documentsByStoreId, $currentStoreIds));
 
-        return new Result($upsertChunkIds, $deletionChunkIds);
+        return new Result($upsertChunkIds, $deleteChunkIds);
     }
 
     /**
@@ -177,7 +177,7 @@ class DocumentUpdater
 
         return new Result(
             $this->chunkPersistence->getChunkIdsByDocumentId($documentId),
-            $updateResult->deletionChunkIds
+            $updateResult->deleteChunkIds
         );
     }
 

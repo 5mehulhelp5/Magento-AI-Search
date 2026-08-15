@@ -25,9 +25,9 @@
             <schedule>0 0 * * *</schedule>
         </job>
     </group>
-    <group id="davidbel_ai_search_deletion">
-        <job name="davidbel_ai_search_chunk_deletion"
-             instance="DavidBel\AiSearch\Cron\ChunkDeletion"
+    <group id="davidbel_ai_search_delete">
+        <job name="davidbel_ai_search_chunk_delete"
+             instance="DavidBel\AiSearch\Cron\ChunkDelete"
              method="execute">
             <schedule>* * * * *</schedule>
         </job>

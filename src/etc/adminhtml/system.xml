@@ -369,12 +369,12 @@
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
             </group>
-            <group id="vector_deletion"
+            <group id="vector_delete"
                    translate="label"
                    type="text"
                    sortOrder="30"
                    showInDefault="1">
-                <label>Vector Deletion</label>
+                <label>Vector Delete</label>
                 <field id="batch_size"
                        translate="label"
                        type="text"
