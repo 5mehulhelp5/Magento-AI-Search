@@ -15,6 +15,7 @@ use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource\StoreScopedSou
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Result;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
@@ -27,6 +28,7 @@ use RuntimeException;
 class DocumentProcessingTest extends TestCase
 {
     private const int BATCH_SIZE = 100;
+    private const int INDEX_VERSION = 7;
 
     public static function setUpBeforeClass(): void
     {
@@ -54,14 +56,18 @@ class DocumentProcessingTest extends TestCase
             ->with('product', 30, $source)
             ->willReturn(new Result([101], [102]));
         $resource = $this->createBacklogResource($this->createTransactionConnection());
-        $resource->expects(self::once())->method('saveByChunkId')->with(101, 'product', 30);
-        $resource->expects(self::once())->method('deleteByChunkId')->with(102, 'product', 30);
+        $resource->expects(self::once())
+            ->method('saveByChunkId')
+            ->with(101, 'product', 30, self::INDEX_VERSION, FullReindexStatus::Pending);
+        $resource->expects(self::once())
+            ->method('deleteByChunkId')
+            ->with(102, 'product', 30, self::INDEX_VERSION, FullReindexStatus::Pending);
 
         $this->createProcessing(
             $sourceProvider,
             $documentUpdater,
             $this->createCollectionFactory($resource)
-        )->fullUpdate();
+        )->fullUpdate(self::INDEX_VERSION);
     }
 
     public function testDeltaUpdatesAffectedProductsInTransactions(): void
@@ -96,14 +102,18 @@ class DocumentProcessingTest extends TestCase
                 }
             );
         $resource = $this->createBacklogResource($this->createTransactionConnection(2));
-        $resource->expects(self::once())->method('saveByChunkId')->with(201, 'product', 10);
-        $resource->expects(self::once())->method('deleteByChunkId')->with(202, 'product', 20);
+        $resource->expects(self::once())
+            ->method('saveByChunkId')
+            ->with(201, 'product', 10, self::INDEX_VERSION, FullReindexStatus::Delta);
+        $resource->expects(self::once())
+            ->method('deleteByChunkId')
+            ->with(202, 'product', 20, self::INDEX_VERSION, FullReindexStatus::Delta);
 
         $this->createProcessing(
             $sourceProvider,
             $documentUpdater,
             $this->createCollectionFactory($resource)
-        )->deltaUpdate([10, 20]);
+        )->deltaUpdate([10, 20], self::INDEX_VERSION);
     }
 
     public function testCommitsAnUpdateWithoutBacklogChanges(): void
@@ -122,7 +132,7 @@ class DocumentProcessingTest extends TestCase
             $sourceProvider,
             $documentUpdater,
             $this->createCollectionFactory($resource)
-        )->deltaUpdate([10]);
+        )->deltaUpdate([10], self::INDEX_VERSION);
     }
 
     public function testRollsBackAFailedProductUpdate(): void
@@ -146,7 +156,7 @@ class DocumentProcessingTest extends TestCase
             $sourceProvider,
             $documentUpdater,
             $this->createCollectionFactory($resource)
-        )->deltaUpdate([10]);
+        )->deltaUpdate([10], self::INDEX_VERSION);
     }
 
     public function testDoesNotLoadAnEmptyDeltaUpdate(): void
@@ -161,7 +171,7 @@ class DocumentProcessingTest extends TestCase
             $sourceProvider,
             self::createStub(DocumentUpdater::class),
             $collectionFactory
-        )->deltaUpdate([]);
+        )->deltaUpdate([], self::INDEX_VERSION);
     }
 
     public function testLoadsDeltaUpdatesInBoundedBatches(): void
@@ -190,7 +200,7 @@ class DocumentProcessingTest extends TestCase
             $sourceProvider,
             self::createStub(DocumentUpdater::class),
             $this->createCollectionFactory($resource, 2)
-        )->deltaUpdate($productIds);
+        )->deltaUpdate($productIds, self::INDEX_VERSION);
 
         self::assertSame(
             [range(1, self::BATCH_SIZE), [self::BATCH_SIZE + 1]],

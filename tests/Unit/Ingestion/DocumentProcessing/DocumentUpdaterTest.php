@@ -68,7 +68,7 @@ class DocumentUpdaterTest extends TestCase
             ->deltaUpdate('product', 42, $this->createSource('New source'));
 
         self::assertSame([100], $result->upsertChunkIds);
-        self::assertSame([101], $result->deletionChunkIds);
+        self::assertSame([101], $result->deleteChunkIds);
     }
 
     public function testFullUpdateQueuesAnUnchangedChunk(): void
@@ -91,7 +91,7 @@ class DocumentUpdaterTest extends TestCase
             ->fullUpdate('product', 42, $this->createSource($content));
 
         self::assertSame([100], $result->upsertChunkIds);
-        self::assertSame([], $result->deletionChunkIds);
+        self::assertSame([], $result->deleteChunkIds);
     }
 
     public function testDeltaUpdateSkipsAnUnchangedSource(): void
@@ -111,7 +111,7 @@ class DocumentUpdaterTest extends TestCase
             ->deltaUpdate('product', 42, $this->createSource($content));
 
         self::assertSame([], $result->upsertChunkIds);
-        self::assertSame([], $result->deletionChunkIds);
+        self::assertSame([], $result->deleteChunkIds);
     }
 
     public function testReturnsChunksDeletedWithAStaleDocument(): void
@@ -133,7 +133,7 @@ class DocumentUpdaterTest extends TestCase
         )->deltaUpdate('product', 42, new DocumentSource('description', 'text_as_is', []));
 
         self::assertSame([], $result->upsertChunkIds);
-        self::assertSame([100], $result->deletionChunkIds);
+        self::assertSame([100], $result->deleteChunkIds);
     }
 
     public function testRequiresASavedDocumentId(): void

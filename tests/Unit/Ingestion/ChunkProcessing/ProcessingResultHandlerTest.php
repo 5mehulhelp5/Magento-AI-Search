@@ -11,6 +11,7 @@ namespace DavidBel\AiSearch\Tests\Unit\Ingestion\ChunkProcessing;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\IndexVersion as BacklogIndexVersion;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\CacheClean;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingBatch;
@@ -53,8 +54,12 @@ class ProcessingResultHandlerTest extends TestCase
         $state->expects(self::once())->method('getBatch')->with(7)->willReturn($batch);
         $state->expects(self::once())->method('recordSuccesses')->with([10 => 2]);
         $state->expects(self::once())->method('removeBatch')->with(7);
+        $backlogIndexVersion = $this->createMock(BacklogIndexVersion::class);
+        $backlogIndexVersion->expects(self::once())
+            ->method('markFullReindexItemsIndexed')
+            ->with([10 => 7]);
 
-        $this->createHandler($resource, $vectorSync, $cacheClean, $state)
+        $this->createHandler($resource, $vectorSync, $cacheClean, $state, $backlogIndexVersion)
             ->completed([[0.1, 0.2]], 7);
     }
 
@@ -156,7 +161,8 @@ class ProcessingResultHandlerTest extends TestCase
         EmbeddingBacklogResource $resource,
         VectorSync $vectorSync,
         CacheClean $cacheClean,
-        ProcessingState $state
+        ProcessingState $state,
+        ?BacklogIndexVersion $backlogIndexVersion = null
     ): ProcessingResultHandler {
         $collection = self::createStub(Collection::class);
         $collection->method('getResourceModel')->willReturn($resource);
@@ -167,19 +173,21 @@ class ProcessingResultHandlerTest extends TestCase
             $collectionFactory,
             $vectorSync,
             $cacheClean,
-            $state
+            $state,
+            $backlogIndexVersion ?? self::createStub(BacklogIndexVersion::class)
         );
     }
 
-    private function createItem(int $backlogId, int $version, int $entityId): Item
+    private function createItem(int $backlogId, int $backlogVersion, int $entityId): Item
     {
         return new Item(
             $backlogId,
-            $version,
+            $backlogVersion,
             '2026-08-04 10:00:00',
             $backlogId + 100,
             'product',
-            $entityId
+            $entityId,
+            7
         );
     }
 }

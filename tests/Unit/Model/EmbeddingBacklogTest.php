@@ -10,12 +10,14 @@ namespace DavidBel\AiSearch\Tests\Unit\Model;
 
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
 use DavidBel\AiSearch\Model\EmbeddingBacklog;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Status;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use UnexpectedValueException;
+use ValueError;
 
 class EmbeddingBacklogTest extends TestCase
 {
@@ -30,11 +32,13 @@ class EmbeddingBacklogTest extends TestCase
     public function testMapsPersistedDataToTheServiceContract(): void
     {
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::BACKLOG_ID, '12');
-        $this->embeddingBacklog->setData(EmbeddingBacklogInterface::VERSION, '4');
+        $this->embeddingBacklog->setData(EmbeddingBacklogInterface::BACKLOG_VERSION, '4');
+        $this->embeddingBacklog->setData(EmbeddingBacklogInterface::INDEX_VERSION, '7');
+        $this->embeddingBacklog->setData(EmbeddingBacklogInterface::FULL_REINDEX_STATUS, '1');
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::CHUNK_ID, '42');
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE, 'product');
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::SOURCE_ENTITY_ID, '81');
-        $this->embeddingBacklog->setData(EmbeddingBacklogInterface::OPERATION, 'deletion');
+        $this->embeddingBacklog->setData(EmbeddingBacklogInterface::OPERATION, 'delete');
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::STATUS, 'failed');
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::ATTEMPT_COUNT, '3');
         $this->embeddingBacklog->setLastErrorCategory('provider_unavailable');
@@ -42,11 +46,13 @@ class EmbeddingBacklogTest extends TestCase
         $this->embeddingBacklog->setUpdatedAt('2026-07-29 11:00:00');
 
         self::assertSame(12, $this->embeddingBacklog->getBacklogId());
-        self::assertSame(4, $this->embeddingBacklog->getVersion());
+        self::assertSame(4, $this->embeddingBacklog->getBacklogVersion());
+        self::assertSame(7, $this->embeddingBacklog->getIndexVersion());
+        self::assertSame(FullReindexStatus::Pending, $this->embeddingBacklog->getFullReindexStatus());
         self::assertSame(42, $this->embeddingBacklog->getChunkId());
         self::assertSame('product', $this->embeddingBacklog->getSourceEntityType());
         self::assertSame(81, $this->embeddingBacklog->getSourceEntityId());
-        self::assertSame(Operation::Deletion, $this->embeddingBacklog->getOperation());
+        self::assertSame(Operation::Delete, $this->embeddingBacklog->getOperation());
         self::assertSame(Status::Failed, $this->embeddingBacklog->getStatus());
         self::assertSame(3, $this->embeddingBacklog->getAttemptCount());
         self::assertSame('provider_unavailable', $this->embeddingBacklog->getLastErrorCategory());
@@ -58,13 +64,20 @@ class EmbeddingBacklogTest extends TestCase
     {
         $this->embeddingBacklog->setOperation(Operation::Upsert);
         $this->embeddingBacklog->setStatus(Status::Outdated);
-        $this->embeddingBacklog->setVersion(5);
+        $this->embeddingBacklog->setBacklogVersion(5);
+        $this->embeddingBacklog->setIndexVersion(8);
+        $this->embeddingBacklog->setFullReindexStatus(FullReindexStatus::Indexed);
         $this->embeddingBacklog->setSourceEntityType('product');
         $this->embeddingBacklog->setSourceEntityId(91);
 
         self::assertSame('upsert', $this->embeddingBacklog->getData(EmbeddingBacklogInterface::OPERATION));
         self::assertSame('outdated', $this->embeddingBacklog->getData(EmbeddingBacklogInterface::STATUS));
-        self::assertSame(5, $this->embeddingBacklog->getData(EmbeddingBacklogInterface::VERSION));
+        self::assertSame(5, $this->embeddingBacklog->getData(EmbeddingBacklogInterface::BACKLOG_VERSION));
+        self::assertSame(8, $this->embeddingBacklog->getData(EmbeddingBacklogInterface::INDEX_VERSION));
+        self::assertSame(
+            FullReindexStatus::Indexed->value,
+            $this->embeddingBacklog->getData(EmbeddingBacklogInterface::FULL_REINDEX_STATUS)
+        );
         self::assertSame('product', $this->embeddingBacklog->getSourceEntityType());
         self::assertSame(91, $this->embeddingBacklog->getSourceEntityId());
         self::assertSame(Operation::Upsert, $this->embeddingBacklog->getOperation());
@@ -97,52 +110,68 @@ class EmbeddingBacklogTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{mixed, string}>
+     * @return iterable<string, array{mixed, class-string<\Throwable>, string}>
      */
     public static function invalidOperations(): iterable
     {
         yield 'non-string' => [
             null,
+            UnexpectedValueException::class,
             'Embedding backlog operation is not a string.',
         ];
         yield 'unknown value' => [
             'unknown',
-            'Embedding backlog operation "unknown" is invalid.',
+            ValueError::class,
+            '"unknown" is not a valid backing value for enum',
         ];
     }
 
+    /**
+     * @param class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('invalidOperations')]
-    public function testRejectsAnInvalidOperation(mixed $value, string $message): void
-    {
+    public function testRejectsAnInvalidOperation(
+        mixed $value,
+        string $exceptionClass,
+        string $message
+    ): void {
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::OPERATION, $value);
 
-        $this->expectException(UnexpectedValueException::class);
+        $this->expectException($exceptionClass);
         $this->expectExceptionMessage($message);
 
         $this->embeddingBacklog->getOperation();
     }
 
     /**
-     * @return iterable<string, array{mixed, string}>
+     * @return iterable<string, array{mixed, class-string<\Throwable>, string}>
      */
     public static function invalidStatuses(): iterable
     {
         yield 'non-string' => [
             null,
+            UnexpectedValueException::class,
             'Embedding backlog status is not a string.',
         ];
         yield 'unknown value' => [
             'unknown',
-            'Embedding backlog status "unknown" is invalid.',
+            ValueError::class,
+            '"unknown" is not a valid backing value for enum',
         ];
     }
 
+    /**
+     * @param class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('invalidStatuses')]
-    public function testRejectsAnInvalidStatus(mixed $value, string $message): void
-    {
+    public function testRejectsAnInvalidStatus(
+        mixed $value,
+        string $exceptionClass,
+        string $message
+    ): void {
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::STATUS, $value);
 
-        $this->expectException(UnexpectedValueException::class);
+        $this->expectException($exceptionClass);
         $this->expectExceptionMessage($message);
 
         $this->embeddingBacklog->getStatus();

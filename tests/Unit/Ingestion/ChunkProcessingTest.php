@@ -15,6 +15,7 @@ use DavidBel\AiSearch\Config\DataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Maintenance as BacklogMaintenance;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\CacheClean;
@@ -53,6 +54,10 @@ class ChunkProcessingTest extends TestCase
         $handler->expects(self::once())->method('finish')->willReturn(1);
         $cacheClean = $this->createMock(CacheClean::class);
         $cacheClean->expects(self::once())->method('start');
+        $maintenance = $this->createMock(BacklogMaintenance::class);
+        $maintenance->expects(self::once())
+            ->method('markMissingChunkUpsertsOutdated')
+            ->with(7);
 
         $workflow = new ChunkProcessing(
             $this->createCollectionFactory($resource),
@@ -62,10 +67,11 @@ class ChunkProcessingTest extends TestCase
             $this->createHandlerFactory($state, $handler),
             $this->createVectorEmbedding($handler),
             $cacheClean,
-            $this->createDataProcessingConfig()
+            $this->createDataProcessingConfig(),
+            $maintenance
         );
 
-        self::assertSame(1, $workflow->execute());
+        self::assertSame(1, $workflow->execute(7));
     }
 
     /**
@@ -74,14 +80,15 @@ class ChunkProcessingTest extends TestCase
     private function createResource(array $row): EmbeddingBacklogResource
     {
         $resource = $this->createMock(EmbeddingBacklogResource::class);
-        $resource->expects(self::once())->method('markMissingChunkUpsertsOutdated');
         $resource->expects(self::exactly(2))
             ->method('getPendingUpsertsForEmbedding')
             ->willReturnCallback(static function (
+                int $indexVersion,
                 int $limit,
                 ?string $updatedAt,
                 ?int $backlogId
             ) use ($row): array {
+                self::assertSame(7, $indexVersion);
                 self::assertSame(100, $limit);
 
                 if ($updatedAt === null) {
@@ -189,7 +196,8 @@ class ChunkProcessingTest extends TestCase
     {
         return [
             EmbeddingBacklogInterface::BACKLOG_ID => '10',
-            EmbeddingBacklogInterface::VERSION => '2',
+            EmbeddingBacklogInterface::BACKLOG_VERSION => '2',
+            EmbeddingBacklogInterface::INDEX_VERSION => '7',
             EmbeddingBacklogInterface::UPDATED_AT => '2026-08-04 10:00:00',
             EmbeddingBacklogInterface::CHUNK_ID => '42',
             DocumentInterface::SOURCE_ENTITY_TYPE => 'product',

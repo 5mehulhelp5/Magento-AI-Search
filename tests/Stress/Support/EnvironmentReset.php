@@ -100,7 +100,7 @@ class EnvironmentReset
                 continue;
             }
 
-            $this->openSearch->delete($index);
+            $this->openSearch->deleteIndex($index);
             $removed++;
         }
 

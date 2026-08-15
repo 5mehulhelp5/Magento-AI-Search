@@ -62,19 +62,19 @@ class ResponseMapperTest extends TestCase
     {
         yield 'missing errors flag' => [
             ['items' => []],
-            'OpenSearch returned an invalid bulk deletion response.',
+            'OpenSearch returned an invalid bulk delete response.',
         ];
         yield 'non-list items' => [
             ['errors' => false, 'items' => ['item' => []]],
-            'OpenSearch returned an invalid bulk deletion response.',
+            'OpenSearch returned an invalid bulk delete response.',
         ];
         yield 'unexpected item count' => [
             ['errors' => false, 'items' => []],
-            'OpenSearch returned an unexpected bulk deletion item count.',
+            'OpenSearch returned an unexpected bulk delete item count.',
         ];
         yield 'mismatched document ID' => [
             ['errors' => false, 'items' => [['delete' => ['_id' => '999', 'status' => 200]]]],
-            'OpenSearch returned an invalid bulk deletion item.',
+            'OpenSearch returned an invalid bulk delete item.',
         ];
     }
 

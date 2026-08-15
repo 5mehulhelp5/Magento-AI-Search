@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 # https://github.com/DavidBelicza/Magento-AI-Search
 
-name: Quality
+name: CI
 
 on:
   push:

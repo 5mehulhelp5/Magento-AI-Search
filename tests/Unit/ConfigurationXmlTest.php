@@ -81,8 +81,8 @@ class ConfigurationXmlTest extends TestCase
                 'davidbel_ai_search_chunk_processing_retry' => 'DavidBel\AiSearch\Cron\ChunkProcessingRetry',
                 'davidbel_ai_search_chunk_processing_cleanup' => 'DavidBel\AiSearch\Cron\ChunkProcessingCleanup',
             ],
-            'davidbel_ai_search_deletion' => [
-                'davidbel_ai_search_chunk_deletion' => 'DavidBel\AiSearch\Cron\ChunkDeletion',
+            'davidbel_ai_search_delete' => [
+                'davidbel_ai_search_chunk_delete' => 'DavidBel\AiSearch\Cron\ChunkDelete',
             ],
         ];
 
@@ -243,7 +243,7 @@ class ConfigurationXmlTest extends TestCase
                     . '[column[@name="source_entity_id"]]'
                     . '[column[@name="operation"][@default="upsert"]]'
                     . '[column[@name="status"][@default="pending"]]'
-                    . '[column[@name="version"][@default="1"]]'
+                    . '[column[@name="backlog_version"][@default="1"]]'
                     . '[column[@name="attempt_count"][@default="0"]]'
                     . '[constraint/column[@name="chunk_id"]'
                     . '/../column[@name="operation"]]'

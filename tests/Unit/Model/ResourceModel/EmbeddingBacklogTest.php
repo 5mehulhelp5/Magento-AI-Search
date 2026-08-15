@@ -11,9 +11,14 @@ namespace DavidBel\AiSearch\Tests\Unit\Model\ResourceModel;
 use DavidBel\AiSearch\Api\Data\ChunkInterface;
 use DavidBel\AiSearch\Api\Data\DocumentInterface;
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Status;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Maintenance;
+use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use InvalidArgumentException;
 use LogicException;
 use Magento\Framework\DB\Adapter\AdapterInterface;
@@ -25,14 +30,19 @@ use PHPUnit\Framework\TestCase;
 
 class EmbeddingBacklogTest extends TestCase
 {
+    public static function setUpBeforeClass(): void
+    {
+        GeneratedFactoryStub::register(CollectionFactory::class);
+    }
+
     public function testQueuesAnUpsertByChunkId(): void
     {
         $this->assertQueuesOperation(Operation::Upsert);
     }
 
-    public function testQueuesADeletionByChunkId(): void
+    public function testQueuesADeleteByChunkId(): void
     {
-        $this->assertQueuesOperation(Operation::Deletion);
+        $this->assertQueuesOperation(Operation::Delete);
     }
 
     /**
@@ -84,6 +94,7 @@ class EmbeddingBacklogTest extends TestCase
         $this->expectExceptionMessage($exceptionMessage);
 
         $resource->getPendingUpsertsForEmbedding(
+            7,
             $limit,
             $cursorUpdatedAt,
             $cursorBacklogId
@@ -93,7 +104,7 @@ class EmbeddingBacklogTest extends TestCase
     public function testLoadsPendingUpsertsInStableOrder(): void
     {
         $selectCalls = [];
-        $select = $this->createEmbeddingSelect(2, $selectCalls);
+        $select = $this->createEmbeddingSelect(3, $selectCalls);
         $rows = [
             [
                 EmbeddingBacklogInterface::BACKLOG_ID => '10',
@@ -114,7 +125,7 @@ class EmbeddingBacklogTest extends TestCase
 
         self::assertSame(
             $rows,
-            $resource->getPendingUpsertsForEmbedding(25)
+            $resource->getPendingUpsertsForEmbedding(7, 25)
         );
         $this->assertBaseSelectCalls($selectCalls, 25);
     }
@@ -122,7 +133,7 @@ class EmbeddingBacklogTest extends TestCase
     public function testLoadsPendingUpsertsAfterACompositeCursor(): void
     {
         $selectCalls = [];
-        $select = $this->createEmbeddingSelect(3, $selectCalls);
+        $select = $this->createEmbeddingSelect(4, $selectCalls);
         $quoteCalls = [];
         $connection = $this->createCursorConnection($select, $quoteCalls);
         $resource = $this->createRetrievalResource($connection);
@@ -130,6 +141,7 @@ class EmbeddingBacklogTest extends TestCase
         self::assertSame(
             [],
             $resource->getPendingUpsertsForEmbedding(
+                7,
                 10,
                 '2026-07-31 10:00:00',
                 42
@@ -145,7 +157,7 @@ class EmbeddingBacklogTest extends TestCase
         );
         self::assertSame(
             ['(after_timestamp OR (at_timestamp AND after_id))'],
-            $selectCalls['where'][2]
+            $selectCalls['where'][3]
         );
     }
 
@@ -223,6 +235,7 @@ class EmbeddingBacklogTest extends TestCase
                 [EmbeddingBacklogInterface::STATUS => Status::Pending->value],
                 [
                     EmbeddingBacklogInterface::STATUS . ' = ?' => Status::Failed->value,
+                    EmbeddingBacklogInterface::INDEX_VERSION . ' = ?' => 7,
                     EmbeddingBacklogInterface::ATTEMPT_COUNT . ' < ?' => 3,
                 ]
             )
@@ -230,21 +243,17 @@ class EmbeddingBacklogTest extends TestCase
 
         self::assertSame(
             4,
-            $this->createUpdateResource($connection)->markFailedAsPending(3)
+            $this->createMaintenance($connection)->markFailedAsPending(7, 3)
         );
     }
 
     public function testRejectsANonPositiveRetryThreshold(): void
     {
-        $resource = $this->getMockBuilder(EmbeddingBacklog::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getConnection'])
-            ->getMock();
-        $resource->expects(self::never())->method('getConnection');
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The retry attempt threshold must be positive.');
 
-        $resource->markFailedAsPending(0);
+        (new Maintenance(self::createStub(CollectionFactory::class)))
+            ->markFailedAsPending(7, 0);
     }
 
     public function testDeletesExhaustedUpsertsAndExpiredResults(): void
@@ -270,7 +279,7 @@ class EmbeddingBacklogTest extends TestCase
 
         self::assertSame(
             6,
-            $this->createUpdateResource($connection)
+            $this->createMaintenance($connection)
                 ->deleteExhaustedUpsertsOrExpiredResults(
                     3,
                     '2026-08-03 10:00:00'
@@ -280,20 +289,17 @@ class EmbeddingBacklogTest extends TestCase
 
     public function testRejectsAnEmptyCleanupCutoff(): void
     {
-        $resource = $this->getMockBuilder(EmbeddingBacklog::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getConnection'])
-            ->getMock();
-        $resource->expects(self::never())->method('getConnection');
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The backlog expiration cutoff must not be empty.');
 
-        $resource->deleteExhaustedUpsertsOrExpiredResults(3, '');
+        (new Maintenance(self::createStub(CollectionFactory::class)))
+            ->deleteExhaustedUpsertsOrExpiredResults(3, '');
     }
 
     private function assertQueuesOperation(Operation $operation): void
     {
         $connection = $this->createMock(AdapterInterface::class);
+        $this->configureQuotedIdentifiers($connection);
         $connection->expects(self::once())
             ->method('insertOnDuplicate')
             ->with(
@@ -304,7 +310,9 @@ class EmbeddingBacklogTest extends TestCase
                     EmbeddingBacklogInterface::SOURCE_ENTITY_ID => 99,
                     EmbeddingBacklogInterface::OPERATION => $operation->value,
                     EmbeddingBacklogInterface::STATUS => Status::Pending->value,
-                    EmbeddingBacklogInterface::VERSION => 1,
+                    EmbeddingBacklogInterface::INDEX_VERSION => 7,
+                    EmbeddingBacklogInterface::FULL_REINDEX_STATUS => FullReindexStatus::Pending->value,
+                    EmbeddingBacklogInterface::BACKLOG_VERSION => 1,
                     EmbeddingBacklogInterface::ATTEMPT_COUNT => 0,
                     EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
                 ],
@@ -313,12 +321,12 @@ class EmbeddingBacklogTest extends TestCase
         $resource = $this->createUpdateResource($connection);
 
         if ($operation === Operation::Upsert) {
-            $resource->saveByChunkId(42, 'product', 99);
+            $resource->saveByChunkId(42, 'product', 99, 7, FullReindexStatus::Pending);
 
             return;
         }
 
-        $resource->deleteByChunkId(42, 'product', 99);
+        $resource->deleteByChunkId(42, 'product', 99, 7, FullReindexStatus::Pending);
     }
 
     /**
@@ -335,15 +343,23 @@ class EmbeddingBacklogTest extends TestCase
             ],
             array_slice($fields, 0, 4)
         );
-        $version = $fields[EmbeddingBacklogInterface::VERSION];
-        self::assertInstanceOf(Expression::class, $version);
-        self::assertSame('version + 1', (string) $version);
+        $fullReindexStatus = $fields[EmbeddingBacklogInterface::FULL_REINDEX_STATUS];
+        self::assertInstanceOf(Expression::class, $fullReindexStatus);
+        self::assertSame(
+            'IF(`index_version` <> VALUES(`index_version`), VALUES(`full_reindex_status`), '
+            . 'GREATEST(`full_reindex_status`, VALUES(`full_reindex_status`)))',
+            (string) $fullReindexStatus
+        );
+        self::assertSame(EmbeddingBacklogInterface::INDEX_VERSION, $fields[4]);
+        $backlogVersion = $fields[EmbeddingBacklogInterface::BACKLOG_VERSION];
+        self::assertInstanceOf(Expression::class, $backlogVersion);
+        self::assertSame('backlog_version + 1', (string) $backlogVersion);
         self::assertSame(
             [
                 EmbeddingBacklogInterface::ATTEMPT_COUNT,
                 EmbeddingBacklogInterface::LAST_ERROR_CATEGORY,
             ],
-            array_slice($fields, 5)
+            [$fields[5], $fields[6]]
         );
 
         return true;
@@ -358,6 +374,7 @@ class EmbeddingBacklogTest extends TestCase
         $this->assertJoinSelectCalls($calls);
         self::assertSame(
             [
+                ['backlog.index_version = ?', 7],
                 ['backlog.operation = ?', Operation::Upsert->value],
                 ['backlog.status = ?', Status::Pending->value],
             ],
@@ -388,7 +405,8 @@ class EmbeddingBacklogTest extends TestCase
                     ['backlog' => 'embedding_backlog'],
                     [
                         EmbeddingBacklogInterface::BACKLOG_ID,
-                        EmbeddingBacklogInterface::VERSION,
+                        EmbeddingBacklogInterface::BACKLOG_VERSION,
+                        EmbeddingBacklogInterface::INDEX_VERSION,
                         EmbeddingBacklogInterface::CHUNK_ID,
                         EmbeddingBacklogInterface::UPDATED_AT,
                     ],
@@ -560,6 +578,17 @@ class EmbeddingBacklogTest extends TestCase
         return $resource;
     }
 
+    private function createMaintenance(AdapterInterface $connection): Maintenance
+    {
+        $resource = $this->createUpdateResource($connection);
+        $collection = self::createStub(Collection::class);
+        $collection->method('getResourceModel')->willReturn($resource);
+        $collectionFactory = self::createStub(CollectionFactory::class);
+        $collectionFactory->method('create')->willReturn($collection);
+
+        return new Maintenance($collectionFactory);
+    }
+
     /**
      * @param array<int, int> $backlogVersions
      * @return array<int|string, mixed>
@@ -574,7 +603,7 @@ class EmbeddingBacklogTest extends TestCase
 
         return [
             sprintf(
-                '(`backlog_id`, `version`) IN (%s)',
+                '(`backlog_id`, `backlog_version`) IN (%s)',
                 implode(', ', $pairs)
             ),
             EmbeddingBacklogInterface::STATUS . ' IN (?)' => [

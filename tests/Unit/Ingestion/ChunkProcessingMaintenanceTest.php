@@ -9,36 +9,29 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Ingestion;
 
 use DavidBel\AiSearch\Config\DataProcessingConfig;
-use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
-use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
-use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
-use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use DavidBel\AiSearch\Ingestion\ChunkProcessingCleanup;
 use DavidBel\AiSearch\Ingestion\ChunkProcessingRetry;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\IndexVersion as BacklogIndexVersion;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Maintenance as BacklogMaintenance;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use PHPUnit\Framework\TestCase;
 
 class ChunkProcessingMaintenanceTest extends TestCase
 {
-    public static function setUpBeforeClass(): void
-    {
-        GeneratedFactoryStub::register(CollectionFactory::class);
-    }
-
     public function testRetriesFailedRowsBelowTheAttemptThreshold(): void
     {
-        $resource = $this->createMock(EmbeddingBacklogResource::class);
-        $resource->expects(self::once())
+        $maintenance = $this->createMock(BacklogMaintenance::class);
+        $maintenance->expects(self::once())
             ->method('markFailedAsPending')
-            ->with(3)
+            ->with(7, 3)
             ->willReturn(7);
 
         self::assertSame(
             7,
             (new ChunkProcessingRetry(
-                $this->createCollectionFactory($resource),
+                $maintenance,
                 $this->createDataProcessingConfig()
-            ))->execute()
+            ))->execute(7)
         );
     }
 
@@ -49,31 +42,26 @@ class ChunkProcessingMaintenanceTest extends TestCase
             ->method('gmtDate')
             ->with(null, '-24 hours')
             ->willReturn('2026-08-03 10:00:00');
-        $resource = $this->createMock(EmbeddingBacklogResource::class);
-        $resource->expects(self::once())
+        $backlogIndexVersion = $this->createMock(BacklogIndexVersion::class);
+        $backlogIndexVersion->expects(self::once())
+            ->method('deleteItemsOutsideIndexVersion')
+            ->with(7)
+            ->willReturn(2);
+        $maintenance = $this->createMock(BacklogMaintenance::class);
+        $maintenance->expects(self::once())
             ->method('deleteExhaustedUpsertsOrExpiredResults')
-            ->with(3, '2026-08-03 10:00:00')
+            ->with(3, '2026-08-03 10:00:00', 8)
             ->willReturn(5);
 
         self::assertSame(
-            5,
+            7,
             (new ChunkProcessingCleanup(
-                $this->createCollectionFactory($resource),
+                $backlogIndexVersion,
+                $maintenance,
                 $dateTime,
                 $this->createDataProcessingConfig()
-            ))->execute()
+            ))->execute(7, 8)
         );
-    }
-
-    private function createCollectionFactory(
-        EmbeddingBacklogResource $resource
-    ): CollectionFactory {
-        $collection = self::createStub(Collection::class);
-        $collection->method('getResourceModel')->willReturn($resource);
-        $factory = self::createStub(CollectionFactory::class);
-        $factory->method('create')->willReturn($collection);
-
-        return $factory;
     }
 
     private function createDataProcessingConfig(): DataProcessingConfig

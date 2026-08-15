@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Stress;
 
-use DavidBel\AiSearch\Cron\ChunkDeletion;
+use DavidBel\AiSearch\Cron\ChunkDelete;
 use DavidBel\AiSearch\Indexer\ProductIndexer;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Status;
@@ -42,11 +42,11 @@ class CleanupTest extends StressTestCase
             self::assertSame(0, $pipelineState->getChunkCount($productIds));
             self::assertSame(
                 0,
-                $pipelineState->getBacklogCount($productIds, Operation::Deletion, Status::Pending)
+                $pipelineState->getBacklogCount($productIds, Operation::Delete, Status::Pending)
             );
             self::assertSame(
                 0,
-                $pipelineState->getBacklogCount($productIds, Operation::Deletion, Status::Failed)
+                $pipelineState->getBacklogCount($productIds, Operation::Delete, Status::Failed)
             );
         } finally {
             $pipelineState->removeLocalData($productIds);
@@ -54,7 +54,7 @@ class CleanupTest extends StressTestCase
 
         self::assertSame([], $dataset->getAllProductIds());
         self::assertSame(0, $pipelineState->getBacklogCount($productIds, Operation::Upsert));
-        self::assertSame(0, $pipelineState->getBacklogCount($productIds, Operation::Deletion));
+        self::assertSame(0, $pipelineState->getBacklogCount($productIds, Operation::Delete));
         $this->create(CronSchedule::class)->reset();
     }
 
@@ -63,11 +63,11 @@ class CleanupTest extends StressTestCase
      */
     private function processDeletions(PipelineState $pipelineState, array $productIds): void
     {
-        $chunkDeletion = $this->get(ChunkDeletion::class);
+        $chunkDelete = $this->get(ChunkDelete::class);
         $deadline = hrtime(true) + self::MAXIMUM_RUNTIME_SECONDS * 1_000_000_000;
 
-        while ($pipelineState->getBacklogCount($productIds, Operation::Deletion, Status::Pending) > 0) {
-            $chunkDeletion->execute();
+        while ($pipelineState->getBacklogCount($productIds, Operation::Delete, Status::Pending) > 0) {
+            $chunkDelete->execute();
 
             if (hrtime(true) < $deadline) {
                 continue;

@@ -33,12 +33,15 @@ class BulkTest extends TestCase
         $openSearch = $this->createMock(OpenSearch::class);
         $openSearch->expects(self::once())
             ->method('bulkQuery')
-            ->with([
-                ['index' => ['_id' => '42']],
-                $this->documentBody(),
-                ['index' => ['_id' => '43']],
-                $this->documentBody(),
-            ])
+            ->with(
+                1,
+                [
+                    ['index' => ['_id' => '42']],
+                    $this->documentBody(),
+                    ['index' => ['_id' => '43']],
+                    $this->documentBody(),
+                ]
+            )
             ->willReturn([
                 'errors' => true,
                 'items' => [

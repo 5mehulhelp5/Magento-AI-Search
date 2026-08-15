@@ -1,6 +1,6 @@
 # Magento AI Search
 
-[![Quality](https://github.com/DavidBelicza/Magento-AI-Search/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/DavidBelicza/Magento-AI-Search/actions/workflows/quality.yml)
+[![CI](https://github.com/DavidBelicza/Magento-AI-Search/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/DavidBelicza/Magento-AI-Search/actions/workflows/quality.yml)
 [![Codecov](https://codecov.io/gh/DavidBelicza/Magento-AI-Search/branch/main/graph/badge.svg)](https://codecov.io/gh/DavidBelicza/Magento-AI-Search)
 [![Latest Stable Version](https://img.shields.io/packagist/v/davidbel/magento-ai-search)](https://packagist.org/packages/davidbel/magento-ai-search)
 [![MIT License](https://img.shields.io/github/license/DavidBelicza/Magento-AI-Search)](LICENSE)

@@ -38,10 +38,10 @@ class ProcessingItemMapperTest extends TestCase
     public function testRejectsANonPositiveBacklogVersion(): void
     {
         $row = $this->createRow();
-        $row[EmbeddingBacklogInterface::VERSION] = '0';
+        $row[EmbeddingBacklogInterface::BACKLOG_VERSION] = '0';
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('version must be a positive integer.');
+        $this->expectExceptionMessage('backlog_version must be a positive integer.');
 
         (new ProcessingItemMapper())->mapRows([$row]);
     }
@@ -64,7 +64,8 @@ class ProcessingItemMapperTest extends TestCase
     {
         return [
             EmbeddingBacklogInterface::BACKLOG_ID => '10',
-            EmbeddingBacklogInterface::VERSION => '2',
+            EmbeddingBacklogInterface::BACKLOG_VERSION => '2',
+            EmbeddingBacklogInterface::INDEX_VERSION => '7',
             EmbeddingBacklogInterface::UPDATED_AT => '2026-08-04 10:00:00',
             EmbeddingBacklogInterface::CHUNK_ID => '42',
             DocumentInterface::SOURCE_ENTITY_TYPE => 'product',

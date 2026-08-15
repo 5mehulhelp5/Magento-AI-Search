@@ -18,6 +18,7 @@ use DavidBel\AiSearch\Model\ResourceModel\Chunk\CollectionFactory as ChunkCollec
 use DavidBel\AiSearch\Model\ResourceModel\Document\Collection as DocumentCollection;
 use DavidBel\AiSearch\Model\ResourceModel\Document\CollectionFactory as DocumentCollectionFactory;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory as BacklogCollectionFactory;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Maintenance as BacklogMaintenance;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use RuntimeException;
 
@@ -29,6 +30,7 @@ class PipelineState
         private readonly DocumentCollectionFactory $documentCollectionFactory,
         private readonly ChunkCollectionFactory $chunkCollectionFactory,
         private readonly BacklogCollectionFactory $backlogCollectionFactory,
+        private readonly BacklogMaintenance $backlogMaintenance,
         private readonly Flag $versionFlag,
         private readonly PhysicalIndexProvider $physicalIndexProvider,
         private readonly OpenSearch $openSearch
@@ -213,10 +215,15 @@ class PipelineState
 
     public function markMissingChunkUpsertsOutdated(): int
     {
-        return $this->backlogCollectionFactory
-            ->create()
-            ->getResourceModel()
-            ->markMissingChunkUpsertsOutdated();
+        $physicalIndex = $this->physicalIndexProvider->getForIngestion();
+
+        if ($physicalIndex === null) {
+            throw new RuntimeException('A writable OpenSearch index is not available.');
+        }
+
+        return $this->backlogMaintenance->markMissingChunkUpsertsOutdated(
+            $physicalIndex->number
+        );
     }
 
     /**
