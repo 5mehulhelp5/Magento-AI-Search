@@ -46,10 +46,9 @@ class CatalogQueryModifier
             throw new UnexpectedValueException('Magento returned invalid catalog search conditions.');
         }
 
-        $mustQueries[] = $this->createCandidateQuery($candidates);
+        $mustQueries[] = $this->createCandidateCondition($candidates);
         $boolQuery['must'] = $mustQueries;
-        $searchQuery['bool'] = $boolQuery;
-        $body['query'] = $searchQuery;
+        $body['query'] = $this->createScoredCatalogQuery($boolQuery, $candidates);
         $query['body'] = $body;
 
         return $query;
@@ -58,7 +57,7 @@ class CatalogQueryModifier
     /**
      * @return array<string, mixed>
      */
-    private function createCandidateQuery(Candidates $candidates): array
+    private function createCandidateCondition(Candidates $candidates): array
     {
         $scoresByProductId = $candidates->scoresByProductId;
 
@@ -67,12 +66,27 @@ class CatalogQueryModifier
         }
 
         return [
+            'ids' => [
+                'values' => array_map('strval', array_keys($scoresByProductId)),
+            ],
+        ];
+    }
+
+    /**
+     * @param array<mixed> $boolQuery
+     * @return array<string, mixed>
+     */
+    private function createScoredCatalogQuery(array $boolQuery, Candidates $candidates): array
+    {
+        $scoresByProductId = $candidates->scoresByProductId;
+
+        if ($scoresByProductId === []) {
+            return ['bool' => $boolQuery];
+        }
+
+        return [
             'script_score' => [
-                'query' => [
-                    'ids' => [
-                        'values' => array_map('strval', array_keys($scoresByProductId)),
-                    ],
-                ],
+                'query' => ['bool' => $boolQuery],
                 'script' => [
                     'lang' => 'painless',
                     'source' => self::SCORE_SCRIPT,

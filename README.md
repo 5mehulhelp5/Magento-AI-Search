@@ -175,18 +175,18 @@ pie showData title End-to-end processing time distribution
 
 ## 🗺️ Roadmap
 
-| Planned feature | Area | Priority |
-|---|---|---|
-| **Automated index version switching** | Index versioning | Essential |
-| **Avoiding duplicate embedding requests for identical chunk text** | Embedding | Essential |
-| **Removing orphaned documents and chunks after product deletion or visibility changes** | Ingestion | Essential |
-| **Handling failed deletion backlog items after the retry threshold** | Operations | Essential |
-| **Reindexing documents after store creation, deletion, enabling, or disabling** | Store scope | Essential |
-| **Attribute change detection for documents dependent on complex attributes** | Documents | Essential |
-| **Search-result cache membership invalidation** | Storefront | Essential |
-| **Authenticated OpenAI-compatible endpoints** | AI server | Planned |
-| **Native Google Gemini API support** | AI server | Planned |
-| **Store-view languages for dynamic documents** | Documents | Planned |
-| **AI server configuration test** | Admin | Planned |
-| **Document and chunk Admin grids** | Admin | Planned |
-| **Semantic search testing in Admin** | Admin | Planned |
+| Feature | Area | Priority | Status |
+|---|---|---|---|
+| **Automated index version switching** | Index versioning | Essential | ✅ Complete |
+| **Avoiding duplicate embedding requests for identical chunk text** | Embedding | Essential | ⏳ Open |
+| **Removing orphaned documents and chunks after product deletion or visibility changes** | Ingestion | Essential | ⏳ Open |
+| **Handling failed deletion backlog items after the retry threshold** | Operations | Essential | ⏳ Open |
+| **Reindexing documents after store creation, deletion, enabling, or disabling** | Store scope | Essential | ⏳ Open |
+| **Attribute change detection for documents dependent on complex attributes** | Documents | Essential | ⏳ Open |
+| **Search-result cache membership invalidation** | Storefront | Essential | ⏳ Open |
+| **Authenticated OpenAI-compatible endpoints** | AI server | Planned | ⏳ Open |
+| **Native Google Gemini API support** | AI server | Planned | ⏳ Open |
+| **Store-view languages for dynamic documents** | Documents | Planned | ⏳ Open |
+| **AI server configuration test** | Admin | Planned | ⏳ Open |
+| **Document and chunk Admin grids** | Admin | Planned | ⏳ Open |
+| **Semantic search testing in Admin** | Admin | Planned | ⏳ Open |
