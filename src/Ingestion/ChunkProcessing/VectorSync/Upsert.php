@@ -51,7 +51,8 @@ class Upsert
                     $item->backlogUpdatedAt,
                     $item->chunkId,
                     $item->sourceEntityType,
-                    $item->sourceEntityId
+                    $item->sourceEntityId,
+                    $item->indexVersion
                 ),
                 $item->storeId,
                 $item->sourceCode,

@@ -25,7 +25,10 @@ class Delete
     public function execute(Batch $batch): Result
     {
         $items = $batch->getItems();
-        $response = $this->openSearch->bulkQuery($this->requestBuilder->build($batch));
+        $response = $this->openSearch->bulkQuery(
+            $batch->getIndexVersion(),
+            $this->requestBuilder->build($batch)
+        );
 
         return $this->responseMapper->map($response, $items);
     }

@@ -8,17 +8,20 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Cron;
 
+use DavidBel\AiSearch\Indexer\Versioning;
 use DavidBel\AiSearch\Ingestion\ChunkProcessingFactory;
 
 class ChunkProcessing
 {
     public function __construct(
-        private readonly ChunkProcessingFactory $chunkProcessingFactory
+        private readonly ChunkProcessingFactory $chunkProcessingFactory,
+        private readonly Versioning $versioning
     ) {
     }
 
     public function execute(): void
     {
         $this->chunkProcessingFactory->create()->execute();
+        $this->versioning->activateTargetWhenReady();
     }
 }

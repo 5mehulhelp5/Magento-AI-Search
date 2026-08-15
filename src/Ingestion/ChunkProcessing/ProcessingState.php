@@ -23,6 +23,7 @@ class ProcessingState
     private array $successfulBacklogVersions = [];
 
     private int $processedCount = 0;
+    private bool $acceptingWork = true;
     private readonly int $startedAt;
 
     public function __construct()
@@ -32,7 +33,13 @@ class ProcessingState
 
     public function isWithinRuntime(int $maxRuntimeNanoseconds): bool
     {
-        return hrtime(true) - $this->startedAt < $maxRuntimeNanoseconds;
+        return $this->acceptingWork
+            && hrtime(true) - $this->startedAt < $maxRuntimeNanoseconds;
+    }
+
+    public function stopAcceptingWork(): void
+    {
+        $this->acceptingWork = false;
     }
 
     public function addBatch(int $batchId, ProcessingBatch $batch): void

@@ -8,17 +8,23 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Cron;
 
+use DavidBel\AiSearch\Indexer\Versioning;
 use DavidBel\AiSearch\Ingestion\ChunkProcessingCleanup as IngestionChunkProcessingCleanup;
 
 class ChunkProcessingCleanup
 {
     public function __construct(
-        private readonly IngestionChunkProcessingCleanup $chunkProcessingCleanup
+        private readonly IngestionChunkProcessingCleanup $chunkProcessingCleanup,
+        private readonly Versioning $versioning
     ) {
     }
 
     public function execute(): void
     {
-        $this->chunkProcessingCleanup->execute();
+        $this->chunkProcessingCleanup->execute(
+            $this->versioning->getOptionalIngestionIndexVersion(),
+            $this->versioning->getOptionalTargetIndexVersion()
+        );
+        $this->versioning->cleanupPhysicalIndexes();
     }
 }

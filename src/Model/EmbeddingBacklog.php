@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Model;
 
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Status;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
@@ -40,6 +41,27 @@ class EmbeddingBacklog extends AbstractExtensibleModel implements EmbeddingBackl
     public function setVersion(int $version): EmbeddingBacklogInterface
     {
         return $this->setData(self::VERSION, $version);
+    }
+
+    public function getIndexVersion(): int
+    {
+        return $this->getInteger(self::INDEX_VERSION);
+    }
+
+    public function setIndexVersion(int $indexVersion): EmbeddingBacklogInterface
+    {
+        return $this->setData(self::INDEX_VERSION, $indexVersion);
+    }
+
+    public function getFullReindexStatus(): FullReindexStatus
+    {
+        return FullReindexStatus::from($this->getInteger(self::FULL_REINDEX_STATUS));
+    }
+
+    public function setFullReindexStatus(
+        FullReindexStatus $fullReindexStatus
+    ): EmbeddingBacklogInterface {
+        return $this->setData(self::FULL_REINDEX_STATUS, $fullReindexStatus->value);
     }
 
     public function getChunkId(): int
@@ -76,23 +98,11 @@ class EmbeddingBacklog extends AbstractExtensibleModel implements EmbeddingBackl
     {
         $value = $this->getData(self::OPERATION);
 
-        if ($value instanceof Operation) {
-            return $value;
-        }
-
         if (!is_string($value)) {
             throw new UnexpectedValueException('Embedding backlog operation is not a string.');
         }
 
-        $operation = Operation::tryFrom($value);
-
-        if ($operation === null) {
-            throw new UnexpectedValueException(
-                sprintf('Embedding backlog operation "%s" is invalid.', $value)
-            );
-        }
-
-        return $operation;
+        return Operation::from($value);
     }
 
     public function setOperation(Operation $operation): EmbeddingBacklogInterface
@@ -104,23 +114,11 @@ class EmbeddingBacklog extends AbstractExtensibleModel implements EmbeddingBackl
     {
         $value = $this->getData(self::STATUS);
 
-        if ($value instanceof Status) {
-            return $value;
-        }
-
         if (!is_string($value)) {
             throw new UnexpectedValueException('Embedding backlog status is not a string.');
         }
 
-        $status = Status::tryFrom($value);
-
-        if ($status === null) {
-            throw new UnexpectedValueException(
-                sprintf('Embedding backlog status "%s" is invalid.', $value)
-            );
-        }
-
-        return $status;
+        return Status::from($value);
     }
 
     public function setStatus(Status $status): EmbeddingBacklogInterface

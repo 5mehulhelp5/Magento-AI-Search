@@ -70,13 +70,18 @@ class OpenSearch
      * @param list<array<string, mixed>> $body
      * @return array<array-key, mixed>
      */
-    public function bulkQuery(array $body): array
+    public function bulkQuery(int $indexVersion, array $body): array
     {
-        $physicalIndex = $this->physicalIndexProvider->getTarget()
-            ?? $this->physicalIndexProvider->getActive();
+        $physicalIndex = $this->physicalIndexProvider->getForIngestion();
 
         if ($physicalIndex === null) {
             throw new RuntimeException('A writable OpenSearch index is not available.');
+        }
+
+        if ($physicalIndex->number !== $indexVersion) {
+            throw new RuntimeException(
+                'The backlog item belongs to an obsolete OpenSearch index version.'
+            );
         }
 
         return $this->getClient()->bulkQuery([
@@ -137,6 +142,34 @@ class OpenSearch
         }
 
         $this->getClient()->deleteIndex($indexName);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getVersionIndexNames(): array
+    {
+        $alias = $this->indexName->getAlias();
+        $indexes = $this->getClient()->getOpenSearchClient()->indices()->get([
+            'index' => $alias . '_v*',
+            'allow_no_indices' => true,
+            'ignore_unavailable' => true,
+        ]);
+
+        $indexNames = [];
+        $pattern = sprintf('/^%s_v[1-9][0-9]*$/', preg_quote($alias, '/'));
+
+        foreach (array_keys($indexes) as $indexName) {
+            if (!is_string($indexName) || preg_match($pattern, $indexName) !== 1) {
+                continue;
+            }
+
+            $indexNames[] = $indexName;
+        }
+
+        sort($indexNames);
+
+        return $indexNames;
     }
 
     /**

@@ -31,7 +31,10 @@ class Bulk
             return $this->createResult([], []);
         }
 
-        $response = $this->openSearch->bulkQuery($this->createBulkBody($documents));
+        $response = $this->openSearch->bulkQuery(
+            $this->getIndexVersion($documents),
+            $this->createBulkBody($documents)
+        );
 
         return $this->createBulkResult($response, $documents);
     }
@@ -161,5 +164,23 @@ class Bulk
             static fn (Document $document): Item => $document->item,
             $documents
         );
+    }
+
+    /**
+     * @param non-empty-list<Document> $documents
+     */
+    private function getIndexVersion(array $documents): int
+    {
+        $indexVersion = $documents[0]->item->indexVersion;
+
+        foreach ($documents as $document) {
+            if ($document->item->indexVersion !== $indexVersion) {
+                throw new UnexpectedValueException(
+                    'An OpenSearch bulk request must contain one index version.'
+                );
+            }
+        }
+
+        return $indexVersion;
     }
 }

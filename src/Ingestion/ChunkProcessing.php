@@ -11,6 +11,10 @@ namespace DavidBel\AiSearch\Ingestion;
 use DavidBel\AiSearch\Config\DataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\IndexVersion
+    as BacklogIndexVersion;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Maintenance
+    as BacklogMaintenance;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\CacheClean;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingBatchFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingItemMapper;
@@ -35,30 +39,39 @@ class ChunkProcessing
         private readonly ProcessingResultHandlerFactory $processingResultHandlerFactory,
         private readonly VectorEmbedding $vectorEmbedding,
         private readonly CacheClean $cacheClean,
-        private readonly DataProcessingConfig $dataProcessingConfig
+        private readonly DataProcessingConfig $dataProcessingConfig,
+        private readonly BacklogIndexVersion $backlogIndexVersion,
+        private readonly BacklogMaintenance $backlogMaintenance
     ) {
     }
 
     public function execute(): int
     {
+        $indexVersion = $this->backlogIndexVersion->getHighestIndexVersion();
+
+        if ($indexVersion === null) {
+            return 0;
+        }
+
         $processingState = $this->processingStateFactory->create();
         $resultHandler = $this->processingResultHandlerFactory->create([
             'processingState' => $processingState,
         ]);
 
-        $this->getResource()->markMissingChunkUpsertsOutdated();
+        $this->backlogMaintenance->markMissingChunkUpsertsOutdated($indexVersion);
         $this->cacheClean->start();
-        $this->runVectorEmbedding($processingState, $resultHandler);
+        $this->runVectorEmbedding($processingState, $resultHandler, $indexVersion);
 
         return $this->finish($resultHandler);
     }
 
     private function runVectorEmbedding(
         ProcessingState $processingState,
-        ProcessingResultHandler $resultHandler
+        ProcessingResultHandler $resultHandler,
+        int $indexVersion
     ): void {
         $this->vectorEmbedding->execute(
-            $this->createProcessingBatches($processingState),
+            $this->createProcessingBatches($processingState, $indexVersion),
             $this->dataProcessingConfig->getVectorEmbeddingConcurrentRequests(),
             [$resultHandler, 'completed'],
             [$resultHandler, 'failed']
@@ -68,8 +81,10 @@ class ChunkProcessing
     /**
      * @return Generator<int, \DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingBatch>
      */
-    private function createProcessingBatches(ProcessingState $processingState): Generator
-    {
+    private function createProcessingBatches(
+        ProcessingState $processingState,
+        int $indexVersion
+    ): Generator {
         $cursorUpdatedAt = null;
         $cursorBacklogId = null;
         $batchId = 0;
@@ -79,6 +94,7 @@ class ChunkProcessing
 
         while ($processingState->isWithinRuntime($maxRuntimeNanoseconds)) {
             $rows = $this->getResource()->getPendingUpsertsForEmbedding(
+                $indexVersion,
                 $batchSize,
                 $cursorUpdatedAt,
                 $cursorBacklogId

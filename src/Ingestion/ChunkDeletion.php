@@ -11,6 +11,8 @@ namespace DavidBel\AiSearch\Ingestion;
 use DavidBel\AiSearch\Config\DataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\IndexVersion
+    as BacklogIndexVersion;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\CacheClean;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingResultHandler;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingResultHandlerFactory;
@@ -36,34 +38,42 @@ class ChunkDeletion
         private readonly ProcessingResultHandlerFactory $processingResultHandlerFactory,
         private readonly VectorSync $vectorSync,
         private readonly CacheClean $cacheClean,
-        private readonly DataProcessingConfig $dataProcessingConfig
+        private readonly DataProcessingConfig $dataProcessingConfig,
+        private readonly BacklogIndexVersion $backlogIndexVersion
     ) {
     }
 
     public function execute(): int
     {
+        $indexVersion = $this->backlogIndexVersion->getHighestIndexVersion();
+
+        if ($indexVersion === null) {
+            return 0;
+        }
+
         $processingState = $this->processingStateFactory->create();
         $resultHandler = $this->processingResultHandlerFactory->create([
             'processingState' => $processingState,
         ]);
 
         $this->cacheClean->start();
-        $this->run($processingState, $resultHandler);
+        $this->run($processingState, $resultHandler, $indexVersion);
 
         return $resultHandler->finish();
     }
 
     private function run(
         ProcessingState $processingState,
-        ProcessingResultHandler $resultHandler
+        ProcessingResultHandler $resultHandler,
+        int $indexVersion
     ): void {
-        foreach ($this->createBatches($processingState) as $batch) {
+        foreach ($this->createBatches($processingState, $indexVersion) as $batch) {
             try {
                 $result = $this->vectorSync->delete($batch);
             } catch (Throwable) {
                 $resultHandler->openSearchFailed($batch->getBacklogVersions());
 
-                continue;
+                break;
             }
 
             $resultHandler->completeDeletion($result);
@@ -73,8 +83,10 @@ class ChunkDeletion
     /**
      * @return Generator<int, \DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\Batch>
      */
-    private function createBatches(ProcessingState $processingState): Generator
-    {
+    private function createBatches(
+        ProcessingState $processingState,
+        int $indexVersion
+    ): Generator {
         $cursorUpdatedAt = null;
         $cursorBacklogId = null;
         $batchSize = $this->dataProcessingConfig->getVectorDeletionBatchSize();
@@ -85,6 +97,7 @@ class ChunkDeletion
 
         while ($processingState->isWithinRuntime($maxRuntimeNanoseconds)) {
             $rows = $this->getResource()->getItemsForDeletion(
+                $indexVersion,
                 $batchSize,
                 $upsertAttemptThreshold,
                 $cursorUpdatedAt,

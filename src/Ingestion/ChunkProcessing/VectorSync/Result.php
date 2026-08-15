@@ -37,6 +37,20 @@ class Result
     }
 
     /**
+     * @return array<int, int>
+     */
+    public function getSuccessfulBacklogIndexVersions(): array
+    {
+        $backlogIndexVersions = [];
+
+        foreach ($this->successfulItems as $item) {
+            $backlogIndexVersions[$item->backlogId] = $item->indexVersion;
+        }
+
+        return $backlogIndexVersions;
+    }
+
+    /**
      * @return array<string, list<int>>
      */
     public function getSuccessfulSourceEntities(): array

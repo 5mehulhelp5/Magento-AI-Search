@@ -36,7 +36,11 @@ class ProcessingItemMapper
                 $this->toInteger($row[ChunkInterface::CHUNK_INDEX] ?? null, 'chunk_index'),
                 $this->toString($row[ChunkInterface::CONTENT] ?? null, 'content'),
                 $this->toString($row[ChunkInterface::CONTENT_HASH] ?? null, 'content_hash'),
-                $this->toNullableString($row[DocumentInterface::TITLE] ?? null, 'title')
+                $this->toNullableString($row[DocumentInterface::TITLE] ?? null, 'title'),
+                $this->toPositiveInteger(
+                    $row[EmbeddingBacklogInterface::INDEX_VERSION] ?? null,
+                    'index_version'
+                )
             );
         }
 

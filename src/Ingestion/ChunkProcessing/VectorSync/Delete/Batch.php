@@ -18,6 +18,8 @@ class Batch
      */
     private readonly array $items;
 
+    private readonly int $indexVersion;
+
     /**
      * @param list<Item> $items
      */
@@ -28,6 +30,15 @@ class Batch
         }
 
         $this->items = $items;
+        $this->indexVersion = $items[0]->indexVersion;
+
+        foreach ($items as $item) {
+            if ($item->indexVersion !== $this->indexVersion) {
+                throw new InvalidArgumentException(
+                    'A deletion batch must contain one OpenSearch index version.'
+                );
+            }
+        }
     }
 
     /**
@@ -47,6 +58,11 @@ class Batch
     public function getLastItem(): Item
     {
         return $this->items[array_key_last($this->items)];
+    }
+
+    public function getIndexVersion(): int
+    {
+        return $this->indexVersion;
     }
 
     /**

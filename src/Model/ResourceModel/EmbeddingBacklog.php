@@ -11,6 +11,7 @@ namespace DavidBel\AiSearch\Model\ResourceModel;
 use DavidBel\AiSearch\Api\Data\ChunkInterface;
 use DavidBel\AiSearch\Api\Data\DocumentInterface;
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Status;
 use InvalidArgumentException;
@@ -24,26 +25,34 @@ class EmbeddingBacklog extends AbstractDb
     public function saveByChunkId(
         int $chunkId,
         string $sourceEntityType,
-        int $sourceEntityId
+        int $sourceEntityId,
+        int $indexVersion,
+        FullReindexStatus $fullReindexStatus
     ): void {
         $this->upsert(
             $chunkId,
             $sourceEntityType,
             $sourceEntityId,
-            Operation::Upsert
+            Operation::Upsert,
+            $indexVersion,
+            $fullReindexStatus
         );
     }
 
     public function deleteByChunkId(
         int $chunkId,
         string $sourceEntityType,
-        int $sourceEntityId
+        int $sourceEntityId,
+        int $indexVersion,
+        FullReindexStatus $fullReindexStatus
     ): void {
         $this->upsert(
             $chunkId,
             $sourceEntityType,
             $sourceEntityId,
-            Operation::Deletion
+            Operation::Deletion,
+            $indexVersion,
+            $fullReindexStatus
         );
     }
 
@@ -51,10 +60,13 @@ class EmbeddingBacklog extends AbstractDb
      * @return list<array<string, mixed>>
      */
     public function getPendingUpsertsForEmbedding(
+        int $indexVersion,
         int $limit,
         ?string $cursorUpdatedAt = null,
         ?int $cursorBacklogId = null
     ): array {
+        $this->validateIndexVersion($indexVersion);
+
         if ($limit < 1) {
             throw new InvalidArgumentException('The embedding backlog batch limit must be positive.');
         }
@@ -73,6 +85,7 @@ class EmbeddingBacklog extends AbstractDb
         $rows = $connection->fetchAll(
             $this->createUpsertSelect(
                 $connection,
+                $indexVersion,
                 $limit,
                 $cursorUpdatedAt,
                 $cursorBacklogId
@@ -86,11 +99,14 @@ class EmbeddingBacklog extends AbstractDb
      * @return list<array<string, mixed>>
      */
     public function getItemsForDeletion(
+        int $indexVersion,
         int $limit,
         int $upsertAttemptThreshold,
         ?string $cursorUpdatedAt = null,
         ?int $cursorBacklogId = null
     ): array {
+        $this->validateIndexVersion($indexVersion);
+
         if ($limit < 1) {
             throw new InvalidArgumentException('The deletion backlog batch limit must be positive.');
         }
@@ -113,6 +129,7 @@ class EmbeddingBacklog extends AbstractDb
         $rows = $connection->fetchAll(
             $this->createDeletionSelect(
                 $connection,
+                $indexVersion,
                 $limit,
                 $upsertAttemptThreshold,
                 $cursorUpdatedAt,
@@ -162,143 +179,20 @@ class EmbeddingBacklog extends AbstractDb
         );
     }
 
-    public function markFailedAsPending(int $attemptThreshold): int
-    {
-        if ($attemptThreshold < 1) {
-            throw new InvalidArgumentException('The retry attempt threshold must be positive.');
-        }
-
-        /** @var AdapterInterface $connection */
-        $connection = $this->getConnection();
-
-        return $connection->update(
-            $this->getMainTable(),
-            [EmbeddingBacklogInterface::STATUS => Status::Pending->value],
-            [
-                EmbeddingBacklogInterface::STATUS . ' = ?' => Status::Failed->value,
-                EmbeddingBacklogInterface::ATTEMPT_COUNT . ' < ?' => $attemptThreshold,
-            ]
-        );
-    }
-
-    public function markMissingChunkUpsertsOutdated(): int
-    {
-        /** @var AdapterInterface $connection */
-        $connection = $this->getConnection();
-        $select = $connection->select()
-            ->joinLeft(
-                ['chunk' => $this->getTable('davidbel_ai_search_chunk')],
-                'chunk.chunk_id = backlog.chunk_id',
-                []
-            )
-            ->columns([
-                EmbeddingBacklogInterface::STATUS => new Expression(
-                    $connection->quoteInto('?', Status::Outdated->value)
-                ),
-                EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => new Expression('NULL'),
-            ])
-            ->where('backlog.operation = ?', Operation::Upsert->value)
-            ->where('backlog.status = ?', Status::Pending->value)
-            ->where('chunk.chunk_id IS NULL');
-        $query = $connection->updateFromSelect(
-            $select,
-            ['backlog' => $this->getMainTable()]
-        );
-
-        return $connection->query($query)->rowCount();
-    }
-
-    public function hasPendingOrFailedItems(): bool
-    {
-        /** @var AdapterInterface $connection */
-        $connection = $this->getConnection();
-        $select = $connection->select()
-            ->from($this->getMainTable(), [new Expression('COUNT(*)')])
-            ->where(
-                EmbeddingBacklogInterface::STATUS . ' IN (?)',
-                [Status::Pending->value, Status::Failed->value]
-            )
-            ->limit(1);
-
-        return (int) $connection->fetchOne($select) > 0;
-    }
-
-    public function deleteExhaustedUpsertsOrExpiredResults(
-        int $attemptThreshold,
-        string $expiredBefore
-    ): int {
-        if ($attemptThreshold < 1) {
-            throw new InvalidArgumentException('The cleanup attempt threshold must be positive.');
-        }
-
-        if ($expiredBefore === '') {
-            throw new InvalidArgumentException('The backlog expiration cutoff must not be empty.');
-        }
-
-        /** @var AdapterInterface $connection */
-        $connection = $this->getConnection();
-
-        return $connection->delete(
-            $this->getMainTable(),
-            $this->createCleanupCondition(
-                $connection,
-                $attemptThreshold,
-                $expiredBefore
-            )
-        );
-    }
-
     protected function _construct(): void
     {
         $this->_init('davidbel_ai_search_embedding_backlog', 'backlog_id');
     }
 
-    private function createCleanupCondition(
-        AdapterInterface $connection,
-        int $attemptThreshold,
-        string $expiredBefore
-    ): string {
-        $failedStatus = $connection->quoteInto(
-            EmbeddingBacklogInterface::STATUS . ' = ?',
-            Status::Failed->value
-        );
-        $attemptLimit = $connection->quoteInto(
-            EmbeddingBacklogInterface::ATTEMPT_COUNT . ' >= ?',
-            $attemptThreshold
-        );
-        $upsertOperation = $connection->quoteInto(
-            EmbeddingBacklogInterface::OPERATION . ' = ?',
-            Operation::Upsert->value
-        );
-        $resultStatus = $connection->quoteInto(
-            EmbeddingBacklogInterface::STATUS . ' IN (?)',
-            [
-                Status::Done->value,
-                Status::Outdated->value,
-            ]
-        );
-        $expirationCutoff = $connection->quoteInto(
-            EmbeddingBacklogInterface::UPDATED_AT . ' < ?',
-            $expiredBefore
-        );
-
-        return sprintf(
-            '((%s AND %s AND %s) OR (%s AND %s))',
-            $upsertOperation,
-            $failedStatus,
-            $attemptLimit,
-            $resultStatus,
-            $expirationCutoff
-        );
-    }
-
     private function createUpsertSelect(
         AdapterInterface $connection,
+        int $indexVersion,
         int $limit,
         ?string $cursorUpdatedAt,
         ?int $cursorBacklogId
     ): Select {
         $select = $this->createEmbeddingSelect($connection)
+            ->where('backlog.index_version = ?', $indexVersion)
             ->where('backlog.operation = ?', Operation::Upsert->value)
             ->where('backlog.status = ?', Status::Pending->value)
             ->order([
@@ -322,6 +216,7 @@ class EmbeddingBacklog extends AbstractDb
 
     private function createDeletionSelect(
         AdapterInterface $connection,
+        int $indexVersion,
         int $limit,
         int $upsertAttemptThreshold,
         ?string $cursorUpdatedAt,
@@ -337,12 +232,14 @@ class EmbeddingBacklog extends AbstractDb
                 [
                     EmbeddingBacklogInterface::BACKLOG_ID,
                     EmbeddingBacklogInterface::VERSION,
+                    EmbeddingBacklogInterface::INDEX_VERSION,
                     EmbeddingBacklogInterface::CHUNK_ID,
                     EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE,
                     EmbeddingBacklogInterface::SOURCE_ENTITY_ID,
                     EmbeddingBacklogInterface::UPDATED_AT,
                 ]
             )
+            ->where('backlog.index_version = ?', $indexVersion)
             ->where('backlog.operation = ?', Operation::Deletion->value)
             ->where('backlog.status = ?', Status::Pending->value)
             ->where(
@@ -388,6 +285,7 @@ class EmbeddingBacklog extends AbstractDb
             ->from(['blocking_upsert' => $this->getMainTable()], [])
             ->columns([new Expression('1')])
             ->where('blocking_upsert.chunk_id = backlog.chunk_id')
+            ->where('blocking_upsert.index_version = backlog.index_version')
             ->where('blocking_upsert.operation = ?', Operation::Upsert->value)
             ->where(
                 sprintf('(%s OR (%s AND %s))', $pendingStatus, $failedStatus, $attemptLimit)
@@ -402,6 +300,7 @@ class EmbeddingBacklog extends AbstractDb
                 [
                     EmbeddingBacklogInterface::BACKLOG_ID,
                     EmbeddingBacklogInterface::VERSION,
+                    EmbeddingBacklogInterface::INDEX_VERSION,
                     EmbeddingBacklogInterface::CHUNK_ID,
                     EmbeddingBacklogInterface::UPDATED_AT,
                 ]
@@ -444,35 +343,83 @@ class EmbeddingBacklog extends AbstractDb
         int $chunkId,
         string $sourceEntityType,
         int $sourceEntityId,
-        Operation $operation
+        Operation $operation,
+        int $indexVersion,
+        FullReindexStatus $fullReindexStatus
     ): void {
+        $this->validateIndexVersion($indexVersion);
+
         /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
 
         $connection->insertOnDuplicate(
             $this->getMainTable(),
-            [
-                EmbeddingBacklogInterface::CHUNK_ID => $chunkId,
-                EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE => $sourceEntityType,
-                EmbeddingBacklogInterface::SOURCE_ENTITY_ID => $sourceEntityId,
-                EmbeddingBacklogInterface::OPERATION => $operation->value,
-                EmbeddingBacklogInterface::STATUS => Status::Pending->value,
-                EmbeddingBacklogInterface::VERSION => 1,
-                EmbeddingBacklogInterface::ATTEMPT_COUNT => 0,
-                EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
-            ],
-            [
-                EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE,
-                EmbeddingBacklogInterface::SOURCE_ENTITY_ID,
-                EmbeddingBacklogInterface::OPERATION,
-                EmbeddingBacklogInterface::STATUS,
-                EmbeddingBacklogInterface::VERSION => new Expression(
-                    EmbeddingBacklogInterface::VERSION . ' + 1'
-                ),
-                EmbeddingBacklogInterface::ATTEMPT_COUNT,
-                EmbeddingBacklogInterface::LAST_ERROR_CATEGORY,
-            ]
+            $this->createInsertData(
+                $chunkId,
+                $sourceEntityType,
+                $sourceEntityId,
+                $operation,
+                $indexVersion,
+                $fullReindexStatus
+            ),
+            $this->createDuplicateFields($connection)
         );
+    }
+
+    /**
+     * @return array<string, int|string|null>
+     */
+    private function createInsertData(
+        int $chunkId,
+        string $sourceEntityType,
+        int $sourceEntityId,
+        Operation $operation,
+        int $indexVersion,
+        FullReindexStatus $fullReindexStatus
+    ): array {
+        return [
+            EmbeddingBacklogInterface::CHUNK_ID => $chunkId,
+            EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE => $sourceEntityType,
+            EmbeddingBacklogInterface::SOURCE_ENTITY_ID => $sourceEntityId,
+            EmbeddingBacklogInterface::OPERATION => $operation->value,
+            EmbeddingBacklogInterface::STATUS => Status::Pending->value,
+            EmbeddingBacklogInterface::INDEX_VERSION => $indexVersion,
+            EmbeddingBacklogInterface::FULL_REINDEX_STATUS => $fullReindexStatus->value,
+            EmbeddingBacklogInterface::VERSION => 1,
+            EmbeddingBacklogInterface::ATTEMPT_COUNT => 0,
+            EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
+        ];
+    }
+
+    /**
+     * @return array<int|string, string|Expression>
+     */
+    private function createDuplicateFields(AdapterInterface $connection): array
+    {
+        $indexVersionField = $connection->quoteIdentifier(
+            EmbeddingBacklogInterface::INDEX_VERSION
+        );
+        $fullReindexStatusField = $connection->quoteIdentifier(
+            EmbeddingBacklogInterface::FULL_REINDEX_STATUS
+        );
+
+        return [
+            EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE,
+            EmbeddingBacklogInterface::SOURCE_ENTITY_ID,
+            EmbeddingBacklogInterface::OPERATION,
+            EmbeddingBacklogInterface::STATUS,
+            EmbeddingBacklogInterface::FULL_REINDEX_STATUS => new Expression(sprintf(
+                'IF(%1$s <> VALUES(%1$s), VALUES(%2$s), GREATEST(%2$s, VALUES(%2$s)))',
+                $indexVersionField,
+                $fullReindexStatusField
+            )),
+            EmbeddingBacklogInterface::INDEX_VERSION,
+            EmbeddingBacklogInterface::VERSION => new Expression(
+                EmbeddingBacklogInterface::VERSION . ' + 1'
+            ),
+            EmbeddingBacklogInterface::ATTEMPT_COUNT,
+            EmbeddingBacklogInterface::LAST_ERROR_CATEGORY,
+        ];
     }
 
     /**
@@ -522,5 +469,12 @@ class EmbeddingBacklog extends AbstractDb
             $connection->quoteIdentifier(EmbeddingBacklogInterface::VERSION),
             implode(', ', $pairs)
         );
+    }
+
+    private function validateIndexVersion(int $indexVersion): void
+    {
+        if ($indexVersion < 1) {
+            throw new InvalidArgumentException('The OpenSearch index version must be positive.');
+        }
     }
 }

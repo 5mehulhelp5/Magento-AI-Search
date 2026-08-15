@@ -10,6 +10,8 @@ namespace DavidBel\AiSearch\Ingestion\ChunkProcessing;
 
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\IndexVersion
+    as BacklogIndexVersion;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Result;
 use Throwable;
 
@@ -25,7 +27,8 @@ class ProcessingResultHandler
         private readonly CollectionFactory $collectionFactory,
         private readonly VectorSync $vectorSync,
         private readonly CacheClean $cacheClean,
-        private readonly ProcessingState $processingState
+        private readonly ProcessingState $processingState,
+        private readonly BacklogIndexVersion $backlogIndexVersion
     ) {
     }
 
@@ -40,6 +43,7 @@ class ProcessingResultHandler
             try {
                 $result = $this->vectorSync->upsert($batch, $vectors);
             } catch (Throwable) {
+                $this->processingState->stopAcceptingWork();
                 $this->openSearchFailed($batch->getBacklogVersions());
 
                 return;
@@ -103,6 +107,10 @@ class ProcessingResultHandler
     {
         $failedBacklogVersions = $result->getFailedBacklogVersions();
         $successfulBacklogVersions = $result->getSuccessfulBacklogVersions();
+
+        $this->backlogIndexVersion->markFullReindexItemsIndexed(
+            $result->getSuccessfulBacklogIndexVersions()
+        );
 
         $this->getResource()->markFailedByVersions(
             $failedBacklogVersions,

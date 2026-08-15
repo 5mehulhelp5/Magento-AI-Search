@@ -35,6 +35,8 @@ class DataProcessingConfig
         'davidbel_ai_search_data_processing/cleanup/result_retention';
     private const string XML_PATH_INDEXER_LOCK_TIMEOUT_SECONDS =
         'davidbel_ai_search_data_processing/indexer/lock_timeout_seconds';
+    private const string XML_PATH_INDEXER_MINIMUM_SUCCESS_PERCENTAGE =
+        'davidbel_ai_search_data_processing/indexer/minimum_success_percentage';
 
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig
@@ -97,6 +99,24 @@ class DataProcessingConfig
     public function getIndexerLockTimeoutSeconds(): int
     {
         return $this->getPositiveInteger(self::XML_PATH_INDEXER_LOCK_TIMEOUT_SECONDS);
+    }
+
+    public function getIndexerMinimumSuccessPercentage(): int
+    {
+        $percentage = $this->getPositiveInteger(
+            self::XML_PATH_INDEXER_MINIMUM_SUCCESS_PERCENTAGE
+        );
+
+        if ($percentage > 100) {
+            throw new UnexpectedValueException(
+                sprintf(
+                    'Configuration path "%s" must not exceed 100.',
+                    self::XML_PATH_INDEXER_MINIMUM_SUCCESS_PERCENTAGE
+                )
+            );
+        }
+
+        return $percentage;
     }
 
     /**

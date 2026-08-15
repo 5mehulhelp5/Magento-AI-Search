@@ -167,6 +167,18 @@
                 default="pending"
                 length="16"
                 comment="Status"/>
+        <column xsi:type="int"
+                name="index_version"
+                unsigned="true"
+                nullable="false"
+                default="1"
+                comment="OpenSearch Index Version"/>
+        <column xsi:type="smallint"
+                name="full_reindex_status"
+                unsigned="true"
+                nullable="false"
+                default="0"
+                comment="Full Reindex Status"/>
         <column xsi:type="bigint"
                 name="version"
                 unsigned="true"
@@ -207,11 +219,18 @@
         <index referenceId="DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_STATUS" indexType="btree">
             <column name="status"/>
         </index>
-        <index referenceId="DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_OPERATION_STATUS" indexType="btree">
+        <index referenceId="DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_INDEX_OPERATION_STATUS"
+               indexType="btree">
+            <column name="index_version"/>
             <column name="operation"/>
             <column name="status"/>
             <column name="updated_at"/>
             <column name="backlog_id"/>
+        </index>
+        <index referenceId="DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_INDEX_FULL_REINDEX_STATUS"
+               indexType="btree">
+            <column name="index_version"/>
+            <column name="full_reindex_status"/>
         </index>
     </table>
 </schema>

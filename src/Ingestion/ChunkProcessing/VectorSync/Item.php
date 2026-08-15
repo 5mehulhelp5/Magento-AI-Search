@@ -16,7 +16,8 @@ readonly class Item
         public string $backlogUpdatedAt,
         public int $chunkId,
         public string $sourceEntityType,
-        public int $sourceEntityId
+        public int $sourceEntityId,
+        public int $indexVersion = 1
     ) {
     }
 }

@@ -20,9 +20,7 @@ use DavidBel\AiSearch\Indexer\Versioning\State;
 use DavidBel\AiSearch\Indexer\Versioning\State\Flag;
 use DavidBel\AiSearch\Indexer\Versioning\Target;
 use DavidBel\AiSearch\Indexer\Versioning\VersionLock;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
-use Throwable;
 
 class Preparation
 {
@@ -34,8 +32,7 @@ class Preparation
         private readonly IndexName $indexName,
         private readonly Flag $stateFlag,
         private readonly OpenSearch $openSearch,
-        private readonly VersionLock $versionLock,
-        private readonly LoggerInterface $logger
+        private readonly VersionLock $versionLock
     ) {
     }
 
@@ -60,7 +57,6 @@ class Preparation
                 new Target($targetIndex, false),
                 $state->cacheStatus
             ));
-            $this->deleteReplacedTarget($existingTarget, $targetIndex);
         } finally {
             $this->versionLock->unlock();
         }
@@ -137,22 +133,6 @@ class Preparation
         $this->openSearch->create($physicalIndex);
 
         return $physicalIndex;
-    }
-
-    private function deleteReplacedTarget(?Target $target, PhysicalIndex $replacement): void
-    {
-        if ($target === null || $target->physicalIndex->indexName === $replacement->indexName) {
-            return;
-        }
-
-        try {
-            $this->openSearch->delete($target->physicalIndex->indexName);
-        } catch (Throwable $throwable) {
-            $this->logger->warning(
-                'The replaced target search index version could not be deleted.',
-                ['exception' => $throwable]
-            );
-        }
     }
 
     private function lock(): void

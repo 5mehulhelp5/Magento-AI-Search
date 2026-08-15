@@ -14,6 +14,7 @@ use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Result as DocumentUpdateResult;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\UpdateMode;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory
     as EmbeddingBacklogCollectionFactory;
@@ -33,7 +34,7 @@ class DocumentProcessing
     ) {
     }
 
-    public function fullUpdate(): void
+    public function fullUpdate(int $indexVersion): void
     {
         $lastProductId = 0;
         $batchSize = $this->dataProcessingConfig->getDocumentProcessingBatchSize();
@@ -48,7 +49,7 @@ class DocumentProcessing
                 return;
             }
 
-            $this->processProducts($productIds, UpdateMode::FullUpdate);
+            $this->processProducts($productIds, UpdateMode::FullUpdate, $indexVersion);
             $lastProductId = $productIds[array_key_last($productIds)];
         }
     }
@@ -56,13 +57,13 @@ class DocumentProcessing
     /**
      * @param list<int> $productIds
      */
-    public function deltaUpdate(array $productIds): void
+    public function deltaUpdate(array $productIds, int $indexVersion): void
     {
         $batchSize = $this->dataProcessingConfig->getDocumentProcessingBatchSize();
         $affectedProductIds = $this->getAffectedProductIds($productIds, $batchSize);
 
         foreach (array_chunk($affectedProductIds, $batchSize) as $productIdBatch) {
-            $this->processProducts($productIdBatch, UpdateMode::DeltaUpdate);
+            $this->processProducts($productIdBatch, UpdateMode::DeltaUpdate, $indexVersion);
         }
     }
 
@@ -88,8 +89,11 @@ class DocumentProcessing
     /**
      * @param list<int> $productIds
      */
-    private function processProducts(array $productIds, UpdateMode $updateMode): void
-    {
+    private function processProducts(
+        array $productIds,
+        UpdateMode $updateMode,
+        int $indexVersion
+    ): void {
         $sourcesByProductId = $this->sourceProvider->getSourcesByProductIds($productIds);
         $embeddingBacklogResource = $this->embeddingBacklogCollectionFactory
             ->create()
@@ -108,6 +112,7 @@ class DocumentProcessing
                 $productId,
                 $sources,
                 $updateMode,
+                $indexVersion,
                 $embeddingBacklogResource,
                 $connection
             );
@@ -121,6 +126,7 @@ class DocumentProcessing
         int $productId,
         array $sources,
         UpdateMode $updateMode,
+        int $indexVersion,
         EmbeddingBacklogResource $embeddingBacklogResource,
         AdapterInterface $connection
     ): void {
@@ -132,7 +138,9 @@ class DocumentProcessing
                 $this->saveBacklog(
                     $updateResult,
                     $embeddingBacklogResource,
-                    $productId
+                    $productId,
+                    $indexVersion,
+                    $updateMode
                 );
             }
 
@@ -166,17 +174,25 @@ class DocumentProcessing
     private function saveBacklog(
         DocumentUpdateResult $updateResult,
         EmbeddingBacklogResource $embeddingBacklogResource,
-        int $productId
+        int $productId,
+        int $indexVersion,
+        UpdateMode $updateMode
     ): void {
         if ($updateResult->upsertChunkIds === [] && $updateResult->deletionChunkIds === []) {
             return;
         }
 
+        $fullReindexStatus = $updateMode === UpdateMode::FullUpdate
+            ? FullReindexStatus::Pending
+            : FullReindexStatus::Delta;
+
         foreach ($updateResult->upsertChunkIds as $chunkId) {
             $embeddingBacklogResource->saveByChunkId(
                 $chunkId,
                 self::SOURCE_ENTITY_TYPE,
-                $productId
+                $productId,
+                $indexVersion,
+                $fullReindexStatus
             );
         }
 
@@ -184,7 +200,9 @@ class DocumentProcessing
             $embeddingBacklogResource->deleteByChunkId(
                 $chunkId,
                 self::SOURCE_ENTITY_TYPE,
-                $productId
+                $productId,
+                $indexVersion,
+                $fullReindexStatus
             );
         }
     }

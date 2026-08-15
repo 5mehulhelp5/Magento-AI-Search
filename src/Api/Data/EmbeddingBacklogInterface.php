@@ -10,6 +10,7 @@ namespace DavidBel\AiSearch\Api\Data;
 
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Status;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
 use Magento\Framework\Api\ExtensibleDataInterface;
 
 /**
@@ -25,6 +26,8 @@ interface EmbeddingBacklogInterface extends ExtensibleDataInterface
     public const string SOURCE_ENTITY_ID = 'source_entity_id';
     public const string OPERATION = 'operation';
     public const string STATUS = 'status';
+    public const string INDEX_VERSION = 'index_version';
+    public const string FULL_REINDEX_STATUS = 'full_reindex_status';
     public const string VERSION = 'version';
     public const string ATTEMPT_COUNT = 'attempt_count';
     public const string LAST_ERROR_CATEGORY = 'last_error_category';
@@ -60,6 +63,38 @@ interface EmbeddingBacklogInterface extends ExtensibleDataInterface
      * @return \DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface
      */
     public function setVersion(int $version): EmbeddingBacklogInterface;
+
+    /**
+     * Get the assigned OpenSearch index version.
+     *
+     * @return int
+     */
+    public function getIndexVersion(): int;
+
+    /**
+     * Set the assigned OpenSearch index version.
+     *
+     * @param int $indexVersion
+     * @return \DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface
+     */
+    public function setIndexVersion(int $indexVersion): EmbeddingBacklogInterface;
+
+    /**
+     * Get the full-reindex status.
+     *
+     * @return \DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus
+     */
+    public function getFullReindexStatus(): FullReindexStatus;
+
+    /**
+     * Set the full-reindex status.
+     *
+     * @param \DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus $fullReindexStatus
+     * @return \DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface
+     */
+    public function setFullReindexStatus(
+        FullReindexStatus $fullReindexStatus
+    ): EmbeddingBacklogInterface;
 
     /**
      * Get the chunk ID.

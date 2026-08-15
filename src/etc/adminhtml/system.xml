@@ -459,6 +459,15 @@
                     <label>Lock Timeout (Seconds)</label>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
+                <field id="minimum_success_percentage"
+                       translate="label"
+                       type="text"
+                       sortOrder="20"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Minimum Successful Full Reindex (%)</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
             </group>
         </section>
     </system>

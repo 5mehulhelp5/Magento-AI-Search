@@ -35,6 +35,10 @@ class ItemMapper
                 $this->toInteger(
                     $row[EmbeddingBacklogInterface::SOURCE_ENTITY_ID] ?? null,
                     'source_entity_id'
+                ),
+                $this->toPositiveInteger(
+                    $row[EmbeddingBacklogInterface::INDEX_VERSION] ?? null,
+                    'index_version'
                 )
             );
         }

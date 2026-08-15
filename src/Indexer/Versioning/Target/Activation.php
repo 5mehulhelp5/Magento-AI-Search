@@ -10,16 +10,13 @@ namespace DavidBel\AiSearch\Indexer\Versioning\Target;
 
 use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Indexer\Versioning\ConfigurationFingerprint;
-use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use DavidBel\AiSearch\Indexer\Versioning\State;
 use DavidBel\AiSearch\Indexer\Versioning\State\CacheStatus;
 use DavidBel\AiSearch\Indexer\Versioning\State\Flag;
 use DavidBel\AiSearch\Indexer\Versioning\Target\Activation\CacheClean;
 use DavidBel\AiSearch\Indexer\Versioning\Target\Activation\Readiness;
 use DavidBel\AiSearch\Indexer\Versioning\VersionLock;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
-use Throwable;
 
 class Activation
 {
@@ -29,8 +26,7 @@ class Activation
         private readonly OpenSearch $openSearch,
         private readonly Readiness $targetReadiness,
         private readonly CacheClean $cacheClean,
-        private readonly VersionLock $versionLock,
-        private readonly LoggerInterface $logger
+        private readonly VersionLock $versionLock
     ) {
     }
 
@@ -76,7 +72,7 @@ class Activation
             return false;
         }
 
-        return $this->targetReadiness->isReady();
+        return $this->targetReadiness->isReady($target->physicalIndex->number);
     }
 
     private function activate(State $state): void
@@ -90,26 +86,7 @@ class Activation
         $this->openSearch->activate($target->physicalIndex);
         $activatedState = new State($target->physicalIndex, null, CacheStatus::Required);
         $this->stateFlag->save($activatedState);
-        $this->deletePreviousActiveIndex($state->active, $target->physicalIndex);
         $this->completeCacheClean($activatedState);
-    }
-
-    private function deletePreviousActiveIndex(
-        ?PhysicalIndex $active,
-        PhysicalIndex $target
-    ): void {
-        if ($active === null || $active->indexName === $target->indexName) {
-            return;
-        }
-
-        try {
-            $this->openSearch->delete($active->indexName);
-        } catch (Throwable $throwable) {
-            $this->logger->warning(
-                'The previous active search index version could not be deleted.',
-                ['exception' => $throwable]
-            );
-        }
     }
 
     private function completeCacheClean(State $state): void

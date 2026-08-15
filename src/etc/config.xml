@@ -111,6 +111,7 @@
             </cleanup>
             <indexer>
                 <lock_timeout_seconds>10</lock_timeout_seconds>
+                <minimum_success_percentage>50</minimum_success_percentage>
             </indexer>
         </davidbel_ai_search_data_processing>
         <davidbel_ai_search_search_result>

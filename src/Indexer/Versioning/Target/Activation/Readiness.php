@@ -8,55 +8,31 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Indexer\Versioning\Target\Activation;
 
-use DavidBel\AiSearch\Indexer\ProductIndexer;
-use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
-use Magento\Framework\Indexer\IndexerRegistry;
-use Magento\Framework\Mview\View\ChangelogTableNotExistsException;
+use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\IndexVersion
+    as BacklogIndexVersion;
 
 class Readiness
 {
     public function __construct(
-        private readonly CollectionFactory $collectionFactory,
-        private readonly IndexerRegistry $indexerRegistry
+        private readonly BacklogIndexVersion $backlogIndexVersion,
+        private readonly DataProcessingConfig $dataProcessingConfig
     ) {
     }
 
-    public function isReady(): bool
+    public function isReady(int $indexVersion): bool
     {
-        if (!$this->isProductIndexerReady()) {
+        $progress = $this->backlogIndexVersion->getFullReindexProgress($indexVersion);
+
+        if ($progress['unfinished'] > 0) {
             return false;
         }
 
-        return !$this->collectionFactory
-            ->create()
-            ->getResourceModel()
-            ->hasPendingOrFailedItems();
-    }
-
-    private function isProductIndexerReady(): bool
-    {
-        $indexer = $this->indexerRegistry->get(ProductIndexer::ID);
-
-        if (!$indexer->isValid()) {
-            return false;
-        }
-
-        $view = $indexer->getView();
-
-        if (!$view->isIdle()) {
-            return false;
-        }
-
-        if (!$view->isEnabled()) {
+        if ($progress['total'] === 0) {
             return true;
         }
 
-        try {
-            $currentVersion = $view->getChangelog()->getVersion();
-        } catch (ChangelogTableNotExistsException) {
-            return true;
-        }
-
-        return (int) $view->getState()->getVersionId() >= $currentVersion;
+        return $progress['indexed'] * 100 >= $progress['total']
+            * $this->dataProcessingConfig->getIndexerMinimumSuccessPercentage();
     }
 }

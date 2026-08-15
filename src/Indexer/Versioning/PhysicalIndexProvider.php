@@ -56,6 +56,11 @@ class PhysicalIndexProvider
         return $activeIndex;
     }
 
+    public function getForIngestion(): ?PhysicalIndex
+    {
+        return $this->getTarget() ?? $this->getActive();
+    }
+
     public function getForSearch(bool $usePreviousDuringRebuild): ?PhysicalIndex
     {
         $state = $this->stateFlag->get();

@@ -5,6 +5,9 @@
         "https://github.com/DavidBelicza/Magento-AI-Search"
     ],
     "davidbel_ai_search_embedding_backlog": {
+        "index": {
+            "DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_OPERATION_STATUS": true
+        },
         "constraint": {
             "DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_CHUNK_ID": true
         }

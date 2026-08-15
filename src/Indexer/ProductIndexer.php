@@ -26,7 +26,7 @@ class ProductIndexer implements IndexerActionInterface, MviewActionInterface
     public function executeFull(): void
     {
         $this->versioning->prepareTargetForFullReindex();
-        $this->documentProcessing->fullUpdate();
+        $this->documentProcessing->fullUpdate($this->versioning->getTargetIndexVersion());
         $this->versioning->markTargetDocumentProcessingComplete();
     }
 
@@ -41,7 +41,10 @@ class ProductIndexer implements IndexerActionInterface, MviewActionInterface
             return;
         }
 
-        $this->documentProcessing->deltaUpdate($this->normalizeIds($ids));
+        $this->documentProcessing->deltaUpdate(
+            $this->normalizeIds($ids),
+            $this->versioning->getIngestionIndexVersion()
+        );
     }
 
     public function executeRow(mixed $id): void

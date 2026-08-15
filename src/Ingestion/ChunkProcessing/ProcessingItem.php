@@ -22,7 +22,8 @@ readonly class ProcessingItem
         public int $chunkIndex,
         public string $content,
         public string $contentHash,
-        public ?string $title = null
+        public ?string $title = null,
+        public int $indexVersion = 1
     ) {
     }
 }
