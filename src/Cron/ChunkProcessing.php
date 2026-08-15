@@ -21,7 +21,12 @@ class ChunkProcessing
 
     public function execute(): void
     {
-        $this->chunkProcessingFactory->create()->execute();
+        $indexVersion = $this->versioning->getOptionalIngestionIndexVersion();
+
+        if ($indexVersion !== null) {
+            $this->chunkProcessingFactory->create()->execute($indexVersion);
+        }
+
         $this->versioning->activateTargetWhenReady();
     }
 }

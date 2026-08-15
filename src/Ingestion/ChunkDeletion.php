@@ -11,8 +11,6 @@ namespace DavidBel\AiSearch\Ingestion;
 use DavidBel\AiSearch\Config\DataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
-use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\IndexVersion
-    as BacklogIndexVersion;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\CacheClean;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingResultHandler;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingResultHandlerFactory;
@@ -38,19 +36,12 @@ class ChunkDeletion
         private readonly ProcessingResultHandlerFactory $processingResultHandlerFactory,
         private readonly VectorSync $vectorSync,
         private readonly CacheClean $cacheClean,
-        private readonly DataProcessingConfig $dataProcessingConfig,
-        private readonly BacklogIndexVersion $backlogIndexVersion
+        private readonly DataProcessingConfig $dataProcessingConfig
     ) {
     }
 
-    public function execute(): int
+    public function execute(int $indexVersion): int
     {
-        $indexVersion = $this->backlogIndexVersion->getHighestIndexVersion();
-
-        if ($indexVersion === null) {
-            return 0;
-        }
-
         $processingState = $this->processingStateFactory->create();
         $resultHandler = $this->processingResultHandlerFactory->create([
             'processingState' => $processingState,

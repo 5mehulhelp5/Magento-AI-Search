@@ -26,25 +26,6 @@ class IndexVersion
     ) {
     }
 
-    public function getHighestIndexVersion(): ?int
-    {
-        $resource = $this->getResource();
-        /** @var AdapterInterface $connection */
-        $connection = $resource->getConnection();
-        $select = $connection->select()
-            ->from(
-                $resource->getMainTable(),
-                [new Expression(sprintf('MAX(%s)', EmbeddingBacklogInterface::INDEX_VERSION))]
-            );
-        $value = (int) $connection->fetchOne($select);
-
-        if ($value < 1) {
-            return null;
-        }
-
-        return $value;
-    }
-
     /**
      * @param array<int, int> $backlogIndexVersions
      */
