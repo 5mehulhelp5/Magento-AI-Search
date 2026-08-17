@@ -9,7 +9,6 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Ingestion;
 
 use DavidBel\AiSearch\Config\DataProcessingConfig;
-use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Result as DocumentUpdateResult;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
@@ -120,7 +119,7 @@ class DocumentProcessing
     }
 
     /**
-     * @param list<DocumentSource> $sources
+     * @param list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource> $sources
      */
     private function processProduct(
         int $productId,
@@ -133,16 +132,14 @@ class DocumentProcessing
         $connection->beginTransaction();
 
         try {
-            foreach ($sources as $source) {
-                $updateResult = $this->updateDocumentSource($productId, $source, $updateMode);
-                $this->saveBacklog(
-                    $updateResult,
-                    $embeddingBacklogResource,
-                    $productId,
-                    $indexVersion,
-                    $updateMode
-                );
-            }
+            $updateResult = $this->updateProductDocuments($productId, $sources, $updateMode);
+            $this->saveBacklog(
+                $updateResult,
+                $embeddingBacklogResource,
+                $productId,
+                $indexVersion,
+                $updateMode
+            );
 
             $connection->commit();
         } catch (Throwable $throwable) {
@@ -151,23 +148,26 @@ class DocumentProcessing
         }
     }
 
-    private function updateDocumentSource(
+    /**
+     * @param list<\DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource> $sources
+     */
+    private function updateProductDocuments(
         int $productId,
-        DocumentSource $source,
+        array $sources,
         UpdateMode $updateMode
     ): DocumentUpdateResult {
         if ($updateMode === UpdateMode::FullUpdate) {
             return $this->documentUpdater->fullUpdate(
                 self::SOURCE_ENTITY_TYPE,
                 $productId,
-                $source
+                $sources
             );
         }
 
         return $this->documentUpdater->deltaUpdate(
             self::SOURCE_ENTITY_TYPE,
             $productId,
-            $source
+            $sources
         );
     }
 
