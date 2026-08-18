@@ -11,6 +11,7 @@ namespace DavidBel\AiSearch\Ingestion;
 use DavidBel\AiSearch\Config\DataProcessingConfig;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Result as DocumentUpdateResult;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\DeletedProductIdProvider;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\UpdateMode;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
@@ -27,6 +28,7 @@ class DocumentProcessing
 
     public function __construct(
         private readonly SourceProvider $sourceProvider,
+        private readonly DeletedProductIdProvider $deletedProductIdProvider,
         private readonly DocumentUpdater $documentUpdater,
         private readonly EmbeddingBacklogCollectionFactory $embeddingBacklogCollectionFactory,
         private readonly DataProcessingConfig $dataProcessingConfig
@@ -35,8 +37,18 @@ class DocumentProcessing
 
     public function fullUpdate(int $indexVersion): void
     {
-        $lastProductId = 0;
         $batchSize = $this->dataProcessingConfig->getDocumentProcessingBatchSize();
+
+        $this->processCurrentProducts($indexVersion, $batchSize);
+        $this->processDeletedProducts($indexVersion, $batchSize);
+    }
+
+    /**
+     * @param positive-int $batchSize
+     */
+    private function processCurrentProducts(int $indexVersion, int $batchSize): void
+    {
+        $lastProductId = 0;
 
         while (true) {
             $productIds = $this->sourceProvider->getProductIdsAfter(
@@ -50,6 +62,28 @@ class DocumentProcessing
 
             $this->processProducts($productIds, UpdateMode::FullUpdate, $indexVersion);
             $lastProductId = $productIds[array_key_last($productIds)];
+        }
+    }
+
+    /**
+     * @param positive-int $batchSize
+     */
+    private function processDeletedProducts(int $indexVersion, int $batchSize): void
+    {
+        $fromProductId = 0;
+
+        while (true) {
+            $productIds = $this->deletedProductIdProvider->getProductIdsFrom(
+                $fromProductId,
+                $batchSize
+            );
+
+            if ($productIds === []) {
+                return;
+            }
+
+            $this->processProducts($productIds, UpdateMode::FullUpdate, $indexVersion);
+            $fromProductId = $productIds[array_key_last($productIds)];
         }
     }
 
