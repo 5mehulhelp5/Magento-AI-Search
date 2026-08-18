@@ -11,6 +11,7 @@ namespace DavidBel\AiSearch\Indexer\Versioning;
 use DavidBel\AiSearch\Config\EmbeddedAttribute;
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
 use DavidBel\AiSearch\Config\EmbedderConfig;
+use DavidBel\AiSearch\Config\IndexingScopeConfig;
 use DavidBel\AiSearch\Config\SearchConfig;
 use Magento\Framework\Serialize\SerializerInterface;
 use UnexpectedValueException;
@@ -20,6 +21,7 @@ class ConfigurationFingerprint
     public function __construct(
         private readonly EmbedderConfig $embedderConfig,
         private readonly EmbeddedAttributesConfig $embeddedAttributesConfig,
+        private readonly IndexingScopeConfig $indexingScopeConfig,
         private readonly SearchConfig $searchConfig,
         private readonly IndexName $indexName,
         private readonly SerializerInterface $serializer
@@ -31,6 +33,7 @@ class ConfigurationFingerprint
         $serializedConfiguration = $this->serializer->serialize([
             'index_alias' => $this->indexName->getAlias(),
             'index_schema_version' => $this->searchConfig->getIndexSchemaVersion(),
+            'indexed_store_ids' => $this->indexingScopeConfig->getStoreIdsForIndexing(),
             'title_attribute_code' => $this->getDocumentTitleAttributeCode(),
             'embedded_attributes' => $this->getEmbeddedAttributes(),
             'chunking' => [

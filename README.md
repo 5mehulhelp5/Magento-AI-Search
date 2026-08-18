@@ -188,7 +188,7 @@ pie showData title End-to-end processing time distribution
 | **Avoiding duplicate embedding requests for identical chunk text** | Embedding | Essential | ⏳ Open |
 | **Removing orphaned documents and chunks after product deletion or visibility changes** | Ingestion | Essential | ✅ Complete |
 | **Handling failed deletion backlog items after the retry threshold** | Operations | Essential | ⏳ Open |
-| **Reindexing documents after store creation, deletion, enabling, or disabling** | Store scope | Essential | ⏳ Open |
+| **Explicit store-view indexing scope** | Store scope | Essential | ✅ Complete |
 | **Attribute change detection for documents dependent on complex attributes** | Documents | Essential | ⏳ Open |
 | **Search-result cache membership invalidation** | Storefront | Essential | ⏳ Open |
 | **Authenticated OpenAI-compatible endpoints** | AI server | Planned | ⏳ Open |

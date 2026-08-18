@@ -27,9 +27,10 @@ class DataProvider
 
     /**
      * @param list<int> $productIds
+     * @param list<int> $storeIds
      * @return list<array<array-key, mixed>>
      */
-    public function getEligibleScopeRows(array $productIds): array
+    public function getEligibleScopeRows(array $productIds, array $storeIds): array
     {
         $productResource = $this->createProductResource();
         $connection = $productResource->getConnection();
@@ -51,8 +52,7 @@ class DataProvider
             $attributeIds['visibility']
         );
         $select->where('product.entity_id IN (?)', $productIds)
-            ->where('store.store_id <> ?', self::DEFAULT_STORE_ID)
-            ->where('store.is_active = ?', 1)
+            ->where('store.store_id IN (?)', $storeIds)
             ->where(
                 $this->getScopedValueExpression($connection, 'status') . ' = ?',
                 Status::STATUS_ENABLED
@@ -302,7 +302,6 @@ class DataProvider
             ->columns(['child_id' => 'product.entity_id', 'store_id' => 'store.store_id'])
             ->where('product.entity_id IN (?)', $childIds)
             ->where('store.store_id IN (?)', $storeIds)
-            ->where('store.is_active = ?', 1)
             ->where(
                 $this->getScopedValueExpression($connection, 'status') . ' = ?',
                 Status::STATUS_ENABLED

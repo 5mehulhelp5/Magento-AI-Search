@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 
+use DavidBel\AiSearch\Config\IndexingScopeConfig;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\Eligibility\DataProvider;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\Eligibility\EligibleScope;
 use Magento\Bundle\Model\Product\Type as BundleProductType;
@@ -24,7 +25,8 @@ class Eligibility
     ];
 
     public function __construct(
-        private readonly DataProvider $dataProvider
+        private readonly DataProvider $dataProvider,
+        private readonly IndexingScopeConfig $indexingScopeConfig
     ) {
     }
 
@@ -38,7 +40,13 @@ class Eligibility
             return [];
         }
 
-        $scopeRows = $this->dataProvider->getEligibleScopeRows($productIds);
+        $storeIds = $this->indexingScopeConfig->getStoreIdsForIndexing();
+
+        if ($storeIds === []) {
+            return [];
+        }
+
+        $scopeRows = $this->dataProvider->getEligibleScopeRows($productIds, $storeIds);
 
         if ($scopeRows === []) {
             return [];
