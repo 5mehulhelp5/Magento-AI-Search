@@ -14,6 +14,7 @@ use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource\StoreScopedSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Result;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\DeletedProductIdProvider;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
@@ -53,7 +54,7 @@ class DocumentProcessingTest extends TestCase
         $documentUpdater = $this->createMock(DocumentUpdater::class);
         $documentUpdater->expects(self::once())
             ->method('fullUpdate')
-            ->with('product', 30, $source)
+            ->with('product', 30, [$source])
             ->willReturn(new Result([101], [102]));
         $resource = $this->createBacklogResource($this->createTransactionConnection());
         $resource->expects(self::once())
@@ -90,13 +91,16 @@ class DocumentProcessingTest extends TestCase
                 static function (
                     string $entityType,
                     int $entityId,
-                    DocumentSource $source
+                    array $sources
                 ) use (
                     $firstSource,
                     $secondSource
                 ): Result {
                     self::assertSame('product', $entityType);
-                    self::assertSame($entityId === 10 ? $firstSource : $secondSource, $source);
+                    self::assertSame(
+                        [$entityId === 10 ? $firstSource : $secondSource],
+                        $sources
+                    );
 
                     return $entityId === 10 ? new Result([201], []) : new Result([], [202]);
                 }
@@ -195,10 +199,12 @@ class DocumentProcessingTest extends TestCase
         $resource = $this->createBacklogResourceStub(
             $this->createTransactionConnection(count($productIds))
         );
+        $documentUpdater = self::createStub(DocumentUpdater::class);
+        $documentUpdater->method('deltaUpdate')->willReturn(new Result([], []));
 
         $this->createProcessing(
             $sourceProvider,
-            self::createStub(DocumentUpdater::class),
+            $documentUpdater,
             $this->createCollectionFactory($resource, 2)
         )->deltaUpdate($productIds, self::INDEX_VERSION);
 
@@ -218,6 +224,7 @@ class DocumentProcessingTest extends TestCase
 
         return new DocumentProcessing(
             $sourceProvider,
+            self::createStub(DeletedProductIdProvider::class),
             $documentUpdater,
             $collectionFactory,
             $config

@@ -15,6 +15,7 @@ use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource\StoreScopedSou
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Chunking;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\ChunkPersistence;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\DocumentSourceUpdater;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Result;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Parsing;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\UpdateMode;
@@ -65,7 +66,7 @@ class DocumentUpdaterTest extends TestCase
             ->willReturn(new Result([100], [101]));
 
         $result = $this->createUpdater($repository, $parsing, $chunking, $persistence)
-            ->deltaUpdate('product', 42, $this->createSource('New source'));
+            ->deltaUpdate('product', 42, [$this->createSource('New source')]);
 
         self::assertSame([100], $result->upsertChunkIds);
         self::assertSame([101], $result->deleteChunkIds);
@@ -88,7 +89,7 @@ class DocumentUpdaterTest extends TestCase
             ->willReturn(new Result([100], []));
 
         $result = $this->createUpdater($repository, $parsing, $chunking, $persistence)
-            ->fullUpdate('product', 42, $this->createSource($content));
+            ->fullUpdate('product', 42, [$this->createSource($content)]);
 
         self::assertSame([100], $result->upsertChunkIds);
         self::assertSame([], $result->deleteChunkIds);
@@ -108,7 +109,7 @@ class DocumentUpdaterTest extends TestCase
         $persistence->expects(self::never())->method('reconcile');
 
         $result = $this->createUpdater($repository, $parsing, $chunking, $persistence)
-            ->deltaUpdate('product', 42, $this->createSource($content));
+            ->deltaUpdate('product', 42, [$this->createSource($content)]);
 
         self::assertSame([], $result->upsertChunkIds);
         self::assertSame([], $result->deleteChunkIds);
@@ -130,7 +131,11 @@ class DocumentUpdaterTest extends TestCase
             self::createStub(Parsing::class),
             self::createStub(Chunking::class),
             $persistence
-        )->deltaUpdate('product', 42, new DocumentSource('description', 'text_as_is', []));
+        )->deltaUpdate(
+            'product',
+            42,
+            [new DocumentSource('description', 'text_as_is', [])]
+        );
 
         self::assertSame([], $result->upsertChunkIds);
         self::assertSame([100], $result->deleteChunkIds);
@@ -141,6 +146,7 @@ class DocumentUpdaterTest extends TestCase
         $document = self::createStub(DocumentInterface::class);
         $document->method('getStoreId')->willReturn(1);
         $document->method('getDocumentId')->willReturn(null);
+        $document->method('getSourceCode')->willReturn('description');
         $document->method('getSourceHash')->willReturn('old source hash');
         $document->method('getTitle')->willReturn(null);
         $document->method('setSourceHash')->willReturnSelf();
@@ -160,7 +166,7 @@ class DocumentUpdaterTest extends TestCase
             $parsing,
             $chunking,
             self::createStub(ChunkPersistence::class)
-        )->deltaUpdate('product', 42, $this->createSource('New source'));
+        )->deltaUpdate('product', 42, [$this->createSource('New source')]);
     }
 
     private function createUpdater(
@@ -178,10 +184,13 @@ class DocumentUpdaterTest extends TestCase
         return new DocumentUpdater(
             $builderFactory,
             $repository,
-            self::createStub(DocumentFactory::class),
-            $parsing,
-            $chunking,
-            $chunkPersistence
+            new DocumentSourceUpdater(
+                $repository,
+                self::createStub(DocumentFactory::class),
+                $parsing,
+                $chunking,
+                $chunkPersistence
+            )
         );
     }
 
@@ -204,6 +213,7 @@ class DocumentUpdaterTest extends TestCase
         $document = $this->createMock(DocumentInterface::class);
         $document->method('getStoreId')->willReturn($storeId);
         $document->method('getDocumentId')->willReturn($documentId);
+        $document->method('getSourceCode')->willReturn('description');
         $document->method('getSourceHash')->willReturn($sourceHash);
         $document->method('getTitle')->willReturn(null);
 
@@ -218,6 +228,7 @@ class DocumentUpdaterTest extends TestCase
         $document = self::createStub(DocumentInterface::class);
         $document->method('getStoreId')->willReturn($storeId);
         $document->method('getDocumentId')->willReturn($documentId);
+        $document->method('getSourceCode')->willReturn('description');
         $document->method('getSourceHash')->willReturn($sourceHash);
         $document->method('getTitle')->willReturn(null);
 
