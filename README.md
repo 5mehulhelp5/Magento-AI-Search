@@ -189,7 +189,7 @@ pie showData title End-to-end processing time distribution
 | **Removing orphaned documents and chunks after product deletion or visibility changes** | Ingestion | Essential | ✅ Complete |
 | **Handling failed deletion backlog items after the retry threshold** | Operations | Essential | ⏳ Open |
 | **Explicit store-view indexing scope** | Store scope | Essential | ✅ Complete |
-| **Attribute change detection for documents dependent on complex attributes** | Documents | Essential | ⏳ Open |
+| **Attribute change detection for documents dependent on complex attributes** | Documents | Essential | ✅ Complete |
 | **Search-result cache membership invalidation** | Storefront | Essential | ⏳ Open |
 | **Authenticated OpenAI-compatible endpoints** | AI server | Planned | ⏳ Open |
 | **Native Google Gemini API support** | AI server | Planned | ⏳ Open |
