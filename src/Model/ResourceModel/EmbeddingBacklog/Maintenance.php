@@ -131,10 +131,6 @@ class Maintenance
             EmbeddingBacklogInterface::ATTEMPT_COUNT . ' >= ?',
             $attemptThreshold
         );
-        $upsertOperation = $connection->quoteInto(
-            EmbeddingBacklogInterface::OPERATION . ' = ?',
-            Operation::Upsert->value
-        );
         $resultStatus = $connection->quoteInto(
             EmbeddingBacklogInterface::STATUS . ' IN (?)',
             [
@@ -148,8 +144,7 @@ class Maintenance
         );
 
         return sprintf(
-            '((%s AND %s AND %s) OR (%s AND %s))',
-            $upsertOperation,
+            '((%s AND %s) OR (%s AND %s))',
             $failedStatus,
             $attemptLimit,
             $resultStatus,

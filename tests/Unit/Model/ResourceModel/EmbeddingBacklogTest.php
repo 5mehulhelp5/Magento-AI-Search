@@ -256,15 +256,14 @@ class EmbeddingBacklogTest extends TestCase
             ->markFailedAsPending(7, 0);
     }
 
-    public function testDeletesExhaustedUpsertsAndExpiredResults(): void
+    public function testDeletesExhaustedFailuresAndExpiredResults(): void
     {
         $connection = $this->createMock(AdapterInterface::class);
-        $connection->expects(self::exactly(5))
+        $connection->expects(self::exactly(4))
             ->method('quoteInto')
             ->willReturnOnConsecutiveCalls(
                 'failed_status',
                 'attempt_limit',
-                'upsert_operation',
                 'result_status',
                 'expiration_cutoff'
             );
@@ -272,7 +271,7 @@ class EmbeddingBacklogTest extends TestCase
             ->method('delete')
             ->with(
                 'embedding_backlog',
-                '((upsert_operation AND failed_status AND attempt_limit)'
+                '((failed_status AND attempt_limit)'
                 . ' OR (result_status AND expiration_cutoff))'
             )
             ->willReturn(6);
