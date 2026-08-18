@@ -6,6 +6,13 @@
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Mview/etc/mview.xsd">
+    <view id="davidbel_ai_search_product_attribute_option_mview"
+          class="DavidBel\AiSearch\Indexer\ProductAttributeOptionIndexer"
+          group="indexer">
+        <subscriptions>
+            <table name="eav_attribute_option_value" entity_column="option_id"/>
+        </subscriptions>
+    </view>
     <view id="davidbel_ai_search_product_mview"
           class="DavidBel\AiSearch\Indexer\ProductIndexer"
           group="indexer">

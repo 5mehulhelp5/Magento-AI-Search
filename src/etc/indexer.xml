@@ -6,6 +6,14 @@
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Indexer/etc/indexer.xsd">
+    <indexer id="davidbel_ai_search_product_attribute_option_indexer"
+             view_id="davidbel_ai_search_product_attribute_option_mview"
+             class="DavidBel\AiSearch\Indexer\ProductAttributeOptionIndexer">
+        <title translate="true">AI Search Product Attribute Option</title>
+        <description translate="true">
+            Forward products affected by configured attribute option label changes
+        </description>
+    </indexer>
     <indexer id="davidbel_ai_search_product_indexer"
              view_id="davidbel_ai_search_product_mview"
              class="DavidBel\AiSearch\Indexer\ProductIndexer">
