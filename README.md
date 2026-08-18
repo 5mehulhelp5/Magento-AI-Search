@@ -74,6 +74,13 @@ sequenceDiagram
 - If semantic search is disabled or unavailable, the request falls back to Magento's default
   search.
 
+### Reindexing workflow
+
+| Reindexing mode | Product parsing | Text chunking | Vector embedding |
+|---|---|---|---|
+| Delta | Changed source content only | Changed source content only | Changed or new chunks, or all existing chunks when the document title changes |
+| Full | All eligible product sources | All non-empty documents | All current chunks |
+
 ## ⚙️ System requirements
 
 ### Distribution

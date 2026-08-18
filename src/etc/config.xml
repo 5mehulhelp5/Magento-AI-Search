@@ -8,6 +8,9 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/config.xsd">
     <default>
         <davidbel_ai_search_search_source>
+            <indexing_scope>
+                <indexed_store_views/>
+            </indexing_scope>
             <ai_server>
                 <base_url>http://host.docker.internal:1234</base_url>
                 <embedding_model>text-embedding-embeddinggemma-300m-qat</embedding_model>
