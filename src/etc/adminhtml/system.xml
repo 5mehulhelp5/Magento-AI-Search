@@ -141,13 +141,13 @@
                    showInDefault="1">
                 <label>Indexing Scope</label>
                 <field id="indexed_store_views"
-                       translate="label comment"
+                       translate="label tooltip"
                        type="multiselect"
                        sortOrder="10"
                        showInDefault="1"
                        canRestore="1">
                     <label>Store Views for Indexing</label>
-                    <comment>Select the store views whose product documents should be indexed. Leave this field empty to index no store views.</comment>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <source_model>Magento\Config\Model\Config\Source\Store</source_model>
                 </field>
             </group>
