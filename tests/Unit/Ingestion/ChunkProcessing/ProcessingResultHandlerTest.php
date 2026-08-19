@@ -50,6 +50,7 @@ class ProcessingResultHandlerTest extends TestCase
         $cacheClean->expects(self::once())
             ->method('register')
             ->with('product', [99]);
+        $cacheClean->expects(self::once())->method('registerSearchResults');
         $state = $this->createMock(ProcessingState::class);
         $state->expects(self::once())->method('getBatch')->with(7)->willReturn($batch);
         $state->expects(self::once())->method('recordSuccesses')->with([10 => 2]);
@@ -61,6 +62,31 @@ class ProcessingResultHandlerTest extends TestCase
 
         $this->createHandler($resource, $vectorSync, $cacheClean, $state, $backlogIndexVersion)
             ->completed([[0.1, 0.2]], 7);
+    }
+
+    public function testDoesNotRegisterSearchResultCacheWithoutSuccessfulRows(): void
+    {
+        $resource = $this->createMock(EmbeddingBacklogResource::class);
+        $resource->expects(self::once())
+            ->method('markFailedByVersions')
+            ->with([20 => 3], 'opensearch');
+        $cacheClean = $this->createMock(CacheClean::class);
+        $cacheClean->expects(self::never())->method('register');
+        $cacheClean->expects(self::never())->method('registerSearchResults');
+        $state = $this->createMock(ProcessingState::class);
+        $state->expects(self::once())->method('recordSuccesses')->with([]);
+        $backlogIndexVersion = $this->createMock(BacklogIndexVersion::class);
+        $backlogIndexVersion->expects(self::once())
+            ->method('markFullReindexItemsIndexed')
+            ->with([]);
+
+        $this->createHandler(
+            $resource,
+            self::createStub(VectorSync::class),
+            $cacheClean,
+            $state,
+            $backlogIndexVersion
+        )->completeDelete(new Result([], [$this->createItem(20, 3, 100)]));
     }
 
     public function testMarksTheBatchFailedWhenOpenSearchThrows(): void

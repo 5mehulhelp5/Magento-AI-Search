@@ -37,6 +37,10 @@ class ConfigurationXmlTest extends TestCase
             'di.xml',
             'urn:magento:framework:ObjectManager/etc/config.xsd',
         ];
+        yield 'frontend dependency injection' => [
+            'frontend/di.xml',
+            'urn:magento:framework:ObjectManager/etc/config.xsd',
+        ];
         yield 'indexer' => [
             'indexer.xml',
             'urn:magento:framework:Indexer/etc/indexer.xsd',
@@ -118,6 +122,7 @@ class ConfigurationXmlTest extends TestCase
     {
         yield 'cron' => ['Magento_Cron'];
         yield 'OpenSearch' => ['Magento_OpenSearch'];
+        yield 'page cache' => ['Magento_PageCache'];
     }
 
     #[DataProvider('moduleDependencies')]
@@ -173,6 +178,29 @@ class ConfigurationXmlTest extends TestCase
                 . '[@name="DavidBel\AiSearch\Client\Embedding\OpenAi"]'
                 . '/arguments/argument[@name="client"]'
                 . '[text()="DavidBel\AiSearch\Client\Embedding\HttpClient"])'
+            )
+        );
+    }
+
+    public function testRegistersSearchResultPageCacheTagPreprocessor(): void
+    {
+        $dependencyInjection = new DOMDocument();
+
+        self::assertTrue(
+            $dependencyInjection->load(dirname(__DIR__, 2) . '/src/etc/frontend/di.xml')
+        );
+
+        $dependencyInjectionXPath = new DOMXPath($dependencyInjection);
+
+        self::assertSame(
+            1.0,
+            $dependencyInjectionXPath->evaluate(
+                'count(/config/type'
+                . '[@name="Magento\PageCache\Model\PageCacheTagsPreprocessorComposite"]'
+                . '/arguments/argument[@name="preprocessors"]'
+                . '/item[@name="catalogsearch_result_index"]'
+                . '/item[@name="davidbel_ai_search_result"]'
+                . '[text()="DavidBel\AiSearch\Search\ResultCache"])'
             )
         );
     }

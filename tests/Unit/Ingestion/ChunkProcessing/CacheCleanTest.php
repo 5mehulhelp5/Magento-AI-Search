@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Ingestion\ChunkProcessing;
 
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\CacheClean;
+use DavidBel\AiSearch\Search\ResultCache;
 use InvalidArgumentException;
 use Magento\Catalog\Model\Product;
 use Magento\Framework\Indexer\CacheContext;
@@ -57,5 +58,18 @@ class CacheCleanTest extends TestCase
         );
 
         $cacheClean->register('category', [10]);
+    }
+
+    public function testRegistersSearchResultCacheTag(): void
+    {
+        $context = $this->createMock(CacheContext::class);
+        $context->expects(self::once())
+            ->method('registerTags')
+            ->with([ResultCache::CACHE_TAG]);
+
+        (new CacheClean(
+            $context,
+            self::createStub(DeferredCacheCleanerInterface::class)
+        ))->registerSearchResults();
     }
 }
