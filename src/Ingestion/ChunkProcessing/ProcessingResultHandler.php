@@ -121,6 +121,10 @@ class ProcessingResultHandler
             foreach ($result->getSuccessfulSourceEntities() as $entityType => $entityIds) {
                 $this->cacheClean->register($entityType, $entityIds);
             }
+
+            if ($successfulBacklogVersions !== []) {
+                $this->cacheClean->registerSearchResults();
+            }
         } catch (Throwable $throwable) {
             $this->getResource()->markFailedByVersions(
                 $successfulBacklogVersions,

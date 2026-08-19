@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  davidbel/magento-ai-search by David Belicza
+  SPDX-License-Identifier: MIT
+  https://github.com/DavidBelicza/Magento-AI-Search
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\PageCache\Model\PageCacheTagsPreprocessorComposite">
+        <arguments>
+            <argument name="preprocessors" xsi:type="array">
+                <item name="catalogsearch_result_index" xsi:type="array">
+                    <item name="davidbel_ai_search_result"
+                          xsi:type="object">DavidBel\AiSearch\Search\ResultCache</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+</config>

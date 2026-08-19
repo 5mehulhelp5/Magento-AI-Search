@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\ChunkProcessing;
 
+use DavidBel\AiSearch\Search\ResultCache;
 use InvalidArgumentException;
 use Magento\Catalog\Model\Product;
 use Magento\Framework\Indexer\CacheContext;
@@ -56,6 +57,11 @@ class CacheClean
         }
 
         $this->cacheContext->registerEntities($cacheTag, $entityIds);
+    }
+
+    public function registerSearchResults(): void
+    {
+        $this->cacheContext->registerTags([ResultCache::CACHE_TAG]);
     }
 
     public function flush(): void
