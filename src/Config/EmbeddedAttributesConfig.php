@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Config;
 
+use DavidBel\AiSearch\Config\EmbeddedAttributesConfig\DynamicDocument;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use UnexpectedValueException;
 
@@ -17,11 +18,10 @@ class EmbeddedAttributesConfig
         'davidbel_ai_search_search_source/document_configuration/enable_document_title';
     private const string XML_PATH_DOCUMENT_TITLE =
         'davidbel_ai_search_search_source/document_configuration/document_title';
-    private const string XML_PATH_ENABLE_DYNAMIC_DOCUMENT =
-        'davidbel_ai_search_search_source/document_configuration/enable_dynamic_document';
 
     public function __construct(
-        private readonly ScopeConfigInterface $scopeConfig
+        private readonly ScopeConfigInterface $scopeConfig,
+        private readonly DynamicDocument $dynamicDocument
     ) {
     }
 
@@ -46,23 +46,29 @@ class EmbeddedAttributesConfig
         return $value;
     }
 
-    public function isDynamicDocumentEnabled(): bool
+    public function isDynamicDocumentEnabled(?int $storeId = null): bool
     {
-        return $this->scopeConfig->isSetFlag(self::XML_PATH_ENABLE_DYNAMIC_DOCUMENT);
+        return $this->dynamicDocument->isEnabled($storeId);
     }
 
     /**
      * @return list<EmbeddedAttribute>
      */
-    public function getAttributes(): array
+    public function getAttributes(?int $storeId = null): array
     {
         $attributes = $this->getDocumentAttributes();
+        $dynamicDocument = $this->getDynamicDocument($storeId);
 
-        if ($this->isDynamicDocumentEnabled()) {
-            $attributes[] = $this->getDynamicDocumentAttribute();
+        if ($dynamicDocument !== null) {
+            $attributes[] = $dynamicDocument;
         }
 
         return $attributes;
+    }
+
+    public function getDynamicDocument(?int $storeId = null): ?EmbeddedAttribute
+    {
+        return $this->dynamicDocument->get($storeId);
     }
 
     /**
@@ -86,72 +92,5 @@ class EmbeddedAttributesConfig
                 children: null
             ),
         ];
-    }
-
-    private function getDynamicDocumentAttribute(): EmbeddedAttribute
-    {
-        return new EmbeddedAttribute(
-            attributeCode: 'embedding_template',
-            composite: false,
-            parsingStrategy: 'text_as_is',
-            template: null,
-            children: $this->getDynamicDocumentChildren()
-        );
-    }
-
-    /**
-     * @return list<EmbeddedAttribute>
-     */
-    private function getDynamicDocumentChildren(): array
-    {
-        return [
-            $this->createDynamicDocumentChild(
-                'name',
-                false,
-                'text_as_is',
-                'This product is called {name}.'
-            ),
-            $this->createDynamicDocumentChild(
-                'color,size',
-                true,
-                'text_as_is',
-                'It is available in {color}, with size options including {size}.'
-            ),
-            $this->createDynamicDocumentChild('material', true, 'text_as_is', 'It is made from {material}.'),
-            $this->createDynamicDocumentChild(
-                'pattern',
-                true,
-                'text_as_is',
-                'Its design features a {pattern} pattern.'
-            ),
-            $this->createDynamicDocumentChild('activity', true, 'text_as_is', 'It is designed for {activity}.'),
-            $this->createDynamicDocumentChild(
-                'climate',
-                true,
-                'text_as_is',
-                'It is well suited to {climate} conditions.'
-            ),
-            $this->createDynamicDocumentChild(
-                'short_description',
-                true,
-                'html_to_text',
-                'Here is a brief description: {short_description}'
-            ),
-        ];
-    }
-
-    private function createDynamicDocumentChild(
-        string $attributeCode,
-        bool $composite,
-        string $parsingStrategy,
-        string $template
-    ): EmbeddedAttribute {
-        return new EmbeddedAttribute(
-            attributeCode: $attributeCode,
-            composite: $composite,
-            parsingStrategy: $parsingStrategy,
-            template: $template,
-            children: null
-        );
     }
 }

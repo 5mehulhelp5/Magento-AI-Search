@@ -193,7 +193,7 @@ pie showData title End-to-end processing time distribution
 | **Search-result cache membership invalidation** | Storefront | Essential | ⏳ Open |
 | **Authenticated OpenAI-compatible endpoints** | AI server | Planned | ⏳ Open |
 | **Native Google Gemini API support** | AI server | Planned | ⏳ Open |
-| **Store-view languages for dynamic documents** | Documents | Planned | ⏳ Open |
+| **Store-view languages for dynamic documents** | Documents | Planned | ✅ Complete |
 | **AI server configuration test** | Admin | Planned | ⏳ Open |
 | **Document and chunk Admin grids** | Admin | Planned | ⏳ Open |
 | **Semantic search testing in Admin** | Admin | Planned | ⏳ Open |

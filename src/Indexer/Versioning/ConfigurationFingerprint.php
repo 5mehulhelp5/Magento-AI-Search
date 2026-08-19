@@ -30,12 +30,13 @@ class ConfigurationFingerprint
 
     public function get(): string
     {
+        $indexedStoreIds = $this->indexingScopeConfig->getStoreIdsForIndexing();
         $serializedConfiguration = $this->serializer->serialize([
             'index_alias' => $this->indexName->getAlias(),
             'index_schema_version' => $this->searchConfig->getIndexSchemaVersion(),
-            'indexed_store_ids' => $this->indexingScopeConfig->getStoreIdsForIndexing(),
+            'indexed_store_ids' => $indexedStoreIds,
             'title_attribute_code' => $this->getDocumentTitleAttributeCode(),
-            'embedded_attributes' => $this->getEmbeddedAttributes(),
+            'embedded_attributes' => $this->getEmbeddedAttributesByStoreId($indexedStoreIds),
             'chunking' => [
                 'max_tokens' => $this->embedderConfig->getMaximumChunkTokens(),
                 'overlap_tokens' => $this->embedderConfig->getChunkOverlapTokens(),
@@ -71,17 +72,24 @@ class ConfigurationFingerprint
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @param list<int> $storeIds
+     * @return array<int, list<array<string, mixed>>>
      */
-    private function getEmbeddedAttributes(): array
+    private function getEmbeddedAttributesByStoreId(array $storeIds): array
     {
-        $attributes = [];
+        $attributesByStoreId = [];
 
-        foreach ($this->embeddedAttributesConfig->getAttributes() as $attribute) {
-            $attributes[] = $this->getEmbeddedAttribute($attribute);
+        foreach ($storeIds as $storeId) {
+            $attributes = [];
+
+            foreach ($this->embeddedAttributesConfig->getAttributes($storeId) as $attribute) {
+                $attributes[] = $this->getEmbeddedAttribute($attribute);
+            }
+
+            $attributesByStoreId[$storeId] = $attributes;
         }
 
-        return $attributes;
+        return $attributesByStoreId;
     }
 
     /**

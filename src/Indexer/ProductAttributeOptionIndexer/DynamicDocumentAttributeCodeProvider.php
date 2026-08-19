@@ -10,11 +10,13 @@ namespace DavidBel\AiSearch\Indexer\ProductAttributeOptionIndexer;
 
 use DavidBel\AiSearch\Config\EmbeddedAttribute;
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
+use DavidBel\AiSearch\Config\IndexingScopeConfig;
 
 class DynamicDocumentAttributeCodeProvider
 {
     public function __construct(
-        private readonly EmbeddedAttributesConfig $embeddedAttributesConfig
+        private readonly EmbeddedAttributesConfig $embeddedAttributesConfig,
+        private readonly IndexingScopeConfig $indexingScopeConfig
     ) {
     }
 
@@ -25,8 +27,14 @@ class DynamicDocumentAttributeCodeProvider
     {
         $attributeCodes = [];
 
-        foreach ($this->embeddedAttributesConfig->getAttributes() as $embeddedAttribute) {
-            foreach ($this->getChildAttributeCodes($embeddedAttribute) as $attributeCode) {
+        foreach ($this->indexingScopeConfig->getStoreIdsForIndexing() as $storeId) {
+            $dynamicDocument = $this->embeddedAttributesConfig->getDynamicDocument($storeId);
+
+            if ($dynamicDocument === null) {
+                continue;
+            }
+
+            foreach ($this->getChildAttributeCodes($dynamicDocument) as $attributeCode) {
                 $attributeCodes[$attributeCode] = $attributeCode;
             }
         }

@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Search;
 
-use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
 use DavidBel\AiSearch\Config\SearchResultConfig;
 use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
@@ -20,7 +19,6 @@ class VectorSearch
 {
     public function __construct(
         private readonly OpenSearch $openSearch,
-        private readonly EmbeddedAttributesConfig $embeddedAttributesConfig,
         private readonly SearchResultConfig $searchResultConfig
     ) {
     }
@@ -62,7 +60,6 @@ class VectorSearch
                                 'filter' => [
                                     ['term' => ['source_entity_type' => 'product']],
                                     ['term' => ['store_id' => $storeId]],
-                                    ['terms' => ['source_code' => $this->getAttributeCodes()]],
                                 ],
                             ],
                         ],
@@ -80,20 +77,6 @@ class VectorSearch
         ];
 
         return $query;
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function getAttributeCodes(): array
-    {
-        $attributeCodes = [];
-
-        foreach ($this->embeddedAttributesConfig->getAttributes() as $embeddedAttribute) {
-            $attributeCodes[] = $embeddedAttribute->attributeCode;
-        }
-
-        return $attributeCodes;
     }
 
     /**

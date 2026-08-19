@@ -129,7 +129,8 @@
                  translate="label"
                  type="text"
                  sortOrder="510"
-                 showInDefault="1">
+                 showInDefault="1"
+                 showInStore="1">
             <label>Search Source</label>
             <tab>davidbel</tab>
             <resource>DavidBel_AiSearch::config_search_source</resource>
@@ -267,7 +268,8 @@
                    translate="label"
                    type="text"
                    sortOrder="30"
-                   showInDefault="1">
+                   showInDefault="1"
+                   showInStore="1">
                 <label>Document Configuration</label>
                 <field id="enable_document_title"
                        translate="label tooltip"
@@ -308,6 +310,7 @@
                        type="select"
                        sortOrder="40"
                        showInDefault="1"
+                       showInStore="1"
                        canRestore="1">
                     <label>Enable Dynamic Document</label>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
@@ -317,6 +320,7 @@
                        translate="label tooltip"
                        sortOrder="50"
                        showInDefault="1"
+                       showInStore="1"
                        canRestore="1">
                     <label>Dynamic Document</label>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>

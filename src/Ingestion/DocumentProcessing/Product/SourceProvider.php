@@ -82,7 +82,7 @@ class SourceProvider
             $titleValues
         );
         $templateSources = $this->embeddingTemplate->buildSourcesByProductId(
-            $embeddedAttributes,
+            $this->getDynamicDocumentsByStoreId($eligibleScopes),
             $productIds,
             $eligibleScopes,
             $titleValues
@@ -123,6 +123,35 @@ class SourceProvider
         }
 
         return array_keys($sourceProductIds);
+    }
+
+    /**
+     * @param array<int, list<SourceProvider\Eligibility\EligibleScope>> $eligibleScopes
+     * @return array<int, \DavidBel\AiSearch\Config\EmbeddedAttribute>
+     */
+    private function getDynamicDocumentsByStoreId(array $eligibleScopes): array
+    {
+        $storeIds = [];
+
+        foreach ($eligibleScopes as $productScopes) {
+            foreach ($productScopes as $productScope) {
+                $storeIds[$productScope->storeId] = true;
+            }
+        }
+
+        $dynamicDocuments = [];
+
+        foreach (array_keys($storeIds) as $storeId) {
+            $dynamicDocument = $this->embeddedAttributesConfig->getDynamicDocument($storeId);
+
+            if ($dynamicDocument === null) {
+                continue;
+            }
+
+            $dynamicDocuments[$storeId] = $dynamicDocument;
+        }
+
+        return $dynamicDocuments;
     }
 
     /**

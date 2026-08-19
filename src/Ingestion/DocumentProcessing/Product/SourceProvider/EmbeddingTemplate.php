@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 
-use DavidBel\AiSearch\Config\EmbeddedAttribute;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource\StoreScopedSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\EmbeddingTemplate\AttributeValueResolver;
@@ -24,21 +23,22 @@ class EmbeddingTemplate
     }
 
     /**
-     * @param list<\DavidBel\AiSearch\Config\EmbeddedAttribute> $embeddedAttributes
+     * @param array<int, \DavidBel\AiSearch\Config\EmbeddedAttribute> $dynamicDocumentsByStoreId
      * @param list<int> $productIds
      * @param array<int, list<Eligibility\EligibleScope>> $eligibleScopes
      * @param array<string, string> $titleValues
      * @return array<int, list<DocumentSource>>
      */
     public function buildSourcesByProductId(
-        array $embeddedAttributes,
+        array $dynamicDocumentsByStoreId,
         array $productIds,
         array $eligibleScopes,
         array $titleValues
     ): array {
-        $embeddingTemplates = $this->getEmbeddingTemplates($embeddedAttributes);
         $valuesByAttributeCode = $this->attributeValueResolver->getValuesByAttributeCode(
-            $this->templateRenderer->getAttributeCodes($embeddingTemplates),
+            $this->templateRenderer->getAttributeCodes(
+                array_values($dynamicDocumentsByStoreId)
+            ),
             $this->getSourceProductIds($eligibleScopes),
             $this->getStoreIds($eligibleScopes)
         );
@@ -46,7 +46,7 @@ class EmbeddingTemplate
 
         foreach ($productIds as $productId) {
             $sourcesByProductId[$productId] = $this->buildDocumentSources(
-                $embeddingTemplates,
+                $dynamicDocumentsByStoreId,
                 $productId,
                 $eligibleScopes[$productId] ?? [],
                 $valuesByAttributeCode,
@@ -58,65 +58,51 @@ class EmbeddingTemplate
     }
 
     /**
-     * @param list<\DavidBel\AiSearch\Config\EmbeddedAttribute> $embeddedAttributes
-     * @return list<\DavidBel\AiSearch\Config\EmbeddedAttribute>
-     */
-    private function getEmbeddingTemplates(array $embeddedAttributes): array
-    {
-        $embeddingTemplates = [];
-
-        foreach ($embeddedAttributes as $embeddedAttribute) {
-            if ($embeddedAttribute->children === null) {
-                continue;
-            }
-
-            $embeddingTemplates[] = $embeddedAttribute;
-        }
-
-        return $embeddingTemplates;
-    }
-
-    /**
-     * @param list<\DavidBel\AiSearch\Config\EmbeddedAttribute> $embeddingTemplates
+     * @param array<int, \DavidBel\AiSearch\Config\EmbeddedAttribute> $dynamicDocumentsByStoreId
      * @param list<Eligibility\EligibleScope> $eligibleScopes
      * @param array<string, array<string, list<string>>> $valuesByAttributeCode
      * @param array<string, string> $titleValues
      * @return list<DocumentSource>
      */
     private function buildDocumentSources(
-        array $embeddingTemplates,
+        array $dynamicDocumentsByStoreId,
         int $productId,
         array $eligibleScopes,
         array $valuesByAttributeCode,
         array $titleValues
     ): array {
-        $documentSources = [];
+        $storeScopedSources = $this->buildStoreScopedSources(
+            $dynamicDocumentsByStoreId,
+            $productId,
+            $eligibleScopes,
+            $valuesByAttributeCode,
+            $titleValues
+        );
 
-        foreach ($embeddingTemplates as $embeddingTemplate) {
-            $documentSources[] = new DocumentSource(
-                $embeddingTemplate->attributeCode,
-                $embeddingTemplate->parsingStrategy,
-                $this->buildStoreScopedSources(
-                    $embeddingTemplate,
-                    $productId,
-                    $eligibleScopes,
-                    $valuesByAttributeCode,
-                    $titleValues
-                )
-            );
+        if ($storeScopedSources === []) {
+            return [];
         }
 
-        return $documentSources;
+        $dynamicDocument = $dynamicDocumentsByStoreId[$storeScopedSources[0]->storeId];
+
+        return [
+            new DocumentSource(
+                $dynamicDocument->attributeCode,
+                $dynamicDocument->parsingStrategy,
+                $storeScopedSources
+            ),
+        ];
     }
 
     /**
+     * @param array<int, \DavidBel\AiSearch\Config\EmbeddedAttribute> $dynamicDocumentsByStoreId
      * @param list<Eligibility\EligibleScope> $eligibleScopes
      * @param array<string, array<string, list<string>>> $valuesByAttributeCode
      * @param array<string, string> $titleValues
      * @return list<StoreScopedSource>
      */
     private function buildStoreScopedSources(
-        EmbeddedAttribute $embeddingTemplate,
+        array $dynamicDocumentsByStoreId,
         int $productId,
         array $eligibleScopes,
         array $valuesByAttributeCode,
@@ -125,10 +111,16 @@ class EmbeddingTemplate
         $storeScopedSources = [];
 
         foreach ($eligibleScopes as $eligibleScope) {
+            $dynamicDocument = $dynamicDocumentsByStoreId[$eligibleScope->storeId] ?? null;
+
+            if ($dynamicDocument === null) {
+                continue;
+            }
+
             $storeScopedSources[] = new StoreScopedSource(
                 $eligibleScope->storeId,
                 $this->templateRenderer->render(
-                    $embeddingTemplate,
+                    $dynamicDocument,
                     $productId,
                     $eligibleScope,
                     $valuesByAttributeCode
