@@ -47,37 +47,45 @@ class Documents
                 continue;
             }
 
-            if (!is_array($configuredRow)) {
-                throw new UnexpectedValueException('A Document configuration row must be an array.');
-            }
+            $document = $this->getDocument($configuredRow);
 
-            $attributeCode = $this->getNonEmptyString(
-                $configuredRow['attribute_code'] ?? null,
-                'attribute_code'
-            );
-
-            if (isset($documentCodes[$attributeCode])) {
+            if (isset($documentCodes[$document->attributeCode])) {
                 throw new UnexpectedValueException(
-                    sprintf('Document attribute code "%s" is configured more than once.', $attributeCode)
+                    sprintf(
+                        'Document attribute code "%s" is configured more than once.',
+                        $document->attributeCode
+                    )
                 );
             }
 
-            $documents[] = new EmbeddedAttribute(
-                attributeCode: $attributeCode,
-                composite: $this->getComposite($configuredRow['composite'] ?? null),
-                parsingStrategy: $this->getNonEmptyString(
-                    $configuredRow['parsing_strategy'] ?? null,
-                    'parsing_strategy'
-                ),
-                template: null,
-                children: null
-            );
-            $documentCodes[$attributeCode] = true;
+            $documents[] = $document;
+            $documentCodes[$document->attributeCode] = true;
         }
 
         $this->documents = $documents;
 
         return $this->documents;
+    }
+
+    private function getDocument(mixed $configuredRow): EmbeddedAttribute
+    {
+        if (!is_array($configuredRow)) {
+            throw new UnexpectedValueException('A Document configuration row must be an array.');
+        }
+
+        return new EmbeddedAttribute(
+            attributeCode: $this->getNonEmptyString(
+                $configuredRow['attribute_code'] ?? null,
+                'attribute_code'
+            ),
+            composite: $this->getComposite($configuredRow['composite'] ?? null),
+            parsingStrategy: $this->getNonEmptyString(
+                $configuredRow['parsing_strategy'] ?? null,
+                'parsing_strategy'
+            ),
+            template: null,
+            children: null
+        );
     }
 
     /**
