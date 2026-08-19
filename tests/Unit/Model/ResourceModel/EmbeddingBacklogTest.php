@@ -171,6 +171,9 @@ class EmbeddingBacklogTest extends TestCase
                 'embedding_backlog',
                 [
                     EmbeddingBacklogInterface::STATUS => Status::Done->value,
+                    EmbeddingBacklogInterface::ATTEMPT_COUNT => new Expression(
+                        EmbeddingBacklogInterface::ATTEMPT_COUNT . ' + 1'
+                    ),
                     EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
                 ],
                 self::versionUpdateConditions([10 => 2, 20 => 3])
