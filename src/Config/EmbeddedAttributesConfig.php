@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Config;
 
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig\DynamicDocument;
+use DavidBel\AiSearch\Config\EmbeddedAttributesConfig\Documents;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use UnexpectedValueException;
 
@@ -21,6 +22,7 @@ class EmbeddedAttributesConfig
 
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig,
+        private readonly Documents $documents,
         private readonly DynamicDocument $dynamicDocument
     ) {
     }
@@ -56,7 +58,7 @@ class EmbeddedAttributesConfig
      */
     public function getAttributes(?int $storeId = null): array
     {
-        $attributes = $this->getDocumentAttributes();
+        $attributes = $this->documents->get();
         $dynamicDocument = $this->getDynamicDocument($storeId);
 
         if ($dynamicDocument !== null) {
@@ -69,28 +71,5 @@ class EmbeddedAttributesConfig
     public function getDynamicDocument(?int $storeId = null): ?EmbeddedAttribute
     {
         return $this->dynamicDocument->get($storeId);
-    }
-
-    /**
-     * @return list<EmbeddedAttribute>
-     */
-    private function getDocumentAttributes(): array
-    {
-        return [
-            new EmbeddedAttribute(
-                attributeCode: 'description',
-                composite: true,
-                parsingStrategy: 'html_to_text',
-                template: null,
-                children: null
-            ),
-            new EmbeddedAttribute(
-                attributeCode: 'name',
-                composite: false,
-                parsingStrategy: 'text_as_is',
-                template: null,
-                children: null
-            ),
-        ];
     }
 }
