@@ -185,7 +185,7 @@ pie showData title End-to-end processing time distribution
 | Feature | Area | Priority | Status |
 |---|---|---|---|
 | **Automated index version switching** | Index versioning | Essential | ✅ Complete |
-| **Avoiding duplicate embedding requests for identical chunk text** | Embedding | Essential | ⏳ Open |
+| **Avoiding duplicate embedding requests for identical chunk text** | Embedding | Essential | ✅ Complete |
 | **Removing orphaned documents and chunks after product deletion or visibility changes** | Ingestion | Essential | ✅ Complete |
 | **Handling failed deletion backlog items after the retry threshold** | Operations | Essential | ✅ Complete |
 | **Explicit store-view indexing scope** | Store scope | Essential | ✅ Complete |

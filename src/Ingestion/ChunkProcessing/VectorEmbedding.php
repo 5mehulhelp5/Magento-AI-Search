@@ -9,15 +9,16 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Ingestion\ChunkProcessing;
 
 use DavidBel\AiSearch\Client\Embedding\EmbedderClientInterface;
-use DavidBel\AiSearch\Client\Embedding\EmbeddingInput;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorEmbedding\PromisePool;
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorEmbedding\RequestBatchFactory;
 use Generator;
 
 class VectorEmbedding
 {
     public function __construct(
         private readonly EmbedderClientInterface $embedderClient,
-        private readonly PromisePool $promisePool
+        private readonly PromisePool $promisePool,
+        private readonly RequestBatchFactory $requestBatchFactory
     ) {
     }
 
@@ -45,26 +46,13 @@ class VectorEmbedding
     private function createPromises(iterable $batches): Generator
     {
         foreach ($batches as $batchId => $batch) {
-            yield $batchId => $this->embedderClient->embedDocumentsAsync(
-                $this->getEmbeddingInputs($batch)
-            );
+            $requestBatch = $this->requestBatchFactory->create([
+                'processingBatch' => $batch,
+            ]);
+
+            yield $batchId => $this->embedderClient
+                ->embedDocumentsAsync($requestBatch->getUniqueInputs())
+                ->then([$requestBatch, 'expandVectors']);
         }
-    }
-
-    /**
-     * @return list<EmbeddingInput>
-     */
-    private function getEmbeddingInputs(ProcessingBatch $batch): array
-    {
-        $inputs = [];
-
-        foreach ($batch->getItems() as $item) {
-            $inputs[] = new EmbeddingInput(
-                title: $item->title,
-                text: $item->content
-            );
-        }
-
-        return $inputs;
     }
 }

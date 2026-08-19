@@ -153,6 +153,9 @@ class EmbeddingBacklog extends AbstractDb
             $backlogVersions,
             [
                 EmbeddingBacklogInterface::STATUS => Status::Done->value,
+                EmbeddingBacklogInterface::ATTEMPT_COUNT => new Expression(
+                    EmbeddingBacklogInterface::ATTEMPT_COUNT . ' + 1'
+                ),
                 EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
             ]
         );
