@@ -158,6 +158,12 @@
                    sortOrder="10"
                    showInDefault="1">
                 <label>AI Server</label>
+                <field id="test_embedder_connection"
+                       type="button"
+                       sortOrder="1"
+                       showInDefault="1">
+                    <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\TestEmbedderConnection</frontend_model>
+                </field>
                 <field id="embedding_api_protocol"
                        translate="label tooltip"
                        type="select"
