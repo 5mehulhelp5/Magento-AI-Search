@@ -11,6 +11,7 @@ namespace DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch;
 use DavidBel\AiSearch\Config\SearchConfig;
 use DavidBel\AiSearch\Config\SearchResultConfig;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider\RelatedDocuments;
+use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider\SearchScores;
 use Magento\Backend\Model\UrlInterface;
 use Magento\Catalog\Model\Layer\Resolver;
 use Magento\Store\Api\Data\StoreInterface;
@@ -28,7 +29,8 @@ class ResultProvider
         private readonly UrlInterface $backendUrl,
         private readonly RelatedDocuments $relatedDocuments,
         private readonly SearchResultConfig $searchResultConfig,
-        private readonly SearchConfig $searchConfig
+        private readonly SearchConfig $searchConfig,
+        private readonly SearchScores $searchScores
     ) {
     }
 
@@ -52,6 +54,7 @@ class ResultProvider
      *         name: string,
      *         sku: string,
      *         type: string,
+     *         score: float|null,
      *         edit_url: string,
      *         documents: list<array<string, mixed>>
      *     }>
@@ -90,6 +93,7 @@ class ResultProvider
      *         name: string,
      *         sku: string,
      *         type: string,
+     *         score: float|null,
      *         edit_url: string,
      *         documents: list<array<string, mixed>>
      *     }>
@@ -100,6 +104,8 @@ class ResultProvider
         StoreInterface $store,
         int $storeId
     ): array {
+        $this->searchScores->scoresByProductId = [];
+        $this->searchScores->scoresByChunkId = [];
         $this->layerResolver->create(Resolver::CATALOG_LAYER_SEARCH);
         $collection = $this->layerResolver->get()->getProductCollection();
         $collection->setPageSize(self::RESULT_LIMIT);
@@ -179,6 +185,7 @@ class ResultProvider
      *     name: string,
      *     sku: string,
      *     type: string,
+     *     score: float|null,
      *     edit_url: string,
      *     documents: list<array<string, mixed>>
      * }>
@@ -198,6 +205,7 @@ class ResultProvider
                 'name' => $product->getName(),
                 'sku' => $product->getSku(),
                 'type' => $productType,
+                'score' => $this->searchScores->scoresByProductId[$productId] ?? null,
                 'edit_url' => $this->backendUrl->getUrl(
                     'catalog/product/edit',
                     [
@@ -205,11 +213,73 @@ class ResultProvider
                         'store' => $storeId,
                     ]
                 ),
-                'documents' => $documentsByProductId[$productId] ?? [],
+                'documents' => $this->getDocumentsWithReturnedChunks(
+                    $documentsByProductId[$productId] ?? []
+                ),
             ];
             $position++;
         }
 
         return $products;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $documents
+     * @return list<array<string, mixed>>
+     */
+    private function getDocumentsWithReturnedChunks(array $documents): array
+    {
+        $returnedDocuments = [];
+
+        foreach ($documents as $document) {
+            /**
+             * @var list<array{
+             *     id: int,
+             *     index: int,
+             *     content: string,
+             *     created_at: string|null,
+             *     updated_at: string|null
+             * }> $chunks
+            */
+            $chunks = $document['chunks'];
+            $returnedChunks = $this->getReturnedChunks($chunks);
+
+            if ($returnedChunks === []) {
+                continue;
+            }
+
+            $document['chunks'] = $returnedChunks;
+            $returnedDocuments[] = $document;
+        }
+
+        return $returnedDocuments;
+    }
+
+    /**
+     * @param list<array{
+     *     id: int,
+     *     index: int,
+     *     content: string,
+     *     created_at: string|null,
+     *     updated_at: string|null
+     * }> $chunks
+     * @return list<array<string, mixed>>
+     */
+    private function getReturnedChunks(array $chunks): array
+    {
+        $returnedChunks = [];
+
+        foreach ($chunks as $chunk) {
+            $score = $this->searchScores->scoresByChunkId[$chunk['id']] ?? null;
+
+            if ($score === null) {
+                continue;
+            }
+
+            $chunk['score'] = $score;
+            $returnedChunks[] = $chunk;
+        }
+
+        return $returnedChunks;
     }
 }

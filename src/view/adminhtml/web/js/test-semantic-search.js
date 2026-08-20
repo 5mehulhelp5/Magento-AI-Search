@@ -43,6 +43,11 @@ define([
             .appendTo(chunkElement);
         addDetail(details, $t('Created'), chunk.created_at);
         addDetail(details, $t('Updated'), chunk.updated_at);
+
+        if (typeof chunk.score === 'number') {
+            addDetail(details, $t('Score'), chunk.score.toFixed(4));
+        }
+
         details.appendTo(chunkElement);
         $('<pre>', {'class': 'ai-search-test-chunk-content'})
             .text(chunk.content || '')
@@ -102,6 +107,10 @@ define([
             .text(product.name + ' (ID: ' + product.id + ')')
             .appendTo(title);
         title.appendTo(productElement);
+
+        if (typeof product.score === 'number') {
+            addDetail(details, $t('Highest Score'), product.score.toFixed(4));
+        }
 
         addDetail(details, $t('SKU'), product.sku);
         addDetail(details, $t('Product Type'), product.type);
