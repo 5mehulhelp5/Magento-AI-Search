@@ -70,6 +70,14 @@
                    showInWebsite="1"
                    showInStore="1">
                 <label>Search Relevance</label>
+                <field id="test_semantic_search"
+                       type="button"
+                       sortOrder="1"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1">
+                    <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\TestSemanticSearch</frontend_model>
+                </field>
                 <field id="collapse_results_by_product"
                        translate="label"
                        type="select"
