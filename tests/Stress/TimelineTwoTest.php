@@ -29,15 +29,20 @@ class TimelineTwoTest extends StressTestCase
         $pipelineState = $this->create(PipelineState::class);
         $cronSchedule = $this->create(CronSchedule::class);
         $scheduler = $this->create(CronScheduler::class);
-        $parentIds = $dataset->getConfigurableProductIds();
+        $productIds = $dataset->getSearchableProductIds();
         $initialPendingCount = $pipelineState->getAllBacklogCount(Operation::Upsert, Status::Pending);
 
-        self::assertCount($configuration->getConfigurableProductCount(), $parentIds);
-        self::assertGreaterThan(0, $pipelineState->getChunkCount($parentIds));
+        self::assertCount(
+            $configuration->usesStandaloneSimpleProducts()
+                ? $configuration->getSimpleProductCount()
+                : $configuration->getConfigurableProductCount(),
+            $productIds
+        );
+        self::assertGreaterThan(0, $pipelineState->getChunkCount($productIds));
         self::assertGreaterThan(0, $initialPendingCount);
         $cronSchedule->reset();
 
-        $result = $scheduler->run($pipelineState, $parentIds);
+        $result = $scheduler->run($pipelineState, $productIds);
         $scheduleRecords = $cronSchedule->getRecords();
         $metrics = $this->create(Metrics::class)->calculate(
             $scheduleRecords,
@@ -48,7 +53,7 @@ class TimelineTwoTest extends StressTestCase
         );
         $this->recordMeasurements(
             $pipelineState,
-            $parentIds,
+            $productIds,
             $initialPendingCount,
             $result->observedFrom,
             $result->observedUntil,
@@ -58,7 +63,7 @@ class TimelineTwoTest extends StressTestCase
             $scheduleRecords
         );
 
-        $this->assertSuccessfulResult($pipelineState, $parentIds, $result, $metrics);
+        $this->assertSuccessfulResult($pipelineState, $productIds, $result, $metrics);
     }
 
     /**

@@ -16,7 +16,7 @@ use Magento\ConfigurableProduct\Api\LinkManagementInterface;
 
 class DatasetCreationTest extends StressTestCase
 {
-    public function testCreatesDeterministicConfigurableProductDataset(): void
+    public function testCreatesDeterministicProductDataset(): void
     {
         $startedAt = microtime(true);
         $dataset = $this->create(CatalogDataset::class);
@@ -31,8 +31,7 @@ class DatasetCreationTest extends StressTestCase
             $dataset->getConfigurableProductIds()
         );
         self::assertCount(
-            $configuration->getConfigurableProductCount()
-                * $configuration->getSimpleProductsPerConfigurable(),
+            $configuration->getSimpleProductCount(),
             $dataset->getSimpleProductIds()
         );
         $this->assertConfigurableRelations($dataset);

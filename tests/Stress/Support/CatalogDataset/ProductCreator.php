@@ -47,6 +47,14 @@ class ProductCreator
         return $this->saveAndGetId($product);
     }
 
+    public function createStandaloneSimple(string $sku, string $name, int $sequence): int
+    {
+        $product = $this->createProduct($sku, $name, Type::TYPE_SIMPLE, Visibility::VISIBILITY_BOTH);
+        $product->setPrice(100 + $sequence);
+
+        return $this->saveAndGetId($product);
+    }
+
     /**
      * @param list<int> $childIds
      * @param list<int> $optionIds

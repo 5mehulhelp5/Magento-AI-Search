@@ -10,6 +10,7 @@ namespace DavidBel\AiSearch\Tests\Stress;
 
 use DavidBel\AiSearch\Indexer\ProductIndexer;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
+use DavidBel\AiSearch\Tests\Stress\Support\BacklogScope;
 use DavidBel\AiSearch\Tests\Stress\Support\CatalogDataset;
 use DavidBel\AiSearch\Tests\Stress\Support\Measurement;
 use DavidBel\AiSearch\Tests\Stress\Support\PipelineState;
@@ -24,37 +25,34 @@ class TimelineOneTest extends StressTestCase
         $dataset = $this->create(CatalogDataset::class);
         $configuration = $this->create(StressConfiguration::class);
         $pipelineState = $this->create(PipelineState::class);
-        $parentIds = $dataset->getConfigurableProductIds();
-        $childIds = $dataset->getSimpleProductIds();
+        $searchableProductIds = $dataset->getSearchableProductIds();
+        $nonSearchableProductIds = $configuration->usesStandaloneSimpleProducts()
+            ? []
+            : $dataset->getSimpleProductIds();
 
-        self::assertCount($configuration->getConfigurableProductCount(), $parentIds);
-        self::assertCount(
-            $configuration->getConfigurableProductCount()
-                * $configuration->getSimpleProductsPerConfigurable(),
-            $childIds
+        $this->assertDatasetCounts(
+            $configuration,
+            $searchableProductIds,
+            $nonSearchableProductIds
         );
 
         $indexer = $this->get(IndexerRegistry::class)->get(ProductIndexer::ID);
         $indexer->reindexAll();
 
-        self::assertTrue($indexer->isValid());
-        self::assertGreaterThanOrEqual(20, $pipelineState->getDocumentCount($parentIds));
-        self::assertSame(0, $pipelineState->getDocumentCount($childIds));
-        self::assertContains('description', $pipelineState->getSourceCodes($parentIds));
-        self::assertContains('name', $pipelineState->getSourceCodes($parentIds));
+        if ($configuration->usesStandaloneSimpleProducts()) {
+            $this->create(BacklogScope::class)->keepOnlyProductIds($searchableProductIds);
+        }
 
-        $descriptionChunkCount = $pipelineState->getChunkCount($parentIds, 'description');
-        $totalChunkCount = $pipelineState->getChunkCount($parentIds);
-        self::assertGreaterThan(count($parentIds), $descriptionChunkCount);
-        self::assertGreaterThan($descriptionChunkCount, $totalChunkCount);
-        self::assertSame(
-            $totalChunkCount,
-            $pipelineState->getBacklogCount($parentIds, Operation::Upsert)
+        self::assertTrue($indexer->isValid());
+        $totalChunkCount = $this->assertProcessedState(
+            $pipelineState,
+            $searchableProductIds,
+            $nonSearchableProductIds
         );
         $duration = microtime(true) - $startedAt;
         $this->create(Measurement::class)->recordStage('timeline_one', [
             'duration_seconds' => round($duration, 3),
-            'stress_documents' => $pipelineState->getDocumentCount($parentIds),
+            'stress_documents' => $pipelineState->getDocumentCount($searchableProductIds),
             'stress_chunks' => $totalChunkCount,
             'stress_chunks_per_second' => round($totalChunkCount / $duration, 3),
             'all_documents' => $pipelineState->getAllDocumentCount(),
@@ -62,5 +60,57 @@ class TimelineOneTest extends StressTestCase
             'all_backlog' => $pipelineState->getAllBacklogCount(),
             'peak_memory_bytes' => memory_get_peak_usage(true),
         ]);
+    }
+
+    /**
+     * @param list<int> $searchableProductIds
+     * @param list<int> $nonSearchableProductIds
+     */
+    private function assertDatasetCounts(
+        StressConfiguration $configuration,
+        array $searchableProductIds,
+        array $nonSearchableProductIds
+    ): void {
+        self::assertCount(
+            $configuration->usesStandaloneSimpleProducts()
+                ? $configuration->getSimpleProductCount()
+                : $configuration->getConfigurableProductCount(),
+            $searchableProductIds
+        );
+        self::assertCount(
+            $configuration->usesStandaloneSimpleProducts()
+                ? 0
+                : $configuration->getSimpleProductCount(),
+            $nonSearchableProductIds
+        );
+    }
+
+    /**
+     * @param list<int> $searchableProductIds
+     * @param list<int> $nonSearchableProductIds
+     */
+    private function assertProcessedState(
+        PipelineState $pipelineState,
+        array $searchableProductIds,
+        array $nonSearchableProductIds
+    ): int {
+        self::assertGreaterThanOrEqual(
+            count($searchableProductIds) * 2,
+            $pipelineState->getDocumentCount($searchableProductIds)
+        );
+        self::assertSame(0, $pipelineState->getDocumentCount($nonSearchableProductIds));
+        self::assertContains('description', $pipelineState->getSourceCodes($searchableProductIds));
+        self::assertContains('name', $pipelineState->getSourceCodes($searchableProductIds));
+
+        $descriptionChunkCount = $pipelineState->getChunkCount($searchableProductIds, 'description');
+        $totalChunkCount = $pipelineState->getChunkCount($searchableProductIds);
+        self::assertGreaterThan(count($searchableProductIds), $descriptionChunkCount);
+        self::assertGreaterThan($descriptionChunkCount, $totalChunkCount);
+        self::assertSame(
+            $totalChunkCount,
+            $pipelineState->getBacklogCount($searchableProductIds, Operation::Upsert)
+        );
+
+        return $totalChunkCount;
     }
 }

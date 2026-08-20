@@ -38,6 +38,12 @@ class CatalogDataset
             throw new RuntimeException('Stress-test catalog data already exists. Run the cleanup stage first.');
         }
 
+        if ($this->configuration->usesStandaloneSimpleProducts()) {
+            $this->createStandaloneSimpleProducts();
+
+            return;
+        }
+
         $attribute = $this->configurableAttribute->create();
         $optionIds = $this->configurableAttribute->getOptionIds($attribute);
         $configurableProductCount = $this->configuration->getConfigurableProductCount();
@@ -108,6 +114,18 @@ class CatalogDataset
     public function getSimpleProductIds(): array
     {
         return $this->getProductIdsByType(Product\Type::TYPE_SIMPLE);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getSearchableProductIds(): array
+    {
+        if ($this->configuration->usesStandaloneSimpleProducts()) {
+            return $this->getSimpleProductIds();
+        }
+
+        return $this->getConfigurableProductIds();
     }
 
     /**
@@ -183,6 +201,20 @@ class CatalogDataset
         }
     }
 
+    private function createStandaloneSimpleProducts(): void
+    {
+        $productCount = $this->configuration->getTotalProductCount();
+
+        for ($productNumber = 1; $productNumber <= $productCount; $productNumber++) {
+            $sku = $this->getStandaloneSimpleSku($productNumber);
+            $this->productCreator->createStandaloneSimple(
+                $sku,
+                sprintf('AI Search Stress Simple %04d', $productNumber),
+                $productNumber
+            );
+        }
+    }
+
     /**
      * @return list<int>
      */
@@ -219,5 +251,10 @@ class CatalogDataset
     private function getSimpleSku(int $parentNumber, int $childNumber): string
     {
         return sprintf('%ssimple-%04d-%02d', self::SKU_PREFIX, $parentNumber, $childNumber);
+    }
+
+    private function getStandaloneSimpleSku(int $productNumber): string
+    {
+        return sprintf('%ssimple-%04d', self::SKU_PREFIX, $productNumber);
     }
 }

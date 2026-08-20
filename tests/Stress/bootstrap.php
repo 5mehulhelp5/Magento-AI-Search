@@ -8,4 +8,14 @@ declare(strict_types=1);
 
 use DavidBel\AiSearch\Tests\Stress\MagentoEnvironment;
 
+$magentoRoot = realpath(__DIR__ . '/../../../..');
+
+if ($magentoRoot === false) {
+    throw new RuntimeException('The Magento root directory could not be resolved.');
+}
+
+/** @var \Composer\Autoload\ClassLoader $autoloader */
+$autoloader = require $magentoRoot . '/vendor/autoload.php';
+$autoloader->addPsr4('DavidBel\\AiSearch\\Tests\\', dirname(__DIR__) . '/');
+
 MagentoEnvironment::initialize();

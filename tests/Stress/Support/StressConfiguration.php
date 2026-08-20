@@ -14,10 +14,15 @@ class StressConfiguration
 {
     private const int DEFAULT_CONFIGURABLE_PRODUCT_COUNT = 100;
     private const int SIMPLE_PRODUCTS_PER_CONFIGURABLE = 9;
+    private const int DEFAULT_STANDALONE_SIMPLE_PRODUCT_COUNT = 0;
     private const string DEFAULT_RUN_LABEL = 'scheduler_100x9';
 
     public function getConfigurableProductCount(): int
     {
+        if ($this->usesStandaloneSimpleProducts()) {
+            return 0;
+        }
+
         return $this->getPositiveInteger(
             'AI_SEARCH_STRESS_CONFIGURABLES',
             self::DEFAULT_CONFIGURABLE_PRODUCT_COUNT
@@ -26,13 +31,35 @@ class StressConfiguration
 
     public function getSimpleProductsPerConfigurable(): int
     {
+        if ($this->usesStandaloneSimpleProducts()) {
+            return 0;
+        }
+
         return self::SIMPLE_PRODUCTS_PER_CONFIGURABLE;
     }
 
     public function getTotalProductCount(): int
     {
+        if ($this->usesStandaloneSimpleProducts()) {
+            return $this->getStandaloneSimpleProductCount();
+        }
+
         return $this->getConfigurableProductCount()
             * (self::SIMPLE_PRODUCTS_PER_CONFIGURABLE + 1);
+    }
+
+    public function getSimpleProductCount(): int
+    {
+        if ($this->usesStandaloneSimpleProducts()) {
+            return $this->getStandaloneSimpleProductCount();
+        }
+
+        return $this->getConfigurableProductCount() * self::SIMPLE_PRODUCTS_PER_CONFIGURABLE;
+    }
+
+    public function usesStandaloneSimpleProducts(): bool
+    {
+        return $this->getStandaloneSimpleProductCount() > 0;
     }
 
     public function getRunLabel(): string
@@ -66,6 +93,25 @@ class StressConfiguration
 
         if (!is_int($integer) || $integer < 1) {
             throw new UnexpectedValueException(sprintf('%s must be a positive integer.', $name));
+        }
+
+        return $integer;
+    }
+
+    private function getStandaloneSimpleProductCount(): int
+    {
+        $value = getenv('AI_SEARCH_STRESS_SIMPLE_PRODUCTS');
+
+        if ($value === false || $value === '') {
+            return self::DEFAULT_STANDALONE_SIMPLE_PRODUCT_COUNT;
+        }
+
+        $integer = filter_var($value, FILTER_VALIDATE_INT);
+
+        if (!is_int($integer) || $integer < 1) {
+            throw new UnexpectedValueException(
+                'AI_SEARCH_STRESS_SIMPLE_PRODUCTS must be a positive integer.'
+            );
         }
 
         return $integer;

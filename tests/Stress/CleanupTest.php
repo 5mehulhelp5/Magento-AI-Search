@@ -26,7 +26,7 @@ class CleanupTest extends StressTestCase
         $dataset = $this->create(CatalogDataset::class);
         $pipelineState = $this->create(PipelineState::class);
         $productIds = $dataset->getAllProductIds();
-        $parentIds = $dataset->getConfigurableProductIds();
+        $searchableProductIds = $dataset->getSearchableProductIds();
 
         try {
             $dataset->removeCatalogData();
@@ -37,7 +37,7 @@ class CleanupTest extends StressTestCase
                 $this->processDeletions($pipelineState, $productIds);
             }
 
-            self::assertSame(0, $pipelineState->getRemoteDocumentCount($parentIds));
+            self::assertSame(0, $pipelineState->getRemoteDocumentCount($searchableProductIds));
             self::assertSame(0, $pipelineState->getDocumentCount($productIds));
             self::assertSame(0, $pipelineState->getChunkCount($productIds));
             self::assertSame(

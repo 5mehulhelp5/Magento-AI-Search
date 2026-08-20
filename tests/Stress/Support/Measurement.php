@@ -98,7 +98,13 @@ class Measurement
     {
         return [
             'run_label' => $this->configuration->getRunLabel(),
+            'dataset_type' => $this->configuration->usesStandaloneSimpleProducts()
+                ? 'standalone_simple'
+                : 'configurable',
             'configurable_products' => $this->configuration->getConfigurableProductCount(),
+            'standalone_simple_products' => $this->configuration->usesStandaloneSimpleProducts()
+                ? $this->configuration->getSimpleProductCount()
+                : 0,
             'simple_products_per_configurable' =>
                 $this->configuration->getSimpleProductsPerConfigurable(),
             'total_products' => $this->configuration->getTotalProductCount(),
