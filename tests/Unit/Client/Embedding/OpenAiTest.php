@@ -72,6 +72,19 @@ class OpenAiTest extends TestCase
         );
     }
 
+    public function testAddsConfiguredBearerTokenToRequest(): void
+    {
+        $this->createOpenAi(
+            $this->createSuccessfulHttpClient('secret'),
+            $this->createSuccessfulSerializer(),
+            'secret'
+        )
+            ->embedDocumentsAsync(
+                $this->createInputs(['first input', 'second input'])
+            )
+            ->wait();
+    }
+
     private function createSuccessfulSerializer(): SerializerInterface&MockObject
     {
         $serializer = $this->createMock(SerializerInterface::class);
@@ -103,8 +116,18 @@ class OpenAiTest extends TestCase
         return $serializer;
     }
 
-    private function createSuccessfulHttpClient(): ClientInterface&MockObject
-    {
+    private function createSuccessfulHttpClient(
+        ?string $bearerToken = null
+    ): ClientInterface&MockObject {
+        $headers = [
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ];
+
+        if ($bearerToken !== null) {
+            $headers['Authorization'] = 'Bearer ' . $bearerToken;
+        }
+
         $httpClient = $this->createMock(ClientInterface::class);
         $httpClient->expects(self::once())
             ->method('requestAsync')
@@ -113,10 +136,7 @@ class OpenAiTest extends TestCase
                 'http://host.docker.internal:1234/v1/embeddings',
                 [
                     RequestOptions::BODY => 'serialized request',
-                    RequestOptions::HEADERS => [
-                        'Accept' => 'application/json',
-                        'Content-Type' => 'application/json',
-                    ],
+                    RequestOptions::HEADERS => $headers,
                     RequestOptions::HTTP_ERRORS => false,
                     RequestOptions::TIMEOUT => 60,
                 ]
@@ -320,11 +340,13 @@ class OpenAiTest extends TestCase
 
     private function createOpenAi(
         ClientInterface $httpClient,
-        SerializerInterface $serializer
+        SerializerInterface $serializer,
+        ?string $bearerToken = null
     ): OpenAi {
         $config = self::createStub(EmbedderConfig::class);
-        $config->method('getBaseUrl')
-            ->willReturn('http://host.docker.internal:1234');
+        $config->method('getEmbeddingEndpoint')
+            ->willReturn('http://host.docker.internal:1234/v1/embeddings');
+        $config->method('getBearerToken')->willReturn($bearerToken);
         $config->method('getEmbeddingModel')->willReturn(self::MODEL);
         $config->method('getVectorDimensions')->willReturn(self::VECTOR_DIMENSIONS);
         $config->method('getRequestTimeoutSeconds')->willReturn(60);
