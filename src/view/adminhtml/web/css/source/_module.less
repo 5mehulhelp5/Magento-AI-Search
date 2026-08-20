@@ -1,0 +1,89 @@
+/**
+ * davidbel/magento-ai-search by David Belicza
+ * SPDX-License-Identifier: MIT
+ * https://github.com/DavidBelicza/Magento-AI-Search
+ */
+
+.ai-search-test-modal {
+    .modal-inner-wrap {
+        max-width: 110rem;
+    }
+
+    .ai-search-test-form {
+        align-items: flex-end;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .ai-search-test-field {
+        display: flex;
+        flex: 1 1 30rem;
+        flex-direction: column;
+        gap: .5rem;
+    }
+
+    .ai-search-test-results {
+        margin-top: 2rem;
+    }
+
+    .ai-search-test-configuration {
+        color: @color-gray40;
+        font-size: 1.1rem;
+        line-height: 1.4;
+        margin: .75rem 0 1.5rem;
+
+        .ai-search-test-details {
+            margin: .25rem 0 0;
+        }
+    }
+
+    .ai-search-test-product {
+        border-top: 1px solid @color-gray80;
+        padding: 1.5rem 0;
+    }
+
+    .ai-search-test-product-title {
+        margin: 0 0 .75rem;
+    }
+
+    .ai-search-test-details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .ai-search-test-detail {
+        display: inline-block;
+    }
+
+    .ai-search-test-document,
+    .ai-search-test-chunk {
+        border: 1px solid @color-gray84;
+        margin-top: .75rem;
+        padding: 1rem;
+    }
+
+    summary {
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .ai-search-test-chunk-content,
+    .ai-search-test-error {
+        background: @color-white-smoke;
+        border: 1px solid @color-light-gray;
+        margin: 1rem 0 0;
+        max-height: 30rem;
+        overflow: auto;
+        padding: 1rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .ai-search-test-note {
+        margin-top: 2rem;
+    }
+}
