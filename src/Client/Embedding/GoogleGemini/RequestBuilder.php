@@ -13,12 +13,13 @@ use DavidBel\AiSearch\Client\Embedding\Base\EmbeddingInput;
 class RequestBuilder
 {
     private const string DOCUMENT_TASK_TYPE = 'RETRIEVAL_DOCUMENT';
+    private const string QUERY_TASK_TYPE = 'RETRIEVAL_QUERY';
 
     /**
      * @param list<EmbeddingInput> $inputs
      * @return array{requests: list<array<string, mixed>>}
      */
-    public function execute(
+    public function buildDocumentRequestBody(
         array $inputs,
         string $embeddingModel,
         int $vectorDimensions,
@@ -37,6 +38,36 @@ class RequestBuilder
         }
 
         return ['requests' => $requests];
+    }
+
+    /**
+     * @return array{requests: list<array<string, mixed>>}
+     */
+    public function buildQueryRequestBody(
+        string $queryText,
+        string $embeddingModel,
+        int $vectorDimensions,
+        string $queryTemplate
+    ): array {
+        return [
+            'requests' => [
+                [
+                    'model' => $this->getModelResourceName($embeddingModel),
+                    'content' => [
+                        'parts' => [
+                            [
+                                'text' => strtr(
+                                    $queryTemplate,
+                                    ['{text}' => $queryText]
+                                ),
+                            ],
+                        ],
+                    ],
+                    'taskType' => self::QUERY_TASK_TYPE,
+                    'outputDimensionality' => $vectorDimensions,
+                ],
+            ],
+        ];
     }
 
     /**

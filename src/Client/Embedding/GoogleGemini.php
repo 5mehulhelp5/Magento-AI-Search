@@ -19,7 +19,6 @@ use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\RequestOptions;
 use Magento\Framework\Serialize\SerializerInterface;
-use RuntimeException;
 use UnexpectedValueException;
 
 class GoogleGemini implements EmbedderClientInterface
@@ -43,6 +42,52 @@ class GoogleGemini implements EmbedderClientInterface
             return Create::promiseFor([]);
         }
 
+        $vectorDimensions = $this->embedderConfig->getVectorDimensions();
+        $requestBody = $this->requestBuilder->buildDocumentRequestBody(
+            $inputs,
+            $this->embedderConfig->getEmbeddingModel(),
+            $vectorDimensions,
+            $this->embedderConfig->getEmbedderDocumentTemplate()
+        );
+
+        return $this->sendAsync(
+            $requestBody,
+            $this->embedderConfig->getEmbeddingModel(),
+            $vectorDimensions,
+            count($inputs),
+            $this->embedderConfig->getRequestTimeoutSeconds()
+        );
+    }
+
+    public function embedQueryAsync(
+        string $queryText,
+        int $requestTimeoutSeconds,
+        QueryConfigurationSnapshot $configurationSnapshot
+    ): PromiseInterface {
+        return $this->sendAsync(
+            $this->requestBuilder->buildQueryRequestBody(
+                $queryText,
+                $configurationSnapshot->embeddingModel,
+                $configurationSnapshot->vectorDimensions,
+                $configurationSnapshot->queryTemplate
+            ),
+            $configurationSnapshot->embeddingModel,
+            $configurationSnapshot->vectorDimensions,
+            1,
+            $requestTimeoutSeconds
+        );
+    }
+
+    /**
+     * @param array{requests: list<array<string, mixed>>} $requestBody
+     */
+    private function sendAsync(
+        array $requestBody,
+        string $embeddingModel,
+        int $vectorDimensions,
+        int $inputCount,
+        int $requestTimeoutSeconds
+    ): PromiseInterface {
         $apiKey = $this->embedderConfig->getApiKey();
 
         if ($apiKey === null) {
@@ -51,15 +96,7 @@ class GoogleGemini implements EmbedderClientInterface
             );
         }
 
-        $vectorDimensions = $this->embedderConfig->getVectorDimensions();
-        $payload = $this->serializer->serialize(
-            $this->requestBuilder->execute(
-                $inputs,
-                $this->embedderConfig->getEmbeddingModel(),
-                $vectorDimensions,
-                $this->embedderConfig->getEmbedderDocumentTemplate()
-            )
-        );
+        $payload = $this->serializer->serialize($requestBody);
 
         if (!is_string($payload)) {
             throw new UnexpectedValueException('Embedding request could not be serialized.');
@@ -67,14 +104,14 @@ class GoogleGemini implements EmbedderClientInterface
 
         $responseDecoder = $this->responseDecoderFactory->create([
             'vectorDimensions' => $vectorDimensions,
-            'inputCount' => count($inputs),
+            'inputCount' => $inputCount,
         ]);
 
         return $this->client->requestAsync(
             'POST',
             $this->endpointBuilder->getBatchEmbeddingEndpoint(
                 $this->embedderConfig->getEmbeddingEndpoint(),
-                $this->embedderConfig->getEmbeddingModel()
+                $embeddingModel
             ),
             [
                 RequestOptions::BODY => $payload,
@@ -84,16 +121,8 @@ class GoogleGemini implements EmbedderClientInterface
                     'x-goog-api-key' => $apiKey,
                 ],
                 RequestOptions::HTTP_ERRORS => false,
-                RequestOptions::TIMEOUT => $this->embedderConfig->getRequestTimeoutSeconds(),
+                RequestOptions::TIMEOUT => $requestTimeoutSeconds,
             ]
         )->then([$responseDecoder, 'execute']);
-    }
-
-    public function embedQueryAsync(
-        string $queryText,
-        int $requestTimeoutSeconds,
-        QueryConfigurationSnapshot $configurationSnapshot
-    ): PromiseInterface {
-        throw new RuntimeException('Google Gemini native query embedding is not implemented.');
     }
 }

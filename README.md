@@ -192,7 +192,7 @@ pie showData title End-to-end processing time distribution
 | **Attribute change detection for documents dependent on complex attributes** | Documents | Essential | ✅ Complete |
 | **Search-result cache membership invalidation** | Storefront | Essential | ✅ Complete |
 | **Authenticated OpenAI-compatible endpoints** | AI server | Planned | ✅ Complete |
-| **Native Google Gemini API support** | AI server | Planned | ⏳ Open |
+| **Native Google Gemini API support** | AI server | Planned | ✅ Complete |
 | **Store-view languages for dynamic documents** | Documents | Planned | ✅ Complete |
 | **AI server configuration test** | Admin | Planned | ⏳ Open |
 | **Document and chunk Admin grids** | Admin | Planned | ⏳ Open |
