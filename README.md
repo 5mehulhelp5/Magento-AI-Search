@@ -115,8 +115,8 @@ distribution normally used with Magento.
 | Feature | Current support |
 |---|---|
 | Embedding models | ✅ Any model exposed through a supported endpoint (OpenAI text-embedding, Gemini Embedding, EmbeddingGemma, Cohere Embed, Voyage, Jina Embeddings, BGE, E5, GTE, Nomic Embed, Qwen Embedding, Mistral Embed, etc.) |
-| API protocol | ✅ OpenAI-compatible APIs<br>✅ Configurable embedding endpoint URLs<br>✅ OpenAI hosted API<br>✅ Google Gemini OpenAI-compatible API<br>✅ LM Studio<br>✅ Ollama<br>✅ llama.cpp<br>🚧 Google Gemini native API planned |
-| Authentication | ✅ Unauthenticated endpoints<br>✅ Bearer-token authentication<br>✅ Google Gemini OpenAI-compatible API keys<br>🚧 Google Gemini native API-key authentication planned |
+| API protocol | ✅ OpenAI-compatible APIs<br>✅ Configurable embedding endpoint URLs<br>✅ OpenAI hosted API<br>✅ Google Gemini OpenAI-compatible API<br>✅ LM Studio<br>✅ Ollama<br>✅ llama.cpp<br>✅ Google Gemini native API |
+| Authentication | ✅ Unauthenticated endpoints<br>✅ Bearer-token authentication<br>✅ Google Gemini OpenAI-compatible API keys<br>✅ Google Gemini native API-key authentication |
 
 ## 📦 Install
 
@@ -198,3 +198,4 @@ pie showData title End-to-end processing time distribution
 | **Document and chunk Admin grids** | Admin | Planned | ⏳ Open |
 | **Semantic search testing in Admin** | Admin | Planned | ⏳ Open |
 | **Headless GraphQL semantic search support** | GraphQL | Planned | ⏳ Open |
+| **Progress and error observability** | Operations | Planned | ⏳ Open |
