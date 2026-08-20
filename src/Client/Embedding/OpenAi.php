@@ -100,16 +100,22 @@ class OpenAi implements EmbedderClientInterface
             'vectorDimensions' => $vectorDimensions,
             'inputCount' => count($inputs),
         ]);
+        $headers = [
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ];
+        $bearerToken = $this->embedderConfig->getBearerToken();
+
+        if ($bearerToken !== null) {
+            $headers['Authorization'] = 'Bearer ' . $bearerToken;
+        }
 
         return $this->client->requestAsync(
             'POST',
-            $this->embedderConfig->getBaseUrl() . '/v1/embeddings',
+            $this->embedderConfig->getEmbeddingEndpoint(),
             [
                 RequestOptions::BODY => $payload,
-                RequestOptions::HEADERS => [
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
-                ],
+                RequestOptions::HEADERS => $headers,
                 RequestOptions::HTTP_ERRORS => false,
                 RequestOptions::TIMEOUT => $requestTimeoutSeconds,
             ]

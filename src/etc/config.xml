@@ -12,7 +12,8 @@
                 <indexed_store_views/>
             </indexing_scope>
             <ai_server>
-                <base_url>http://host.docker.internal:1234</base_url>
+                <embedding_endpoint>http://host.docker.internal:1234/v1/embeddings</embedding_endpoint>
+                <bearer_token/>
                 <embedding_model>text-embedding-embeddinggemma-300m-qat</embedding_model>
                 <vector_dimensions>768</vector_dimensions>
                 <request_timeout_seconds>60</request_timeout_seconds>

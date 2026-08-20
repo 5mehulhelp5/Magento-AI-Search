@@ -13,8 +13,10 @@ use UnexpectedValueException;
 
 class EmbedderConfig
 {
-    private const string XML_PATH_BASE_URL =
-        'davidbel_ai_search_search_source/ai_server/base_url';
+    private const string XML_PATH_EMBEDDING_ENDPOINT =
+        'davidbel_ai_search_search_source/ai_server/embedding_endpoint';
+    private const string XML_PATH_BEARER_TOKEN =
+        'davidbel_ai_search_search_source/ai_server/bearer_token';
     private const string XML_PATH_EMBEDDING_MODEL =
         'davidbel_ai_search_search_source/ai_server/embedding_model';
     private const string XML_PATH_VECTOR_DIMENSIONS =
@@ -35,9 +37,29 @@ class EmbedderConfig
     ) {
     }
 
-    public function getBaseUrl(): string
+    public function getEmbeddingEndpoint(): string
     {
-        return $this->getStringValue(self::XML_PATH_BASE_URL);
+        return $this->getStringValue(self::XML_PATH_EMBEDDING_ENDPOINT);
+    }
+
+    public function getBearerToken(): ?string
+    {
+        $value = $this->scopeConfig->getValue(self::XML_PATH_BEARER_TOKEN);
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (!is_string($value)) {
+            throw new UnexpectedValueException(
+                sprintf(
+                    'Configuration path "%s" must contain a string.',
+                    self::XML_PATH_BEARER_TOKEN
+                )
+            );
+        }
+
+        return $value;
     }
 
     public function getEmbeddingModel(): string
