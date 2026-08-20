@@ -110,6 +110,14 @@ sequenceDiagram
 OpenSearch must include the k-NN plugin, which is bundled with the standard OpenSearch
 distribution normally used with Magento.
 
+### Storefront
+
+| Storefront | Status |
+|---|---|
+| Luma | ✅ Supported |
+| Hyvä | 🧪 To be tested |
+| Headless (GraphQL) | 🧪 To be tested |
+
 ### AI server
 
 | Feature | Current support |
@@ -194,8 +202,8 @@ pie showData title End-to-end processing time distribution
 | **Authenticated OpenAI-compatible endpoints** | AI server | Planned | ✅ Complete |
 | **Native Google Gemini API support** | AI server | Planned | ✅ Complete |
 | **Store-view languages for dynamic documents** | Documents | Planned | ✅ Complete |
-| **AI server configuration test** | Admin | Planned | ⏳ Open |
+| **AI server configuration test** | Admin | Planned | ✅ Complete |
 | **Document and chunk Admin grids** | Admin | Planned | ⏳ Open |
-| **Semantic search testing in Admin** | Admin | Planned | ⏳ Open |
+| **Semantic search testing in Admin** | Admin | Planned | ✅ Complete |
 | **Headless GraphQL semantic search support** | GraphQL | Planned | ⏳ Open |
 | **Progress and error observability** | Operations | Planned | ⏳ Open |
