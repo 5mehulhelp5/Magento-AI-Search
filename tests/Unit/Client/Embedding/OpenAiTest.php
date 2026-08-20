@@ -9,12 +9,12 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Client\Embedding;
 
 use DavidBel\AiSearch\Client\Embedding\OpenAi;
-use DavidBel\AiSearch\Client\Embedding\EmbeddingInput;
+use DavidBel\AiSearch\Client\Embedding\Base\EmbeddingInput;
 use DavidBel\AiSearch\Client\Embedding\OpenAi\ResponseDecoder;
 use DavidBel\AiSearch\Client\Embedding\OpenAi\ResponseDecoderFactory;
 use DavidBel\AiSearch\Config\EmbedderConfig;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
-use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Client;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\RequestOptions;
 use GuzzleHttp\Psr7\Response;
@@ -38,7 +38,7 @@ class OpenAiTest extends TestCase
 
     public function testReturnsAResolvedPromiseForEmptyInputs(): void
     {
-        $httpClient = $this->createMock(ClientInterface::class);
+        $httpClient = $this->createMock(Client::class);
         $httpClient->expects(self::never())
             ->method('requestAsync');
         $serializer = $this->createMock(SerializerInterface::class);
@@ -72,7 +72,7 @@ class OpenAiTest extends TestCase
         );
     }
 
-    public function testAddsConfiguredBearerTokenToRequest(): void
+    public function testAddsConfiguredApiKeyAsBearerTokenToRequest(): void
     {
         $this->createOpenAi(
             $this->createSuccessfulHttpClient('secret'),
@@ -117,18 +117,18 @@ class OpenAiTest extends TestCase
     }
 
     private function createSuccessfulHttpClient(
-        ?string $bearerToken = null
-    ): ClientInterface&MockObject {
+        ?string $apiKey = null
+    ): Client&MockObject {
         $headers = [
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
         ];
 
-        if ($bearerToken !== null) {
-            $headers['Authorization'] = 'Bearer ' . $bearerToken;
+        if ($apiKey !== null) {
+            $headers['Authorization'] = 'Bearer ' . $apiKey;
         }
 
-        $httpClient = $this->createMock(ClientInterface::class);
+        $httpClient = $this->createMock(Client::class);
         $httpClient->expects(self::once())
             ->method('requestAsync')
             ->with(
@@ -152,7 +152,7 @@ class OpenAiTest extends TestCase
 
     public function testRejectsAnUnserializableRequestBeforeSendingIt(): void
     {
-        $httpClient = $this->createMock(ClientInterface::class);
+        $httpClient = $this->createMock(Client::class);
         $httpClient->expects(self::never())
             ->method('requestAsync');
         $serializer = self::createStub(SerializerInterface::class);
@@ -339,14 +339,14 @@ class OpenAiTest extends TestCase
     }
 
     private function createOpenAi(
-        ClientInterface $httpClient,
+        Client $httpClient,
         SerializerInterface $serializer,
-        ?string $bearerToken = null
+        ?string $apiKey = null
     ): OpenAi {
         $config = self::createStub(EmbedderConfig::class);
         $config->method('getEmbeddingEndpoint')
             ->willReturn('http://host.docker.internal:1234/v1/embeddings');
-        $config->method('getBearerToken')->willReturn($bearerToken);
+        $config->method('getApiKey')->willReturn($apiKey);
         $config->method('getEmbeddingModel')->willReturn(self::MODEL);
         $config->method('getVectorDimensions')->willReturn(self::VECTOR_DIMENSIONS);
         $config->method('getRequestTimeoutSeconds')->willReturn(60);
@@ -393,8 +393,8 @@ class OpenAiTest extends TestCase
 
     private function createHttpClientForResponse(
         ResponseInterface $response
-    ): ClientInterface&MockObject {
-        $httpClient = $this->createMock(ClientInterface::class);
+    ): Client&MockObject {
+        $httpClient = $this->createMock(Client::class);
         $httpClient->expects(self::once())
             ->method('requestAsync')
             ->willReturn(Create::promiseFor($response));

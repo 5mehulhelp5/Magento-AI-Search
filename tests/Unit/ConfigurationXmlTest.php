@@ -145,7 +145,7 @@ class ConfigurationXmlTest extends TestCase
         );
     }
 
-    public function testDeclaresOpenAiEmbedderClientPreference(): void
+    public function testRegistersEmbeddingClientsInPool(): void
     {
         $dependencyInjection = new DOMDocument();
 
@@ -158,26 +158,21 @@ class ConfigurationXmlTest extends TestCase
         self::assertSame(
             1.0,
             $dependencyInjectionXPath->evaluate(
-                'count(/config/preference'
-                . '[@for="DavidBel\AiSearch\Client\Embedding\EmbedderClientInterface"]'
-                . '[@type="DavidBel\AiSearch\Client\Embedding\OpenAi"])'
-            )
-        );
-        self::assertSame(
-            1.0,
-            $dependencyInjectionXPath->evaluate(
-                'count(/config/virtualType'
-                . '[@name="DavidBel\AiSearch\Client\Embedding\HttpClient"]'
-                . '[@type="GuzzleHttp\Client"])'
+                'count(/config/type'
+                . '[@name="DavidBel\AiSearch\Client\Embedding\Base\EmbedderClientPool"]'
+                . '/arguments/argument[@name="clients"]'
+                . '/item[@name="openai_compatible"]'
+                . '[text()="DavidBel\AiSearch\Client\Embedding\OpenAi"])'
             )
         );
         self::assertSame(
             1.0,
             $dependencyInjectionXPath->evaluate(
                 'count(/config/type'
-                . '[@name="DavidBel\AiSearch\Client\Embedding\OpenAi"]'
-                . '/arguments/argument[@name="client"]'
-                . '[text()="DavidBel\AiSearch\Client\Embedding\HttpClient"])'
+                . '[@name="DavidBel\AiSearch\Client\Embedding\Base\EmbedderClientPool"]'
+                . '/arguments/argument[@name="clients"]'
+                . '/item[@name="google_gemini_native"]'
+                . '[text()="DavidBel\AiSearch\Client\Embedding\GoogleGemini"])'
             )
         );
     }
