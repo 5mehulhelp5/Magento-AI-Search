@@ -104,10 +104,10 @@ class OpenAi implements EmbedderClientInterface
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
         ];
-        $bearerToken = $this->embedderConfig->getBearerToken();
+        $apiKey = $this->embedderConfig->getApiKey();
 
-        if ($bearerToken !== null) {
-            $headers['Authorization'] = 'Bearer ' . $bearerToken;
+        if ($apiKey !== null) {
+            $headers['Authorization'] = 'Bearer ' . $apiKey;
         }
 
         return $this->client->requestAsync(

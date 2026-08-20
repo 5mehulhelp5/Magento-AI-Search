@@ -12,8 +12,9 @@
                 <indexed_store_views/>
             </indexing_scope>
             <ai_server>
+                <embedding_api_protocol>openai_compatible</embedding_api_protocol>
                 <embedding_endpoint>http://host.docker.internal:1234/v1/embeddings</embedding_endpoint>
-                <bearer_token/>
+                <api_key/>
                 <embedding_model>text-embedding-embeddinggemma-300m-qat</embedding_model>
                 <vector_dimensions>768</vector_dimensions>
                 <request_timeout_seconds>60</request_timeout_seconds>

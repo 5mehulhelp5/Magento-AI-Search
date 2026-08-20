@@ -37,11 +37,11 @@
     <type name="Magento\Config\Model\Config\TypePool">
         <arguments>
             <argument name="sensitive" xsi:type="array">
-                <item name="davidbel_ai_search_search_source/ai_server/bearer_token"
+                <item name="davidbel_ai_search_search_source/ai_server/api_key"
                       xsi:type="string">1</item>
             </argument>
             <argument name="environment" xsi:type="array">
-                <item name="davidbel_ai_search_search_source/ai_server/bearer_token"
+                <item name="davidbel_ai_search_search_source/ai_server/api_key"
                       xsi:type="string">1</item>
             </argument>
         </arguments>

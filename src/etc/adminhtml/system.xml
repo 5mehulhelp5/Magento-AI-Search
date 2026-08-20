@@ -158,6 +158,16 @@
                    sortOrder="10"
                    showInDefault="1">
                 <label>AI Server</label>
+                <field id="embedding_api_protocol"
+                       translate="label tooltip"
+                       type="select"
+                       sortOrder="20"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Embedding API Protocol</label>
+                    <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
+                    <source_model>DavidBel\AiSearch\Model\Config\Source\EmbeddingApiProtocol</source_model>
+                </field>
                 <field id="embedding_endpoint"
                        translate="label"
                        type="text"
@@ -167,19 +177,19 @@
                     <label>Embedding Endpoint URL</label>
                     <validate>required-entry validate-url</validate>
                 </field>
-                <field id="bearer_token"
+                <field id="api_key"
                        translate="label"
                        type="obscure"
-                       sortOrder="20"
+                       sortOrder="30"
                        showInDefault="1"
                        canRestore="1">
-                    <label>Bearer Token</label>
+                    <label>API Key</label>
                     <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                 </field>
                 <field id="embedding_model"
                        translate="label tooltip"
                        type="text"
-                       sortOrder="30"
+                       sortOrder="40"
                        showInDefault="1"
                        canRestore="1">
                     <label>Embedding Model</label>
@@ -189,7 +199,7 @@
                 <field id="vector_dimensions"
                        translate="label tooltip"
                        type="text"
-                       sortOrder="40"
+                       sortOrder="50"
                        showInDefault="1"
                        canRestore="1">
                     <label>Vector Dimensions</label>
@@ -199,7 +209,7 @@
                 <field id="request_timeout_seconds"
                        translate="label"
                        type="text"
-                       sortOrder="50"
+                       sortOrder="60"
                        showInDefault="1"
                        canRestore="1">
                     <label>Request Timeout (Seconds)</label>
@@ -208,7 +218,7 @@
                 <field id="embedder_document_template"
                        translate="label tooltip"
                        type="text"
-                       sortOrder="60"
+                       sortOrder="70"
                        showInDefault="1"
                        canRestore="1">
                     <label>Embedder Document Template</label>
@@ -218,7 +228,7 @@
                 <field id="maximum_chunk_tokens"
                        translate="label tooltip"
                        type="text"
-                       sortOrder="70"
+                       sortOrder="80"
                        showInDefault="1"
                        canRestore="1">
                     <label>Maximum Chunk Tokens</label>
@@ -228,7 +238,7 @@
                 <field id="chunk_overlap_tokens"
                        translate="label tooltip"
                        type="text"
-                       sortOrder="80"
+                       sortOrder="90"
                        showInDefault="1"
                        canRestore="1">
                     <label>Chunk Overlap Tokens</label>
@@ -238,7 +248,7 @@
                 <field id="estimated_characters_per_token"
                        translate="label tooltip"
                        type="text"
-                       sortOrder="90"
+                       sortOrder="100"
                        showInDefault="1"
                        canRestore="1">
                     <label>Estimated Characters per Token</label>

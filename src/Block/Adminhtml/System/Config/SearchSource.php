@@ -17,8 +17,8 @@ class SearchSource extends Form
         $title = $this->escapeHtml((string) __('Important:'));
         $message = $this->escapeHtml(
             (string) __(
-                'Changing any setting on this page, except the AI server endpoint, bearer token, and request '
-                . 'timeout, requires '
+                'Changing any setting on this page, except the AI server endpoint, API key, '
+                . 'and request timeout, requires '
                 . 'a full AI Search rebuild, which starts automatically. '
                 . 'The rebuild may reprocess and re-embed the entire catalog, send many requests to the '
                 . 'configured AI server, and take a significant amount of time.'

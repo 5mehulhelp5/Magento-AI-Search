@@ -13,10 +13,12 @@ use UnexpectedValueException;
 
 class EmbedderConfig
 {
+    private const string XML_PATH_EMBEDDING_API_PROTOCOL =
+        'davidbel_ai_search_search_source/ai_server/embedding_api_protocol';
     private const string XML_PATH_EMBEDDING_ENDPOINT =
         'davidbel_ai_search_search_source/ai_server/embedding_endpoint';
-    private const string XML_PATH_BEARER_TOKEN =
-        'davidbel_ai_search_search_source/ai_server/bearer_token';
+    private const string XML_PATH_API_KEY =
+        'davidbel_ai_search_search_source/ai_server/api_key';
     private const string XML_PATH_EMBEDDING_MODEL =
         'davidbel_ai_search_search_source/ai_server/embedding_model';
     private const string XML_PATH_VECTOR_DIMENSIONS =
@@ -37,29 +39,19 @@ class EmbedderConfig
     ) {
     }
 
+    public function getEmbeddingApiProtocol(): string
+    {
+        return $this->getStringValue(self::XML_PATH_EMBEDDING_API_PROTOCOL);
+    }
+
     public function getEmbeddingEndpoint(): string
     {
         return $this->getStringValue(self::XML_PATH_EMBEDDING_ENDPOINT);
     }
 
-    public function getBearerToken(): ?string
+    public function getApiKey(): ?string
     {
-        $value = $this->scopeConfig->getValue(self::XML_PATH_BEARER_TOKEN);
-
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        if (!is_string($value)) {
-            throw new UnexpectedValueException(
-                sprintf(
-                    'Configuration path "%s" must contain a string.',
-                    self::XML_PATH_BEARER_TOKEN
-                )
-            );
-        }
-
-        return $value;
+        return $this->getOptionalStringValue(self::XML_PATH_API_KEY);
     }
 
     public function getEmbeddingModel(): string
@@ -100,6 +92,23 @@ class EmbedderConfig
     private function getStringValue(string $path): string
     {
         $value = $this->scopeConfig->getValue($path);
+
+        if (!is_string($value)) {
+            throw new UnexpectedValueException(
+                sprintf('Configuration path "%s" must contain a string.', $path)
+            );
+        }
+
+        return $value;
+    }
+
+    private function getOptionalStringValue(string $path): ?string
+    {
+        $value = $this->scopeConfig->getValue($path);
+
+        if ($value === null || $value === '') {
+            return null;
+        }
 
         if (!is_string($value)) {
             throw new UnexpectedValueException(
