@@ -44,6 +44,7 @@ class ConfigurationFingerprint
                     ->getEstimatedCharactersPerToken(),
             ],
             'embedding' => [
+                'api_protocol' => $this->embedderConfig->getEmbeddingApiProtocol(),
                 'model' => $this->embedderConfig->getEmbeddingModel(),
                 'vector_dimensions' => $this->embedderConfig->getVectorDimensions(),
                 'document_template' => $this->embedderConfig->getEmbedderDocumentTemplate(),

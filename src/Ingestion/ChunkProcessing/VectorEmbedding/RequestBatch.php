@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorEmbedding;
 
-use DavidBel\AiSearch\Client\Embedding\EmbeddingInput;
+use DavidBel\AiSearch\Client\Embedding\Base\EmbeddingInput;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingBatch;
 
 class RequestBatch

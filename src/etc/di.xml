@@ -24,14 +24,14 @@
                 type="DavidBel\AiSearch\Repository\ChunkRepository"/>
     <preference for="DavidBel\AiSearch\Api\EmbeddingBacklogRepositoryInterface"
                 type="DavidBel\AiSearch\Repository\EmbeddingBacklogRepository"/>
-    <preference for="DavidBel\AiSearch\Client\Embedding\EmbedderClientInterface"
-                type="DavidBel\AiSearch\Client\Embedding\OpenAi"/>
-    <virtualType name="DavidBel\AiSearch\Client\Embedding\HttpClient"
-                 type="GuzzleHttp\Client"/>
-    <type name="DavidBel\AiSearch\Client\Embedding\OpenAi">
+    <type name="DavidBel\AiSearch\Client\Embedding\Base\EmbedderClientPool">
         <arguments>
-            <argument name="client"
-                      xsi:type="object">DavidBel\AiSearch\Client\Embedding\HttpClient</argument>
+            <argument name="clients" xsi:type="array">
+                <item name="openai_compatible"
+                      xsi:type="object">DavidBel\AiSearch\Client\Embedding\OpenAi</item>
+                <item name="google_gemini_native"
+                      xsi:type="object">DavidBel\AiSearch\Client\Embedding\GoogleGemini</item>
+            </argument>
         </arguments>
     </type>
     <type name="Magento\Config\Model\Config\TypePool">

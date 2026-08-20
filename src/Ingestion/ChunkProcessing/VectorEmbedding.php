@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\ChunkProcessing;
 
-use DavidBel\AiSearch\Client\Embedding\EmbedderClientInterface;
+use DavidBel\AiSearch\Client\Embedding\Base\EmbedderClientPool;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorEmbedding\PromisePool;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorEmbedding\RequestBatchFactory;
 use Generator;
@@ -16,7 +16,7 @@ use Generator;
 class VectorEmbedding
 {
     public function __construct(
-        private readonly EmbedderClientInterface $embedderClient,
+        private readonly EmbedderClientPool $embedderClientPool,
         private readonly PromisePool $promisePool,
         private readonly RequestBatchFactory $requestBatchFactory
     ) {
@@ -45,12 +45,14 @@ class VectorEmbedding
      */
     private function createPromises(iterable $batches): Generator
     {
+        $client = $this->embedderClientPool->getClient();
+
         foreach ($batches as $batchId => $batch) {
             $requestBatch = $this->requestBatchFactory->create([
                 'processingBatch' => $batch,
             ]);
 
-            yield $batchId => $this->embedderClient
+            yield $batchId => $client
                 ->embedDocumentsAsync($requestBatch->getUniqueInputs())
                 ->then([$requestBatch, 'expandVectors']);
         }

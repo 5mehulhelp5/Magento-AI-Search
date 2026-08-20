@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Config;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Encryption\EncryptorInterface;
 use UnexpectedValueException;
 
 class EmbedderConfig
@@ -35,7 +36,8 @@ class EmbedderConfig
         'davidbel_ai_search_search_source/ai_server/estimated_characters_per_token';
 
     public function __construct(
-        private readonly ScopeConfigInterface $scopeConfig
+        private readonly ScopeConfigInterface $scopeConfig,
+        private readonly EncryptorInterface $encryptor
     ) {
     }
 
@@ -51,7 +53,15 @@ class EmbedderConfig
 
     public function getApiKey(): ?string
     {
-        return $this->getOptionalStringValue(self::XML_PATH_API_KEY);
+        $value = $this->getOptionalStringValue(self::XML_PATH_API_KEY);
+
+        if ($value === null) {
+            return null;
+        }
+
+        $decryptedValue = $this->encryptor->decrypt($value);
+
+        return $decryptedValue !== '' ? $decryptedValue : $value;
     }
 
     public function getEmbeddingModel(): string

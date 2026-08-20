@@ -6,7 +6,7 @@
  */
 declare(strict_types=1);
 
-namespace DavidBel\AiSearch\Client\Embedding;
+namespace DavidBel\AiSearch\Client\Embedding\Base;
 
 readonly class EmbeddingInput
 {

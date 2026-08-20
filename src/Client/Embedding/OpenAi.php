@@ -8,10 +8,11 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Client\Embedding;
 
+use DavidBel\AiSearch\Client\Embedding\Base\EmbedderClientInterface;
 use DavidBel\AiSearch\Client\Embedding\OpenAi\ResponseDecoderFactory;
 use DavidBel\AiSearch\Config\EmbedderConfig;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex\QueryConfigurationSnapshot;
-use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Client;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\RequestOptions;
@@ -21,7 +22,7 @@ use UnexpectedValueException;
 class OpenAi implements EmbedderClientInterface
 {
     public function __construct(
-        private readonly ClientInterface $client,
+        private readonly Client $client,
         private readonly SerializerInterface $serializer,
         private readonly EmbedderConfig $embedderConfig,
         private readonly ResponseDecoderFactory $responseDecoderFactory
@@ -29,7 +30,7 @@ class OpenAi implements EmbedderClientInterface
     }
 
     /**
-     * @param list<EmbeddingInput> $inputs
+     * @param list<\DavidBel\AiSearch\Client\Embedding\Base\EmbeddingInput> $inputs
      */
     public function embedDocumentsAsync(array $inputs): PromiseInterface
     {
