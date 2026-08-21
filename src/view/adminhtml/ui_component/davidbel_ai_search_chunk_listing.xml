@@ -45,6 +45,18 @@
         <paging name="listing_paging"/>
     </listingToolbar>
     <columns name="davidbel_ai_search_chunk_columns">
+        <settings>
+            <childDefaults>
+                <param name="fieldAction" xsi:type="array">
+                    <item name="provider" xsi:type="string">${ $.parentName }.actions</item>
+                    <item name="target" xsi:type="string">applyAction</item>
+                    <item name="params" xsi:type="array">
+                        <item name="0" xsi:type="string">view</item>
+                        <item name="1" xsi:type="string">${ $.$data.rowIndex }</item>
+                    </item>
+                </param>
+            </childDefaults>
+        </settings>
         <column name="chunk_id" sortOrder="10">
             <settings>
                 <filter>textRange</filter>
@@ -103,5 +115,12 @@
                 <label translate="true">Updated</label>
             </settings>
         </column>
+        <actionsColumn name="actions"
+                       class="DavidBel\AiSearch\Ui\Component\Listing\Column\Chunk\ViewAction"
+                       sortOrder="80">
+            <settings>
+                <indexField>chunk_id</indexField>
+            </settings>
+        </actionsColumn>
     </columns>
 </listing>
