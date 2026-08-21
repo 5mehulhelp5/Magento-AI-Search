@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<!--
+  davidbel/magento-ai-search by David Belicza
+  SPDX-License-Identifier: MIT
+  https://github.com/DavidBelicza/Magento-AI-Search
+-->
+<form xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">
+                davidbel_ai_search_backlog_view_form.davidbel_ai_search_backlog_view_data_source
+            </item>
+        </item>
+        <item name="label" xsi:type="string" translate="true">Backlog Item Information</item>
+        <item name="template" xsi:type="string">templates/form/collapsible</item>
+    </argument>
+    <settings>
+        <buttons>
+            <button name="back" class="DavidBel\AiSearch\Block\Adminhtml\Backlog\View\BackButton"/>
+        </buttons>
+        <namespace>davidbel_ai_search_backlog_view_form</namespace>
+        <dataScope>data</dataScope>
+        <deps>
+            <dep>davidbel_ai_search_backlog_view_form.davidbel_ai_search_backlog_view_data_source</dep>
+        </deps>
+    </settings>
+    <dataSource name="davidbel_ai_search_backlog_view_data_source">
+        <argument name="data" xsi:type="array">
+            <item name="js_config" xsi:type="array">
+                <item name="component" xsi:type="string">Magento_Ui/js/form/provider</item>
+            </item>
+        </argument>
+        <dataProvider class="DavidBel\AiSearch\Ui\DataProvider\Backlog\ViewDataProvider"
+                      name="davidbel_ai_search_backlog_view_data_source">
+            <settings>
+                <requestFieldName>backlog_id</requestFieldName>
+                <primaryFieldName>backlog_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+    <fieldset name="general">
+        <settings>
+            <label translate="true">General</label>
+        </settings>
+        <field name="backlog_id" formElement="input" sortOrder="10">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>backlog_id</dataScope>
+                <label translate="true">Backlog ID</label>
+            </settings>
+        </field>
+        <field name="chunk_id" formElement="input" sortOrder="20">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>chunk_id</dataScope>
+                <label translate="true">Chunk ID</label>
+            </settings>
+        </field>
+        <field name="source_entity_type" formElement="input" sortOrder="30">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>source_entity_type</dataScope>
+                <label translate="true">Source Entity Type</label>
+            </settings>
+        </field>
+        <field name="source_entity_id" formElement="input" sortOrder="40">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>source_entity_id</dataScope>
+                <label translate="true">Source Entity ID</label>
+            </settings>
+        </field>
+        <field name="operation" formElement="input" sortOrder="50">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>operation</dataScope>
+                <label translate="true">Operation</label>
+            </settings>
+        </field>
+        <field name="created_at" formElement="input" sortOrder="60">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>created_at</dataScope>
+                <label translate="true">Created</label>
+            </settings>
+        </field>
+        <field name="updated_at" formElement="input" sortOrder="70">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>updated_at</dataScope>
+                <label translate="true">Updated</label>
+            </settings>
+        </field>
+    </fieldset>
+    <fieldset name="processing">
+        <settings>
+            <label translate="true">Processing</label>
+        </settings>
+        <field name="status" formElement="input" sortOrder="10">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>status</dataScope>
+                <label translate="true">Status</label>
+            </settings>
+        </field>
+        <field name="index_version" formElement="input" sortOrder="20">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>index_version</dataScope>
+                <label translate="true">Index Version</label>
+            </settings>
+        </field>
+        <field name="full_reindex_status" formElement="input" sortOrder="30">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>full_reindex_status</dataScope>
+                <label translate="true">Full Reindex Status</label>
+            </settings>
+        </field>
+        <field name="backlog_version" formElement="input" sortOrder="40">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>backlog_version</dataScope>
+                <label translate="true">Backlog Version</label>
+            </settings>
+        </field>
+        <field name="attempt_count" formElement="input" sortOrder="50">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>attempt_count</dataScope>
+                <label translate="true">Attempt Count</label>
+            </settings>
+        </field>
+        <field name="last_error_category" formElement="input" sortOrder="60">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>last_error_category</dataScope>
+                <label translate="true">Last Error Category</label>
+            </settings>
+        </field>
+    </fieldset>
+</form>
