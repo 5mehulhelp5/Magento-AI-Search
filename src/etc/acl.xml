@@ -9,6 +9,17 @@
     <acl>
         <resources>
             <resource id="Magento_Backend::admin">
+                <resource id="Magento_Backend::system">
+                    <resource id="DavidBel_AiSearch::system_ai_search"
+                              title="AI Search"
+                              translate="title"
+                              sortOrder="90">
+                        <resource id="DavidBel_AiSearch::documents"
+                                  title="Documents"
+                                  translate="title"
+                                  sortOrder="10"/>
+                    </resource>
+                </resource>
                 <resource id="Magento_Backend::stores">
                     <resource id="Magento_Backend::stores_settings">
                         <resource id="Magento_Config::config">

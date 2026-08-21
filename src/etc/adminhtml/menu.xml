@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!--
+  davidbel/magento-ai-search by David Belicza
+  SPDX-License-Identifier: MIT
+  https://github.com/DavidBelicza/Magento-AI-Search
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="DavidBel_AiSearch::system_ai_search"
+             title="AI Search"
+             translate="title"
+             module="DavidBel_AiSearch"
+             sortOrder="90"
+             parent="Magento_Backend::system"
+             resource="DavidBel_AiSearch::system_ai_search"/>
+        <add id="DavidBel_AiSearch::documents"
+             title="Documents"
+             translate="title"
+             module="DavidBel_AiSearch"
+             sortOrder="10"
+             parent="DavidBel_AiSearch::system_ai_search"
+             action="davidbel_ai_search/document/index"
+             resource="DavidBel_AiSearch::documents"/>
+    </menu>
+</config>
