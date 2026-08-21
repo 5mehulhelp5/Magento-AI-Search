@@ -1,0 +1,144 @@
+<?xml version="1.0"?>
+<!--
+  davidbel/magento-ai-search by David Belicza
+  SPDX-License-Identifier: MIT
+  https://github.com/DavidBelicza/Magento-AI-Search
+-->
+<form xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">
+                davidbel_ai_search_document_view_form.davidbel_ai_search_document_view_data_source
+            </item>
+        </item>
+        <item name="label" xsi:type="string" translate="true">Document Information</item>
+        <item name="template" xsi:type="string">templates/form/collapsible</item>
+    </argument>
+    <settings>
+        <buttons>
+            <button name="back" class="DavidBel\AiSearch\Block\Adminhtml\Document\View\BackButton"/>
+        </buttons>
+        <namespace>davidbel_ai_search_document_view_form</namespace>
+        <dataScope>data</dataScope>
+        <deps>
+            <dep>davidbel_ai_search_document_view_form.davidbel_ai_search_document_view_data_source</dep>
+        </deps>
+    </settings>
+    <dataSource name="davidbel_ai_search_document_view_data_source">
+        <argument name="data" xsi:type="array">
+            <item name="js_config" xsi:type="array">
+                <item name="component" xsi:type="string">Magento_Ui/js/form/provider</item>
+            </item>
+        </argument>
+        <dataProvider class="DavidBel\AiSearch\Ui\DataProvider\Document\ViewDataProvider"
+                      name="davidbel_ai_search_document_view_data_source">
+            <settings>
+                <requestFieldName>document_id</requestFieldName>
+                <primaryFieldName>document_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+    <fieldset name="general" sortOrder="10">
+        <settings>
+            <collapsible>true</collapsible>
+            <opened>true</opened>
+            <label translate="true">General</label>
+        </settings>
+        <field name="document_id" formElement="input" sortOrder="10">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>document_id</dataScope>
+                <label translate="true">Document ID</label>
+            </settings>
+        </field>
+        <field name="source_entity_type" formElement="input" sortOrder="20">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>source_entity_type</dataScope>
+                <label translate="true">Source Entity Type</label>
+            </settings>
+        </field>
+        <field name="source_entity_id" formElement="input" sortOrder="30">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>source_entity_id</dataScope>
+                <label translate="true">Source Entity ID</label>
+            </settings>
+        </field>
+        <field name="store_id" formElement="input" sortOrder="40">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>store_id</dataScope>
+                <label translate="true">Store View ID</label>
+            </settings>
+        </field>
+        <field name="source_code" formElement="input" sortOrder="50">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>source_code</dataScope>
+                <label translate="true">Source Code</label>
+            </settings>
+        </field>
+        <field name="title" formElement="input" sortOrder="60">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>title</dataScope>
+                <label translate="true">Title</label>
+            </settings>
+        </field>
+        <field name="source_hash" formElement="input" sortOrder="70">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>source_hash</dataScope>
+                <label translate="true">Source Hash</label>
+            </settings>
+        </field>
+        <field name="created_at" formElement="input" sortOrder="80">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>created_at</dataScope>
+                <label translate="true">Created</label>
+            </settings>
+        </field>
+        <field name="updated_at" formElement="input" sortOrder="90">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>updated_at</dataScope>
+                <label translate="true">Updated</label>
+            </settings>
+        </field>
+    </fieldset>
+    <fieldset name="chunks" sortOrder="20">
+        <settings>
+            <collapsible>true</collapsible>
+            <label translate="true">Chunks</label>
+        </settings>
+        <insertListing name="related_chunks">
+            <settings>
+                <externalProvider>
+                    davidbel_ai_search_document_chunk_listing.davidbel_ai_search_chunk_data_source
+                </externalProvider>
+                <loading>false</loading>
+                <autoRender>true</autoRender>
+                <dataScope>related_chunks</dataScope>
+                <ns>davidbel_ai_search_document_chunk_listing</ns>
+                <exports>
+                    <link name="document_id">${ $.externalProvider }:params.document_id</link>
+                </exports>
+                <imports>
+                    <link name="document_id">${ $.provider }:data.document_id</link>
+                </imports>
+            </settings>
+        </insertListing>
+    </fieldset>
+</form>

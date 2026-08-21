@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+  davidbel/magento-ai-search by David Belicza
+  SPDX-License-Identifier: MIT
+  https://github.com/DavidBelicza/Magento-AI-Search
+-->
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd"
+         extends="davidbel_ai_search_chunk_listing">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">
+                davidbel_ai_search_document_chunk_listing.davidbel_ai_search_chunk_data_source
+            </item>
+        </item>
+    </argument>
+    <settings>
+        <deps>
+            <dep>davidbel_ai_search_document_chunk_listing.davidbel_ai_search_chunk_data_source</dep>
+        </deps>
+    </settings>
+    <dataSource name="davidbel_ai_search_chunk_data_source">
+        <settings>
+            <filterUrlParams>
+                <param name="document_id">*</param>
+            </filterUrlParams>
+        </settings>
+    </dataSource>
+</listing>
