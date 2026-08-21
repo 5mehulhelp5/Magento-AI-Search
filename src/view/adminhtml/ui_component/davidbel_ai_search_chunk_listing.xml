@@ -64,10 +64,18 @@
                 <sorting>desc</sorting>
             </settings>
         </column>
-        <column name="document_id" sortOrder="20">
+        <column name="document_id"
+                class="DavidBel\AiSearch\Ui\Component\Listing\Column\Chunk\DocumentViewLink"
+                sortOrder="20">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="fieldAction" xsi:type="boolean">false</item>
+                </item>
+            </argument>
             <settings>
                 <filter>textRange</filter>
                 <label translate="true">Document ID</label>
+                <bodyTmpl>ui/grid/cells/html</bodyTmpl>
             </settings>
         </column>
         <column name="chunk_index" sortOrder="30">

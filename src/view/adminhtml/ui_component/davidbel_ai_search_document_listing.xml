@@ -73,11 +73,15 @@
         <column name="source_entity_id"
                 class="DavidBel\AiSearch\Ui\Component\Listing\Column\Document\ProductEditLink"
                 sortOrder="30">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="fieldAction" xsi:type="boolean">false</item>
+                </item>
+            </argument>
             <settings>
                 <filter>textRange</filter>
                 <label translate="true">Source Entity ID</label>
                 <bodyTmpl>ui/grid/cells/html</bodyTmpl>
-                <disableAction>true</disableAction>
             </settings>
         </column>
         <column name="store_id"

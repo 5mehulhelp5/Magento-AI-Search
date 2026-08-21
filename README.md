@@ -203,7 +203,7 @@ pie showData title End-to-end processing time distribution
 | **Native Google Gemini API support** | AI server | Planned | ✅ Complete |
 | **Store-view languages for dynamic documents** | Documents | Planned | ✅ Complete |
 | **AI server configuration test** | Admin | Planned | ✅ Complete |
-| **Document and chunk Admin grids** | Admin | Planned | ⏳ Open |
+| **Document, chunk, and backlog Admin grids and views** | Admin | Planned | ✅ Complete |
 | **Semantic search testing in Admin** | Admin | Planned | ✅ Complete |
 | **Headless GraphQL semantic search support** | GraphQL | Planned | ✅ Complete |
 | **Progress and error observability** | Operations | Planned | ⏳ Open |
