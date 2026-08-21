@@ -18,6 +18,10 @@
                                   title="Documents"
                                   translate="title"
                                   sortOrder="10"/>
+                        <resource id="DavidBel_AiSearch::chunks"
+                                  title="Chunks"
+                                  translate="title"
+                                  sortOrder="20"/>
                     </resource>
                 </resource>
                 <resource id="Magento_Backend::stores">

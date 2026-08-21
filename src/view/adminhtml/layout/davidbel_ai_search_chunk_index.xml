@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+  davidbel/magento-ai-search by David Belicza
+  SPDX-License-Identifier: MIT
+  https://github.com/DavidBelicza/Magento-AI-Search
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="content">
+            <uiComponent name="davidbel_ai_search_chunk_listing"/>
+        </referenceContainer>
+    </body>
+</page>

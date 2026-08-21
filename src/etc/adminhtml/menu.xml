@@ -22,5 +22,13 @@
              parent="DavidBel_AiSearch::system_ai_search"
              action="davidbel_ai_search/document/index"
              resource="DavidBel_AiSearch::documents"/>
+        <add id="DavidBel_AiSearch::chunks"
+             title="Chunks"
+             translate="title"
+             module="DavidBel_AiSearch"
+             sortOrder="20"
+             parent="DavidBel_AiSearch::system_ai_search"
+             action="davidbel_ai_search/chunk/index"
+             resource="DavidBel_AiSearch::chunks"/>
     </menu>
 </config>
