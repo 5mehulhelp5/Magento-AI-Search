@@ -18,13 +18,17 @@ use UnexpectedValueException;
 
 class RequestReader
 {
-    private const string QUICK_SEARCH_REQUEST = 'quick_search_container';
+    private const array SEMANTIC_SEARCH_REQUESTS = [
+        'quick_search_container',
+        'graphql_product_search',
+        'graphql_product_search_with_aggregation',
+    ];
     private const string SEARCH_QUERY = 'search';
     private const string STORE_DIMENSION = 'scope';
 
-    public function isQuickSearch(RequestInterface $request): bool
+    public function isSemanticSearchRequest(RequestInterface $request): bool
     {
-        return $request->getName() === self::QUICK_SEARCH_REQUEST;
+        return in_array($request->getName(), self::SEMANTIC_SEARCH_REQUESTS, true);
     }
 
     public function getQueryText(RequestInterface $request): string
@@ -47,7 +51,7 @@ class RequestReader
             }
         }
 
-        throw new UnexpectedValueException('Quick search request does not contain a valid store scope.');
+        throw new UnexpectedValueException('Product search request does not contain a valid store scope.');
     }
 
     private function getPositiveStoreId(mixed $storeId): int
@@ -57,7 +61,7 @@ class RequestReader
         }
 
         if (!is_int($storeId) || $storeId < 1) {
-            throw new UnexpectedValueException('Quick search request does not contain a valid store scope.');
+            throw new UnexpectedValueException('Product search request does not contain a valid store scope.');
         }
 
         return $storeId;

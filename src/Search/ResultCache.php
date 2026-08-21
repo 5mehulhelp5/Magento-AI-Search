@@ -28,7 +28,7 @@ class ResultCache implements PageCacheTagsPreprocessorInterface
      */
     public function process(array $tags): array
     {
-        $storeId = $this->storeManager->getStore()->getId();
+        $storeId = (int) (string) $this->storeManager->getStore()->getId();
 
         if (!$this->searchResultConfig->isEnabled($storeId)) {
             return $tags;

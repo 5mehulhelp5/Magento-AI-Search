@@ -30,7 +30,7 @@ class QuickSearch
      */
     public function execute(RequestInterface $request, array $catalogQuery): array
     {
-        if (!$this->requestReader->isQuickSearch($request)) {
+        if (!$this->requestReader->isSemanticSearchRequest($request)) {
             return $catalogQuery;
         }
 

@@ -116,7 +116,7 @@ distribution normally used with Magento.
 |---|---|
 | Luma | ✅ Supported |
 | Hyvä | 🧪 To be tested |
-| Headless (GraphQL) | 🧪 To be tested |
+| Headless (GraphQL) | ✅ Supported |
 
 ### AI server
 
@@ -205,5 +205,5 @@ pie showData title End-to-end processing time distribution
 | **AI server configuration test** | Admin | Planned | ✅ Complete |
 | **Document and chunk Admin grids** | Admin | Planned | ⏳ Open |
 | **Semantic search testing in Admin** | Admin | Planned | ✅ Complete |
-| **Headless GraphQL semantic search support** | GraphQL | Planned | ⏳ Open |
+| **Headless GraphQL semantic search support** | GraphQL | Planned | ✅ Complete |
 | **Progress and error observability** | Operations | Planned | ⏳ Open |
