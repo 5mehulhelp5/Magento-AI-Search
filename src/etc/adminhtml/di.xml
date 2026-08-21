@@ -30,6 +30,15 @@
             <argument name="identifierName" xsi:type="string">chunk_id</argument>
         </arguments>
     </virtualType>
+    <virtualType name="DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Grid\Collection"
+                 type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">davidbel_ai_search_embedding_backlog</argument>
+            <argument name="resourceModel"
+                      xsi:type="string">DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog</argument>
+            <argument name="identifierName" xsi:type="string">backlog_id</argument>
+        </arguments>
+    </virtualType>
     <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
         <arguments>
             <argument name="collections" xsi:type="array">
@@ -37,6 +46,8 @@
                       xsi:type="string">DavidBel\AiSearch\Model\ResourceModel\Document\Grid\Collection</item>
                 <item name="davidbel_ai_search_chunk_data_source"
                       xsi:type="string">DavidBel\AiSearch\Model\ResourceModel\Chunk\Grid\Collection</item>
+                <item name="davidbel_ai_search_backlog_data_source"
+                      xsi:type="string">DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Grid\Collection</item>
             </argument>
         </arguments>
     </type>

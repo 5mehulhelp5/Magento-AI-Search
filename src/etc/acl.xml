@@ -22,6 +22,10 @@
                                   title="Chunks"
                                   translate="title"
                                   sortOrder="20"/>
+                        <resource id="DavidBel_AiSearch::backlog"
+                                  title="Backlog"
+                                  translate="title"
+                                  sortOrder="30"/>
                     </resource>
                 </resource>
                 <resource id="Magento_Backend::stores">

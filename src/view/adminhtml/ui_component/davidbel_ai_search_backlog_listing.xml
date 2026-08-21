@@ -1,0 +1,149 @@
+<?xml version="1.0"?>
+<!--
+  davidbel/magento-ai-search by David Belicza
+  SPDX-License-Identifier: MIT
+  https://github.com/DavidBelicza/Magento-AI-Search
+-->
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider"
+                  xsi:type="string">davidbel_ai_search_backlog_listing.davidbel_ai_search_backlog_data_source</item>
+        </item>
+    </argument>
+    <settings>
+        <spinner>davidbel_ai_search_backlog_columns</spinner>
+        <deps>
+            <dep>davidbel_ai_search_backlog_listing.davidbel_ai_search_backlog_data_source</dep>
+        </deps>
+    </settings>
+    <dataSource name="davidbel_ai_search_backlog_data_source"
+                component="Magento_Ui/js/grid/provider">
+        <settings>
+            <storageConfig>
+                <param name="indexField" xsi:type="string">backlog_id</param>
+            </storageConfig>
+            <updateUrl path="mui/index/render"/>
+        </settings>
+        <aclResource>DavidBel_AiSearch::backlog</aclResource>
+        <dataProvider class="Magento\Framework\View\Element\UiComponent\DataProvider\DataProvider"
+                      name="davidbel_ai_search_backlog_data_source">
+            <settings>
+                <requestFieldName>backlog_id</requestFieldName>
+                <primaryFieldName>backlog_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+    <listingToolbar name="listing_top">
+        <settings>
+            <sticky>true</sticky>
+        </settings>
+        <bookmark name="bookmarks"/>
+        <columnsControls name="columns_controls"/>
+        <filters name="listing_filters"/>
+        <paging name="listing_paging"/>
+    </listingToolbar>
+    <columns name="davidbel_ai_search_backlog_columns">
+        <column name="backlog_id" sortOrder="10">
+            <settings>
+                <filter>textRange</filter>
+                <label translate="true">Backlog ID</label>
+                <sorting>desc</sorting>
+            </settings>
+        </column>
+        <column name="chunk_id" sortOrder="20">
+            <settings>
+                <filter>textRange</filter>
+                <label translate="true">Chunk ID</label>
+            </settings>
+        </column>
+        <column name="source_entity_type" sortOrder="30">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Source Entity Type</label>
+            </settings>
+        </column>
+        <column name="source_entity_id" sortOrder="40">
+            <settings>
+                <filter>textRange</filter>
+                <label translate="true">Source Entity ID</label>
+            </settings>
+        </column>
+        <column name="operation"
+                component="Magento_Ui/js/grid/columns/select"
+                sortOrder="50">
+            <settings>
+                <options class="DavidBel\AiSearch\Ui\Component\Listing\Column\Backlog\OperationOptions"/>
+                <filter>select</filter>
+                <dataType>select</dataType>
+                <label translate="true">Operation</label>
+            </settings>
+        </column>
+        <column name="status"
+                component="Magento_Ui/js/grid/columns/select"
+                sortOrder="60">
+            <settings>
+                <options class="DavidBel\AiSearch\Ui\Component\Listing\Column\Backlog\StatusOptions"/>
+                <filter>select</filter>
+                <dataType>select</dataType>
+                <label translate="true">Status</label>
+            </settings>
+        </column>
+        <column name="index_version" sortOrder="70">
+            <settings>
+                <filter>textRange</filter>
+                <label translate="true">Index Version</label>
+            </settings>
+        </column>
+        <column name="full_reindex_status"
+                component="Magento_Ui/js/grid/columns/select"
+                sortOrder="80">
+            <settings>
+                <options
+                    class="DavidBel\AiSearch\Ui\Component\Listing\Column\Backlog\FullReindexStatusOptions"/>
+                <filter>select</filter>
+                <dataType>select</dataType>
+                <label translate="true">Full Reindex Status</label>
+            </settings>
+        </column>
+        <column name="backlog_version" sortOrder="90">
+            <settings>
+                <filter>textRange</filter>
+                <label translate="true">Backlog Version</label>
+            </settings>
+        </column>
+        <column name="attempt_count" sortOrder="100">
+            <settings>
+                <filter>textRange</filter>
+                <label translate="true">Attempt Count</label>
+            </settings>
+        </column>
+        <column name="last_error_category" sortOrder="110">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Last Error Category</label>
+            </settings>
+        </column>
+        <column name="created_at"
+                class="Magento\Ui\Component\Listing\Columns\Date"
+                component="Magento_Ui/js/grid/columns/date"
+                sortOrder="120">
+            <settings>
+                <filter>dateRange</filter>
+                <dataType>date</dataType>
+                <label translate="true">Created</label>
+            </settings>
+        </column>
+        <column name="updated_at"
+                class="Magento\Ui\Component\Listing\Columns\Date"
+                component="Magento_Ui/js/grid/columns/date"
+                sortOrder="130">
+            <settings>
+                <filter>dateRange</filter>
+                <dataType>date</dataType>
+                <label translate="true">Updated</label>
+            </settings>
+        </column>
+    </columns>
+</listing>

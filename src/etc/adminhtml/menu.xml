@@ -30,5 +30,13 @@
              parent="DavidBel_AiSearch::system_ai_search"
              action="davidbel_ai_search/chunk/index"
              resource="DavidBel_AiSearch::chunks"/>
+        <add id="DavidBel_AiSearch::backlog"
+             title="Backlog"
+             translate="title"
+             module="DavidBel_AiSearch"
+             sortOrder="30"
+             parent="DavidBel_AiSearch::system_ai_search"
+             action="davidbel_ai_search/backlog/index"
+             resource="DavidBel_AiSearch::backlog"/>
     </menu>
 </config>
