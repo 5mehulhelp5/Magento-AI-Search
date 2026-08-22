@@ -62,15 +62,15 @@ declare(strict_types=1);
                     </div>
                 </div>
             <?php endforeach; ?>
+            <div class="ai-search-progress-legend">
+                <?php foreach ($block->getLegendItems() as $legendItem): ?>
+                    <span>
+                        <i class="ai-search-progress-swatch ai-search-progress-<?=
+                            $escaper->escapeHtmlAttr($legendItem['status'])
+                        ?>"></i><?= $escaper->escapeHtml($legendItem['label']) ?>
+                    </span>
+                <?php endforeach; ?>
+            </div>
         </div>
     <?php endforeach; ?>
-    <div class="ai-search-progress-legend">
-        <?php foreach ($block->getLegendItems() as $legendItem): ?>
-            <span>
-                <i class="ai-search-progress-swatch ai-search-progress-<?=
-                    $escaper->escapeHtmlAttr($legendItem['status'])
-                ?>"></i><?= $escaper->escapeHtml($legendItem['label']) ?>
-            </span>
-        <?php endforeach; ?>
-    </div>
 </section>

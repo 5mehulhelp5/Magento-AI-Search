@@ -11,6 +11,10 @@
             <block class="Magento\Backend\Block\Template"
                    name="davidbel_ai_search_dashboard"
                    template="DavidBel_AiSearch::dashboard.phtml">
+                <block class="DavidBel\AiSearch\Block\Adminhtml\Dashboard\Indexing"
+                       name="davidbel_ai_search_dashboard_indexing"
+                       as="indexing"
+                       template="DavidBel_AiSearch::dashboard/indexing.phtml"/>
                 <block class="DavidBel\AiSearch\Block\Adminhtml\Dashboard\Progress"
                        name="davidbel_ai_search_dashboard_progress"
                        as="progress"

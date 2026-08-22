@@ -19,6 +19,7 @@ use Throwable;
 class ProductIndexer implements IndexerActionInterface, MviewActionInterface
 {
     public const string ID = 'davidbel_ai_search_product_indexer';
+    public const string VIEW_ID = 'davidbel_ai_search_product_mview';
 
     public function __construct(
         private readonly DocumentProcessing $documentProcessing,

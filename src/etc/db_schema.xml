@@ -221,9 +221,10 @@
             <column name="backlog_id"/>
         </constraint>
         <constraint xsi:type="unique"
-                    referenceId="DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_CHUNK_OPERATION">
+                    referenceId="DAVIDBEL_AI_SEARCH_BACKLOG_CHUNK_OPERATION_INDEX_VERSION">
             <column name="chunk_id"/>
             <column name="operation"/>
+            <column name="index_version"/>
         </constraint>
         <index referenceId="DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_STATUS" indexType="btree">
             <column name="status"/>

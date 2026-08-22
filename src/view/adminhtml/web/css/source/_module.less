@@ -107,6 +107,10 @@
         margin-bottom: 3rem;
     }
 
+    .ai-search-dashboard-indexing {
+        margin-bottom: 3rem;
+    }
+
     .ai-search-progress-description {
         color: @color-gray40;
         margin-bottom: 2rem;
@@ -116,8 +120,40 @@
         margin: 1.5rem 0;
     }
 
+    .ai-search-progress-version {
+        background: @color-white;
+        border: 1px solid @color-gray80;
+        padding: 2rem;
+    }
+
+    .ai-search-indexing-box {
+        background: @color-white;
+        border: 1px solid @color-gray80;
+        padding: 2rem;
+    }
+
+    .ai-search-indexing-bar {
+        background: @ai-search-progress-done;
+        height: 3.2rem;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .ai-search-indexing-count {
+        align-items: center;
+        color: @color-white;
+        display: flex;
+        font-weight: 600;
+        height: 100%;
+        justify-content: center;
+
+        &.has-items {
+            background: @ai-search-progress-pending;
+        }
+    }
+
     .ai-search-progress-version + .ai-search-progress-version {
-        margin-top: 3rem;
+        margin-top: 2rem;
     }
 
     .ai-search-progress-version-title {
@@ -184,7 +220,11 @@
         background: @ai-search-progress-done;
     }
 
-    .ai-search-progress-legend span {
-        margin-right: 1.5rem;
+    .ai-search-progress-legend {
+        margin-top: 2rem;
+
+        span {
+            margin-right: 1.5rem;
+        }
     }
 }
