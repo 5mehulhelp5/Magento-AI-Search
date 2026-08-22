@@ -12,6 +12,7 @@ use DavidBel\AiSearch\Config\EmbeddedAttributesConfig\Documents;
 use InvalidArgumentException;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Serialize\SerializerInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use UnexpectedValueException;
 
@@ -92,5 +93,60 @@ class DocumentsTest extends TestCase
         );
 
         (new Documents($scopeConfig, $serializer))->get();
+    }
+
+    public function testReturnsEmptyDocumentsForEmptyConfiguration(): void
+    {
+        $scopeConfig = self::createStub(ScopeConfigInterface::class);
+        $scopeConfig->method('getValue')->willReturn(null);
+
+        self::assertSame(
+            [],
+            (new Documents($scopeConfig, self::createStub(SerializerInterface::class)))->get()
+        );
+    }
+
+    #[DataProvider('invalidDocuments')]
+    public function testRejectsInvalidDocuments(mixed $configuration, mixed $rows, string $message): void
+    {
+        $scopeConfig = self::createStub(ScopeConfigInterface::class);
+        $scopeConfig->method('getValue')->willReturn($configuration);
+        $serializer = self::createStub(SerializerInterface::class);
+        $serializer->method('unserialize')->willReturn($rows);
+
+        $this->expectException(UnexpectedValueException::class);
+        $this->expectExceptionMessage($message);
+
+        (new Documents($scopeConfig, $serializer))->get();
+    }
+
+    /**
+     * @return array<string, array{mixed, mixed, string}>
+     */
+    public static function invalidDocuments(): array
+    {
+        return [
+            'configuration type' => [10, [], 'must contain serialized Documents'],
+            'serialized type' => ['configuration', 'row', 'must contain a Documents array'],
+            'row type' => ['configuration', [10], 'configuration row must be an array'],
+            'attribute' => ['configuration', [self::row('')], 'field "attribute_code"'],
+            'strategy' => ['configuration', [self::row('sku', 0, null)], 'field "parsing_strategy"'],
+            'composition' => ['configuration', [self::row('sku', 3)], 'composition value'],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function row(
+        mixed $attributeCode,
+        mixed $composite = 0,
+        mixed $strategy = 'text'
+    ): array {
+        return [
+            'attribute_code' => $attributeCode,
+            'composite' => $composite,
+            'parsing_strategy' => $strategy,
+        ];
     }
 }

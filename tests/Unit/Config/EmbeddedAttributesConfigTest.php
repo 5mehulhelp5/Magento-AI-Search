@@ -14,6 +14,7 @@ use DavidBel\AiSearch\Config\EmbeddedAttributesConfig\Documents;
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig\DynamicDocument;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use PHPUnit\Framework\TestCase;
+use UnexpectedValueException;
 
 class EmbeddedAttributesConfigTest extends TestCase
 {
@@ -61,5 +62,40 @@ class EmbeddedAttributesConfigTest extends TestCase
                 $dynamic
             ))->getAttributes(3)
         );
+    }
+
+    public function testExposesTitleAndDynamicDocumentConfiguration(): void
+    {
+        $scopeConfig = self::createStub(ScopeConfigInterface::class);
+        $scopeConfig->method('isSetFlag')->willReturn(true);
+        $scopeConfig->method('getValue')->willReturn('name');
+        $dynamicDocument = self::createStub(DynamicDocument::class);
+        $dynamicDocument->method('isEnabled')->willReturn(true);
+        $attribute = new EmbeddedAttribute('dynamic', false, 'text', null, []);
+        $dynamicDocument->method('get')->willReturn($attribute);
+        $config = new EmbeddedAttributesConfig(
+            $scopeConfig,
+            self::createStub(Documents::class),
+            $dynamicDocument
+        );
+
+        self::assertTrue($config->isDocumentTitleEnabled());
+        self::assertSame('name', $config->getDocumentTitleAttributeCode());
+        self::assertTrue($config->isDynamicDocumentEnabled(2));
+        self::assertSame($attribute, $config->getDynamicDocument(2));
+    }
+
+    public function testRejectsNonStringTitleAttribute(): void
+    {
+        $scopeConfig = self::createStub(ScopeConfigInterface::class);
+        $scopeConfig->method('getValue')->willReturn(null);
+        $config = new EmbeddedAttributesConfig(
+            $scopeConfig,
+            self::createStub(Documents::class),
+            self::createStub(DynamicDocument::class)
+        );
+
+        $this->expectException(UnexpectedValueException::class);
+        $config->getDocumentTitleAttributeCode();
     }
 }

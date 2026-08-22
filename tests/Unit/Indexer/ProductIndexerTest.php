@@ -14,6 +14,7 @@ use DavidBel\AiSearch\Ingestion\DocumentProcessing;
 use DavidBel\AiSearch\Log\Logger;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 class ProductIndexerTest extends TestCase
 {
@@ -75,6 +76,34 @@ class ProductIndexerTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         $indexer->executeList([0]);
+    }
+
+    public function testInvalidatesWhenNoIndexMatchesCurrentConfiguration(): void
+    {
+        $processing = $this->createMock(DocumentProcessing::class);
+        $processing->expects(self::never())->method('deltaUpdate');
+        $versioning = $this->createMock(Versioning::class);
+        $versioning->method('hasTargetOrActiveForCurrentConfiguration')->willReturn(false);
+        $versioning->expects(self::once())->method('invalidateProductIndexerWhenNeeded');
+
+        (new ProductIndexer($processing, $versioning, self::createStub(Logger::class)))
+            ->executeList([1]);
+    }
+
+    public function testLogsAndRethrowsFullIndexFailure(): void
+    {
+        $failure = new RuntimeException('full update failed');
+        $versioning = self::createStub(Versioning::class);
+        $versioning->method('prepareTargetForFullReindex')->willThrowException($failure);
+        $logger = $this->createMock(Logger::class);
+        $logger->expects(self::once())
+            ->method('indexerFailed')
+            ->with(ProductIndexer::ID, 'full', $failure);
+        $logger->expects(self::never())->method('indexerCompleted');
+
+        $this->expectExceptionObject($failure);
+        (new ProductIndexer(self::createStub(DocumentProcessing::class), $versioning, $logger))
+            ->executeFull();
     }
 
     private function createAvailableVersioning(): Versioning

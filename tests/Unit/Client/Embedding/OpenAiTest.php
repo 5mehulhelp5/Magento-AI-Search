@@ -16,6 +16,7 @@ use DavidBel\AiSearch\Client\Embedding\Base\ResponseValidator;
 use DavidBel\AiSearch\Client\Embedding\OpenAi\ResponseDecoder;
 use DavidBel\AiSearch\Client\Embedding\OpenAi\ResponseDecoderFactory;
 use DavidBel\AiSearch\Config\EmbedderConfig;
+use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex\QueryConfigurationSnapshot;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use GuzzleHttp\Client;
 use GuzzleHttp\Promise\Create;
@@ -86,6 +87,50 @@ class OpenAiTest extends TestCase
                 $this->createInputs(['first input', 'second input'])
             )
             ->wait();
+    }
+
+    public function testEmbedsQueryUsingVersionedQueryConfiguration(): void
+    {
+        $response = new Response(200, [], 'response');
+        $httpClient = $this->createMock(Client::class);
+        $httpClient->expects(self::once())
+            ->method('requestAsync')
+            ->with(
+                'POST',
+                'https://example.test/embeddings',
+                [
+                    RequestOptions::BODY => 'payload',
+                    RequestOptions::HEADERS => [
+                        'Accept' => 'application/json',
+                        'Content-Type' => 'application/json',
+                    ],
+                    RequestOptions::HTTP_ERRORS => false,
+                    RequestOptions::TIMEOUT => 5,
+                ]
+            )
+            ->willReturn(Create::promiseFor($response));
+        $serializer = $this->createMock(RequestBodySerializer::class);
+        $serializer->expects(self::once())
+            ->method('serialize')
+            ->with([
+                'model' => 'query-model',
+                'input' => ['Search: red shoes'],
+                'encoding_format' => 'float',
+            ])
+            ->willReturn('payload');
+        $decoder = $this->createMock(ResponseDecoder::class);
+        $decoder->expects(self::once())->method('execute')->with($response)->willReturn([[0.5, 0.6]]);
+        $factory = $this->createMock(ResponseDecoderFactory::class);
+        $factory->expects(self::once())
+            ->method('create')
+            ->with(['embeddingModel' => 'query-model', 'vectorDimensions' => 2, 'inputCount' => 1])
+            ->willReturn($decoder);
+        $config = self::createStub(EmbedderConfig::class);
+        $config->method('getEmbeddingEndpoint')->willReturn('https://example.test/embeddings');
+        $client = new OpenAi($httpClient, $serializer, $config, $factory);
+        $snapshot = new QueryConfigurationSnapshot('query-model', 2, 'Search: {text}');
+
+        self::assertSame([[0.5, 0.6]], $client->embedQueryAsync('red shoes', 5, $snapshot)->wait());
     }
 
     private function createSuccessfulSerializer(): SerializerInterface&MockObject

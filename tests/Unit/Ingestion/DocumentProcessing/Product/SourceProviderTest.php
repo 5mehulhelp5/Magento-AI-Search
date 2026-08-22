@@ -9,12 +9,14 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Ingestion\DocumentProcessing\Product;
 
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
+use DavidBel\AiSearch\Config\EmbeddedAttribute;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource\StoreScopedSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\AttributeValueProvider;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\DirectSourceBuilder;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\Eligibility;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\Eligibility\EligibleScope;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider\EmbeddingTemplate;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use InvalidArgumentException;
@@ -24,6 +26,7 @@ use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 class SourceProviderTest extends TestCase
 {
@@ -144,6 +147,112 @@ class SourceProviderTest extends TestCase
                 $eligibility
             )->getAffectedProductIds([10, 20])
         );
+    }
+
+    public function testBuildsSourcesUsingTitlesDirectAttributesAndStoreTemplates(): void
+    {
+        $directAttribute = new EmbeddedAttribute('description', false, 'text', null, null);
+        $nestedAttribute = new EmbeddedAttribute('template', false, 'text', null, []);
+        $dynamicDocument = new EmbeddedAttribute('dynamic', false, 'text', null, []);
+        $scopes = [
+            10 => [new EligibleScope(1, [10, 11])],
+            20 => [new EligibleScope(2, [20])],
+        ];
+        $eligibility = self::createStub(Eligibility::class);
+        $eligibility->method('getEligibleScopesByProductIds')->willReturn($scopes);
+        $config = $this->sourceConfig($directAttribute, $nestedAttribute, $dynamicDocument);
+        $titleValues = [10 => [1 => 'Title']];
+        $values = ['name' => $titleValues, 'description' => []];
+        $attributeValues = $this->createMock(AttributeValueProvider::class);
+        $attributeValues->expects(self::once())
+            ->method('getValuesBySourceCode')
+            ->with(['name', 'description'], [10, 11, 20])
+            ->willReturn($values);
+        [$directBuilder, $template, $directSource, $templateSource] = $this->sourceBuilders(
+            $directAttribute,
+            $dynamicDocument,
+            $scopes,
+            $values,
+            $titleValues
+        );
+
+        self::assertSame(
+            [10 => [$directSource], 20 => [$templateSource]],
+            $this->createProvider(
+                self::createStub(CollectionFactory::class),
+                $eligibility,
+                $config,
+                $attributeValues,
+                $directBuilder,
+                $template
+            )->getSourcesByProductIds([10, 20])
+        );
+    }
+
+    public function testRejectsInvalidProductIdFromDatabase(): void
+    {
+        $select = self::createStub(Select::class);
+        $select->method('from')->willReturnSelf();
+        $select->method('where')->willReturnSelf();
+        $select->method('order')->willReturnSelf();
+        $select->method('limit')->willReturnSelf();
+        $connection = self::createStub(AdapterInterface::class);
+        $connection->method('select')->willReturn($select);
+        $connection->method('fetchCol')->willReturn(['invalid']);
+        $resource = self::createStub(ProductResource::class);
+        $resource->method('getConnection')->willReturn($connection);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Database field "entity_id" is not an unsigned integer');
+
+        $this->createProvider($this->createCollectionFactory($resource))->getProductIdsAfter(0, 10);
+    }
+
+    private function sourceConfig(
+        EmbeddedAttribute $directAttribute,
+        EmbeddedAttribute $nestedAttribute,
+        EmbeddedAttribute $dynamicDocument
+    ): EmbeddedAttributesConfig {
+        $config = $this->createMock(EmbeddedAttributesConfig::class);
+        $config->expects(self::once())
+            ->method('getAttributes')
+            ->willReturn([$directAttribute, $nestedAttribute]);
+        $config->expects(self::once())->method('isDocumentTitleEnabled')->willReturn(true);
+        $config->expects(self::once())->method('getDocumentTitleAttributeCode')->willReturn('name');
+        $config->expects(self::exactly(2))
+            ->method('getDynamicDocument')
+            ->willReturnMap([[1, null], [2, $dynamicDocument]]);
+
+        return $config;
+    }
+
+    /**
+     * @param array<int, list<EligibleScope>> $scopes
+     * @param array<string, array<int, array<int, string>>> $values
+     * @param array<int, array<int, string>> $titleValues
+     * @return array{DirectSourceBuilder, EmbeddingTemplate, DocumentSource, DocumentSource}
+     */
+    private function sourceBuilders(
+        EmbeddedAttribute $directAttribute,
+        EmbeddedAttribute $dynamicDocument,
+        array $scopes,
+        array $values,
+        array $titleValues
+    ): array {
+        $directSource = new DocumentSource('description', 'text', []);
+        $directBuilder = $this->createMock(DirectSourceBuilder::class);
+        $directBuilder->expects(self::once())
+            ->method('buildSourcesByProductId')
+            ->with([$directAttribute], [10, 20], $scopes, $values, $titleValues)
+            ->willReturn([10 => [$directSource]]);
+        $templateSource = new DocumentSource('dynamic', 'text', []);
+        $template = $this->createMock(EmbeddingTemplate::class);
+        $template->expects(self::once())
+            ->method('buildSourcesByProductId')
+            ->with([2 => $dynamicDocument], [10, 20], $scopes, $titleValues)
+            ->willReturn([20 => [$templateSource]]);
+
+        return [$directBuilder, $template, $directSource, $templateSource];
     }
 
     private function createProvider(

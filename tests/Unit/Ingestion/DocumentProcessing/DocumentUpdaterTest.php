@@ -169,6 +169,118 @@ class DocumentUpdaterTest extends TestCase
         )->deltaUpdate('product', 42, [$this->createSource('New source')]);
     }
 
+    public function testSkipsBlankAndUnchunkableSources(): void
+    {
+        $parsing = self::createStub(Parsing::class);
+        $parsing->method('parse')->willReturn('parsed');
+        $chunking = self::createStub(Chunking::class);
+        $chunking->method('chunk')->willReturn([]);
+        $updater = $this->createSourceUpdater(
+            self::createStub(DocumentRepositoryInterface::class),
+            $parsing,
+            $chunking,
+            self::createStub(ChunkPersistence::class)
+        );
+        $source = new DocumentSource(
+            'description',
+            'text_as_is',
+            [new StoreScopedSource(1, '  '), new StoreScopedSource(2, 'content')]
+        );
+
+        self::assertEquals(
+            new Result([], []),
+            $updater->update('product', 42, $source, [], UpdateMode::DeltaUpdate)
+        );
+    }
+
+    public function testDeltaUpdatePersistsChangedTitleAndReturnsAllDocumentChunks(): void
+    {
+        $content = 'Unchanged source';
+        $document = $this->createDocumentMock(1, 10, hash('sha256', $content), 'Old title');
+        $document->expects(self::once())->method('setTitle')->with('New title')->willReturnSelf();
+        $repository = $this->createMock(DocumentRepositoryInterface::class);
+        $repository->expects(self::once())->method('save')->with($document)->willReturn($document);
+        $persistence = $this->createMock(ChunkPersistence::class);
+        $persistence->expects(self::once())
+            ->method('getChunkIdsByDocumentId')
+            ->with(10)
+            ->willReturn([100, 101]);
+        $source = new DocumentSource(
+            'description',
+            'text_as_is',
+            [new StoreScopedSource(1, $content, 'New title')]
+        );
+
+        self::assertEquals(
+            new Result([100, 101], []),
+            $this->createSourceUpdater(
+                $repository,
+                self::createStub(Parsing::class),
+                self::createStub(Chunking::class),
+                $persistence
+            )->update('product', 42, $source, [1 => $document], UpdateMode::DeltaUpdate)
+        );
+    }
+
+    public function testCreatesANewDocumentAndReturnsAllChunksWhenTitleIsAdded(): void
+    {
+        $document = $this->createMock(DocumentInterface::class);
+        $document->expects(self::once())->method('setSourceEntityType')->with('product')->willReturnSelf();
+        $document->expects(self::once())->method('setSourceEntityId')->with(42)->willReturnSelf();
+        $document->expects(self::once())->method('setStoreId')->with(1)->willReturnSelf();
+        $document->expects(self::once())->method('setSourceCode')->with('description')->willReturnSelf();
+        $document->expects(self::once())->method('setSourceHash')->willReturnSelf();
+        $document->expects(self::once())->method('setTitle')->with('Title')->willReturnSelf();
+        $document->method('getDocumentId')->willReturn(10);
+        $factory = self::createStub(DocumentFactory::class);
+        $factory->method('create')->willReturn($document);
+        $repository = $this->createMock(DocumentRepositoryInterface::class);
+        $repository->expects(self::once())->method('save')->with($document)->willReturn($document);
+        $parsing = self::createStub(Parsing::class);
+        $parsing->method('parse')->willReturn('content');
+        $chunking = self::createStub(Chunking::class);
+        $chunking->method('chunk')->willReturn(['chunk']);
+        $persistence = $this->createMock(ChunkPersistence::class);
+        $persistence->expects(self::once())
+            ->method('reconcile')
+            ->willReturn(new Result([100], [102]));
+        $persistence->expects(self::once())
+            ->method('getChunkIdsByDocumentId')
+            ->with(10)
+            ->willReturn([100, 101]);
+        $source = new DocumentSource(
+            'description',
+            'text_as_is',
+            [new StoreScopedSource(1, 'content', 'Title')]
+        );
+
+        self::assertEquals(
+            new Result([100, 101], [102]),
+            $this->createSourceUpdater(
+                $repository,
+                $parsing,
+                $chunking,
+                $persistence,
+                $factory
+            )->update('product', 42, $source, [], UpdateMode::DeltaUpdate)
+        );
+    }
+
+    public function testRejectsDeletingADocumentWithoutAnId(): void
+    {
+        $document = self::createStub(DocumentInterface::class);
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('persisted AI search document must have an ID');
+
+        $this->createSourceUpdater(
+            self::createStub(DocumentRepositoryInterface::class),
+            self::createStub(Parsing::class),
+            self::createStub(Chunking::class),
+            self::createStub(ChunkPersistence::class)
+        )->deleteDocuments([1 => $document]);
+    }
+
     private function createUpdater(
         DocumentRepositoryInterface $repository,
         Parsing $parsing,
@@ -194,6 +306,22 @@ class DocumentUpdaterTest extends TestCase
         );
     }
 
+    private function createSourceUpdater(
+        DocumentRepositoryInterface $repository,
+        Parsing $parsing,
+        Chunking $chunking,
+        ChunkPersistence $chunkPersistence,
+        ?DocumentFactory $documentFactory = null
+    ): DocumentSourceUpdater {
+        return new DocumentSourceUpdater(
+            $repository,
+            $documentFactory ?? self::createStub(DocumentFactory::class),
+            $parsing,
+            $chunking,
+            $chunkPersistence
+        );
+    }
+
     /**
      * @param list<DocumentInterface> $documents
      */
@@ -208,14 +336,15 @@ class DocumentUpdaterTest extends TestCase
     private function createDocumentMock(
         int $storeId,
         ?int $documentId,
-        string $sourceHash
+        string $sourceHash,
+        ?string $title = null
     ): DocumentInterface&MockObject {
         $document = $this->createMock(DocumentInterface::class);
         $document->method('getStoreId')->willReturn($storeId);
         $document->method('getDocumentId')->willReturn($documentId);
         $document->method('getSourceCode')->willReturn('description');
         $document->method('getSourceHash')->willReturn($sourceHash);
-        $document->method('getTitle')->willReturn(null);
+        $document->method('getTitle')->willReturn($title);
 
         return $document;
     }

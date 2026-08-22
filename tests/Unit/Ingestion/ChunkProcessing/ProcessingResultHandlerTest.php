@@ -202,12 +202,90 @@ class ProcessingResultHandlerTest extends TestCase
         )->finish();
     }
 
+    public function testMarksDeleteBatchFailedWhenRecordingResultThrows(): void
+    {
+        $failure = new RuntimeException('progress failed');
+        $errorDetails = new ErrorDetails(null, 'progress failed');
+        $successful = $this->createItem(10, 2, 99);
+        $failed = $this->createItem(20, 3, 100);
+        $result = new Result(
+            [$successful],
+            [new FailedItem($failed, new ErrorDetails('500', 'failed'))]
+        );
+        $resource = $this->createMock(EmbeddingBacklogResource::class);
+        $resource->expects(self::once())
+            ->method('markFailedByVersions')
+            ->with([10 => 2, 20 => 3], 'opensearch', $errorDetails);
+        $indexVersion = self::createStub(BacklogIndexVersion::class);
+        $indexVersion->method('markFullReindexItemsIndexed')->willThrowException($failure);
+        $state = $this->createMock(ProcessingState::class);
+        $state->expects(self::once())->method('stopAcceptingWork');
+        $logger = $this->createMock(Logger::class);
+        $logger->expects(self::once())->method('batchFailed');
+
+        $this->createHandler(
+            $resource,
+            self::createStub(VectorSync::class),
+            self::createStub(CacheClean::class),
+            $state,
+            $indexVersion,
+            $logger
+        )->completeDelete($result, new DeleteBatch([$successful, $failed]), 7);
+    }
+
+    public function testMarksOnlySuccessfulDeletesFailedWhenCacheRegistrationThrows(): void
+    {
+        $failure = new RuntimeException('cache failed');
+        $item = $this->createItem(10, 2, 99);
+        $result = new Result([$item], []);
+        $resource = $this->createMock(EmbeddingBacklogResource::class);
+        $resource->expects(self::once())
+            ->method('markFailedByVersions')
+            ->with([10 => 2], 'cache', new ErrorDetails(null, 'cache failed'));
+        $cacheClean = self::createStub(CacheClean::class);
+        $cacheClean->method('register')->willThrowException($failure);
+        $state = $this->createMock(ProcessingState::class);
+        $state->expects(self::once())->method('stopAcceptingWork');
+
+        $this->createHandler(
+            $resource,
+            self::createStub(VectorSync::class),
+            $cacheClean,
+            $state
+        )->completeDelete($result, new DeleteBatch([$item]), 7);
+    }
+
+    public function testMarksDeleteBatchFailedWhenOpenSearchPromiseRejects(): void
+    {
+        $item = $this->createItem(10, 2, 99);
+        $resource = $this->createMock(EmbeddingBacklogResource::class);
+        $resource->expects(self::once())
+            ->method('markFailedByVersions')
+            ->with(
+                [10 => 2],
+                'opensearch',
+                new ErrorDetails(null, 'Processing failed without an exception.')
+            );
+        $logger = $this->createMock(Logger::class);
+        $logger->expects(self::once())->method('batchFailed');
+
+        $this->createHandler(
+            $resource,
+            self::createStub(VectorSync::class),
+            self::createStub(CacheClean::class),
+            self::createStub(ProcessingState::class),
+            null,
+            $logger
+        )->openSearchFailed(new DeleteBatch([$item]), 7, 'failure');
+    }
+
     private function createHandler(
         EmbeddingBacklogResource $resource,
         VectorSync $vectorSync,
         CacheClean $cacheClean,
         ProcessingState $state,
-        ?BacklogIndexVersion $backlogIndexVersion = null
+        ?BacklogIndexVersion $backlogIndexVersion = null,
+        ?Logger $logger = null
     ): ProcessingResultHandler {
         $collection = self::createStub(Collection::class);
         $collection->method('getResourceModel')->willReturn($resource);
@@ -221,7 +299,7 @@ class ProcessingResultHandlerTest extends TestCase
             $state,
             $backlogIndexVersion ?? self::createStub(BacklogIndexVersion::class),
             new FailureReasonMapper(),
-            self::createStub(Logger::class)
+            $logger ?? self::createStub(Logger::class)
         );
     }
 
