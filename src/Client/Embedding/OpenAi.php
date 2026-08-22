@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Client\Embedding;
 
 use DavidBel\AiSearch\Client\Embedding\Base\EmbedderClientInterface;
+use DavidBel\AiSearch\Client\Embedding\Base\RequestBodySerializer;
 use DavidBel\AiSearch\Client\Embedding\OpenAi\ResponseDecoderFactory;
 use DavidBel\AiSearch\Config\EmbedderConfig;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex\QueryConfigurationSnapshot;
@@ -16,14 +17,12 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\RequestOptions;
-use Magento\Framework\Serialize\SerializerInterface;
-use UnexpectedValueException;
 
 class OpenAi implements EmbedderClientInterface
 {
     public function __construct(
         private readonly Client $client,
-        private readonly SerializerInterface $serializer,
+        private readonly RequestBodySerializer $requestBodySerializer,
         private readonly EmbedderConfig $embedderConfig,
         private readonly ResponseDecoderFactory $responseDecoderFactory
     ) {
@@ -86,15 +85,11 @@ class OpenAi implements EmbedderClientInterface
             return Create::promiseFor([]);
         }
 
-        $payload = $this->serializer->serialize([
+        $payload = $this->requestBodySerializer->serialize([
             'model' => $embeddingModel,
             'input' => $inputs,
             'encoding_format' => 'float',
         ]);
-
-        if (!is_string($payload)) {
-            throw new UnexpectedValueException('Embedding request could not be serialized.');
-        }
 
         $responseDecoder = $this->responseDecoderFactory->create([
             'embeddingModel' => $embeddingModel,

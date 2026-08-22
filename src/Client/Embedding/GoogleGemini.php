@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Client\Embedding;
 
 use DavidBel\AiSearch\Client\Embedding\Base\EmbedderClientInterface;
+use DavidBel\AiSearch\Client\Embedding\Base\RequestBodySerializer;
 use DavidBel\AiSearch\Client\Embedding\GoogleGemini\EndpointBuilder;
 use DavidBel\AiSearch\Client\Embedding\GoogleGemini\RequestBuilder;
 use DavidBel\AiSearch\Client\Embedding\GoogleGemini\ResponseDecoderFactory;
@@ -18,14 +19,13 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\RequestOptions;
-use Magento\Framework\Serialize\SerializerInterface;
 use UnexpectedValueException;
 
 class GoogleGemini implements EmbedderClientInterface
 {
     public function __construct(
         private readonly Client $client,
-        private readonly SerializerInterface $serializer,
+        private readonly RequestBodySerializer $requestBodySerializer,
         private readonly EmbedderConfig $embedderConfig,
         private readonly EndpointBuilder $endpointBuilder,
         private readonly RequestBuilder $requestBuilder,
@@ -96,11 +96,7 @@ class GoogleGemini implements EmbedderClientInterface
             );
         }
 
-        $payload = $this->serializer->serialize($requestBody);
-
-        if (!is_string($payload)) {
-            throw new UnexpectedValueException('Embedding request could not be serialized.');
-        }
+        $payload = $this->requestBodySerializer->serialize($requestBody);
 
         $responseDecoder = $this->responseDecoderFactory->create([
             'vectorDimensions' => $vectorDimensions,
