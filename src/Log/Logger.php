@@ -111,6 +111,35 @@ class Logger
         );
     }
 
+    public function semanticSearchFailed(Throwable $throwable): void
+    {
+        $this->logger->error(
+            'Semantic catalog search failed. Magento full-text search will be used.',
+            ['exception' => $throwable]
+        );
+    }
+
+    public function physicalIndexListingFailed(Throwable $throwable): void
+    {
+        $this->logger->warning(
+            'Obsolete OpenSearch index versions could not be listed.',
+            ['exception' => $throwable]
+        );
+    }
+
+    public function physicalIndexDeleteFailed(
+        string $indexName,
+        Throwable $throwable
+    ): void {
+        $this->logger->warning(
+            'An obsolete OpenSearch index version could not be deleted.',
+            [
+                'index_name' => $indexName,
+                'exception' => $throwable,
+            ]
+        );
+    }
+
     public function workerStarted(Operation $operation, int $indexVersion): void
     {
         $this->logger->info(

@@ -10,7 +10,7 @@ namespace DavidBel\AiSearch\Indexer\Versioning;
 
 use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Indexer\Versioning\State\Flag;
-use Psr\Log\LoggerInterface;
+use DavidBel\AiSearch\Log\Logger;
 use Throwable;
 
 class PhysicalIndexDelete
@@ -18,7 +18,7 @@ class PhysicalIndexDelete
     public function __construct(
         private readonly Flag $stateFlag,
         private readonly OpenSearch $openSearch,
-        private readonly LoggerInterface $logger
+        private readonly Logger $logger
     ) {
     }
 
@@ -58,10 +58,7 @@ class PhysicalIndexDelete
         try {
             return $this->openSearch->getVersionIndexNames();
         } catch (Throwable $throwable) {
-            $this->logger->warning(
-                'Obsolete OpenSearch index versions could not be listed.',
-                ['exception' => $throwable]
-            );
+            $this->logger->physicalIndexListingFailed($throwable);
 
             return [];
         }
@@ -76,13 +73,7 @@ class PhysicalIndexDelete
         try {
             $this->openSearch->deleteIndex($indexName);
         } catch (Throwable $throwable) {
-            $this->logger->warning(
-                'An obsolete OpenSearch index version could not be deleted.',
-                [
-                    'index_name' => $indexName,
-                    'exception' => $throwable,
-                ]
-            );
+            $this->logger->physicalIndexDeleteFailed($indexName, $throwable);
 
             return 0;
         }
