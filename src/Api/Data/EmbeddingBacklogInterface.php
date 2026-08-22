@@ -30,7 +30,9 @@ interface EmbeddingBacklogInterface extends ExtensibleDataInterface
     public const string FULL_REINDEX_STATUS = 'full_reindex_status';
     public const string BACKLOG_VERSION = 'backlog_version';
     public const string ATTEMPT_COUNT = 'attempt_count';
-    public const string LAST_ERROR_CATEGORY = 'last_error_category';
+    public const string LAST_ERROR_STAGE = 'last_error_stage';
+    public const string LAST_ERROR_CODE = 'last_error_code';
+    public const string LAST_ERROR_MESSAGE = 'last_error_message';
     public const string CREATED_AT = 'created_at';
     public const string UPDATED_AT = 'updated_at';
 
@@ -187,19 +189,49 @@ interface EmbeddingBacklogInterface extends ExtensibleDataInterface
     public function setAttemptCount(int $attemptCount): EmbeddingBacklogInterface;
 
     /**
-     * Get the last error category.
+     * Get the last processing stage that produced an error.
      *
      * @return string|null
      */
-    public function getLastErrorCategory(): ?string;
+    public function getLastErrorStage(): ?string;
 
     /**
-     * Set the last error category.
+     * Set the last processing stage that produced an error.
      *
-     * @param string|null $lastErrorCategory
+     * @param string|null $lastErrorStage
      * @return \DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface
      */
-    public function setLastErrorCategory(?string $lastErrorCategory): EmbeddingBacklogInterface;
+    public function setLastErrorStage(?string $lastErrorStage): EmbeddingBacklogInterface;
+
+    /**
+     * Get the last error code.
+     *
+     * @return string|null
+     */
+    public function getLastErrorCode(): ?string;
+
+    /**
+     * Set the last error code.
+     *
+     * @param string|null $lastErrorCode
+     * @return \DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface
+     */
+    public function setLastErrorCode(?string $lastErrorCode): EmbeddingBacklogInterface;
+
+    /**
+     * Get the last error message.
+     *
+     * @return string|null
+     */
+    public function getLastErrorMessage(): ?string;
+
+    /**
+     * Set the last error message.
+     *
+     * @param string|null $lastErrorMessage
+     * @return \DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface
+     */
+    public function setLastErrorMessage(?string $lastErrorMessage): EmbeddingBacklogInterface;
 
     /**
      * Get the creation timestamp.

@@ -64,7 +64,7 @@ class Maintenance
                 EmbeddingBacklogInterface::STATUS => new Expression(
                     $connection->quoteInto('?', Status::Outdated->value)
                 ),
-                EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => new Expression('NULL'),
+                EmbeddingBacklogInterface::LAST_ERROR_STAGE => new Expression('NULL'),
             ])
             ->where('backlog.operation = ?', Operation::Upsert->value)
             ->where('backlog.status = ?', Status::Pending->value)

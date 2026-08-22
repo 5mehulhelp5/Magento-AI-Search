@@ -139,16 +139,34 @@
                 <label translate="true">Attempt Count</label>
             </settings>
         </column>
-        <column name="last_error_category" sortOrder="110">
+        <column name="last_error_stage" sortOrder="110">
             <settings>
                 <filter>text</filter>
-                <label translate="true">Last Error Category</label>
+                <label translate="true">Last Error Stage</label>
+            </settings>
+        </column>
+        <column name="last_error_code" sortOrder="120">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Last Error Code</label>
+            </settings>
+        </column>
+        <column name="last_error_message" sortOrder="130">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="escape" xsi:type="boolean">true</item>
+                    <item name="truncate" xsi:type="number">160</item>
+                </item>
+            </argument>
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Last Error Message</label>
             </settings>
         </column>
         <column name="created_at"
                 class="Magento\Ui\Component\Listing\Columns\Date"
                 component="Magento_Ui/js/grid/columns/date"
-                sortOrder="120">
+                sortOrder="140">
             <settings>
                 <filter>dateRange</filter>
                 <dataType>date</dataType>
@@ -158,7 +176,7 @@
         <column name="updated_at"
                 class="Magento\Ui\Component\Listing\Columns\Date"
                 component="Magento_Ui/js/grid/columns/date"
-                sortOrder="130">
+                sortOrder="150">
             <settings>
                 <filter>dateRange</filter>
                 <dataType>date</dataType>
@@ -167,7 +185,7 @@
         </column>
         <actionsColumn name="actions"
                        class="DavidBel\AiSearch\Ui\Component\Listing\Column\Backlog\ViewAction"
-                       sortOrder="140">
+                       sortOrder="160">
             <settings>
                 <indexField>backlog_id</indexField>
                 <label translate="true">Actions</label>

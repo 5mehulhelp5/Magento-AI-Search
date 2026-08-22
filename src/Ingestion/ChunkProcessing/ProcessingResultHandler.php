@@ -17,9 +17,9 @@ use Throwable;
 
 class ProcessingResultHandler
 {
-    private const string EMBEDDER_ERROR_CATEGORY = 'embedder';
-    private const string OPENSEARCH_ERROR_CATEGORY = 'opensearch';
-    private const string CACHE_ERROR_CATEGORY = 'cache';
+    private const string EMBEDDER_ERROR_STAGE = 'embedder';
+    private const string OPENSEARCH_ERROR_STAGE = 'opensearch';
+    private const string CACHE_ERROR_STAGE = 'cache';
 
     private ?EmbeddingBacklogResource $resource = null;
 
@@ -60,7 +60,7 @@ class ProcessingResultHandler
         try {
             $this->getResource()->markFailedByVersions(
                 $this->processingState->getBatch($batchId)->getBacklogVersions(),
-                self::EMBEDDER_ERROR_CATEGORY
+                self::EMBEDDER_ERROR_STAGE
             );
         } finally {
             $this->processingState->removeBatch($batchId);
@@ -79,7 +79,7 @@ class ProcessingResultHandler
     {
         $this->getResource()->markFailedByVersions(
             $backlogVersions,
-            self::OPENSEARCH_ERROR_CATEGORY
+            self::OPENSEARCH_ERROR_STAGE
         );
     }
 
@@ -92,7 +92,7 @@ class ProcessingResultHandler
         } catch (Throwable $throwable) {
             $this->getResource()->markFailedByVersions(
                 $successfulBacklogVersions,
-                self::CACHE_ERROR_CATEGORY
+                self::CACHE_ERROR_STAGE
             );
 
             throw $throwable;
@@ -114,7 +114,7 @@ class ProcessingResultHandler
 
         $this->getResource()->markFailedByVersions(
             $failedBacklogVersions,
-            self::OPENSEARCH_ERROR_CATEGORY
+            self::OPENSEARCH_ERROR_STAGE
         );
 
         try {
@@ -128,7 +128,7 @@ class ProcessingResultHandler
         } catch (Throwable $throwable) {
             $this->getResource()->markFailedByVersions(
                 $successfulBacklogVersions,
-                self::CACHE_ERROR_CATEGORY
+                self::CACHE_ERROR_STAGE
             );
 
             throw $throwable;

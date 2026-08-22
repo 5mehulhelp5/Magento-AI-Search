@@ -136,14 +136,34 @@ class EmbeddingBacklog extends AbstractExtensibleModel implements EmbeddingBackl
         return $this->setData(self::ATTEMPT_COUNT, $attemptCount);
     }
 
-    public function getLastErrorCategory(): ?string
+    public function getLastErrorStage(): ?string
     {
-        return $this->getNullableString(self::LAST_ERROR_CATEGORY);
+        return $this->getNullableString(self::LAST_ERROR_STAGE);
     }
 
-    public function setLastErrorCategory(?string $lastErrorCategory): EmbeddingBacklogInterface
+    public function setLastErrorStage(?string $lastErrorStage): EmbeddingBacklogInterface
     {
-        return $this->setData(self::LAST_ERROR_CATEGORY, $lastErrorCategory);
+        return $this->setData(self::LAST_ERROR_STAGE, $lastErrorStage);
+    }
+
+    public function getLastErrorCode(): ?string
+    {
+        return $this->getNullableString(self::LAST_ERROR_CODE);
+    }
+
+    public function setLastErrorCode(?string $lastErrorCode): EmbeddingBacklogInterface
+    {
+        return $this->setData(self::LAST_ERROR_CODE, $lastErrorCode);
+    }
+
+    public function getLastErrorMessage(): ?string
+    {
+        return $this->getNullableString(self::LAST_ERROR_MESSAGE);
+    }
+
+    public function setLastErrorMessage(?string $lastErrorMessage): EmbeddingBacklogInterface
+    {
+        return $this->setData(self::LAST_ERROR_MESSAGE, $lastErrorMessage);
     }
 
     public function getCreatedAt(): ?string

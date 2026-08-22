@@ -144,13 +144,36 @@
                 <label translate="true">Attempt Count</label>
             </settings>
         </field>
-        <field name="last_error_category" formElement="input" sortOrder="60">
+        <field name="last_error_stage" formElement="input" sortOrder="60">
             <settings>
                 <elementTmpl>ui/form/element/text</elementTmpl>
                 <dataType>text</dataType>
-                <dataScope>last_error_category</dataScope>
-                <label translate="true">Last Error Category</label>
+                <dataScope>last_error_stage</dataScope>
+                <label translate="true">Last Error Stage</label>
             </settings>
+        </field>
+        <field name="last_error_code" formElement="input" sortOrder="70">
+            <settings>
+                <elementTmpl>ui/form/element/text</elementTmpl>
+                <dataType>text</dataType>
+                <dataScope>last_error_code</dataScope>
+                <label translate="true">Last Error Code</label>
+            </settings>
+        </field>
+        <field name="last_error_message" formElement="textarea" sortOrder="80">
+            <settings>
+                <disabled>true</disabled>
+                <dataType>text</dataType>
+                <dataScope>last_error_message</dataScope>
+                <label translate="true">Last Error Message</label>
+            </settings>
+            <formElements>
+                <textarea>
+                    <settings>
+                        <rows>8</rows>
+                    </settings>
+                </textarea>
+            </formElements>
         </field>
     </fieldset>
 </form>

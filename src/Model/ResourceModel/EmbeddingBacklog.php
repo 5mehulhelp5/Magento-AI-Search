@@ -156,7 +156,7 @@ class EmbeddingBacklog extends AbstractDb
                 EmbeddingBacklogInterface::ATTEMPT_COUNT => new Expression(
                     EmbeddingBacklogInterface::ATTEMPT_COUNT . ' + 1'
                 ),
-                EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
+                EmbeddingBacklogInterface::LAST_ERROR_STAGE => null,
             ]
         );
     }
@@ -164,7 +164,7 @@ class EmbeddingBacklog extends AbstractDb
     /**
      * @param array<int, int> $backlogVersions
      */
-    public function markFailedByVersions(array $backlogVersions, string $errorCategory): void
+    public function markFailedByVersions(array $backlogVersions, string $errorStage): void
     {
         if ($backlogVersions === []) {
             return;
@@ -177,7 +177,7 @@ class EmbeddingBacklog extends AbstractDb
                 EmbeddingBacklogInterface::ATTEMPT_COUNT => new Expression(
                     EmbeddingBacklogInterface::ATTEMPT_COUNT . ' + 1'
                 ),
-                EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => $errorCategory,
+                EmbeddingBacklogInterface::LAST_ERROR_STAGE => $errorStage,
             ]
         );
     }
@@ -390,7 +390,7 @@ class EmbeddingBacklog extends AbstractDb
             EmbeddingBacklogInterface::FULL_REINDEX_STATUS => $fullReindexStatus->value,
             EmbeddingBacklogInterface::BACKLOG_VERSION => 1,
             EmbeddingBacklogInterface::ATTEMPT_COUNT => 0,
-            EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
+            EmbeddingBacklogInterface::LAST_ERROR_STAGE => null,
         ];
     }
 
@@ -421,7 +421,7 @@ class EmbeddingBacklog extends AbstractDb
                 EmbeddingBacklogInterface::BACKLOG_VERSION . ' + 1'
             ),
             EmbeddingBacklogInterface::ATTEMPT_COUNT,
-            EmbeddingBacklogInterface::LAST_ERROR_CATEGORY,
+            EmbeddingBacklogInterface::LAST_ERROR_STAGE,
         ];
     }
 
