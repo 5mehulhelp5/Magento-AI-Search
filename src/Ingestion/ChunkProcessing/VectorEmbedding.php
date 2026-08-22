@@ -12,6 +12,8 @@ use DavidBel\AiSearch\Client\Embedding\Base\EmbedderClientPool;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorEmbedding\PromisePool;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorEmbedding\RequestBatchFactory;
 use Generator;
+use GuzzleHttp\Promise\Create;
+use Throwable;
 
 class VectorEmbedding
 {
@@ -48,13 +50,19 @@ class VectorEmbedding
         $client = $this->embedderClientPool->getClient();
 
         foreach ($batches as $batchId => $batch) {
-            $requestBatch = $this->requestBatchFactory->create([
-                'processingBatch' => $batch,
-            ]);
+            try {
+                $requestBatch = $this->requestBatchFactory->create([
+                    'processingBatch' => $batch,
+                ]);
 
-            yield $batchId => $client
-                ->embedDocumentsAsync($requestBatch->getUniqueInputs())
-                ->then([$requestBatch, 'expandVectors']);
+                $promise = $client
+                    ->embedDocumentsAsync($requestBatch->getUniqueInputs())
+                    ->then([$requestBatch, 'expandVectors']);
+            } catch (Throwable $throwable) {
+                $promise = Create::rejectionFor($throwable);
+            }
+
+            yield $batchId => $promise;
         }
     }
 }

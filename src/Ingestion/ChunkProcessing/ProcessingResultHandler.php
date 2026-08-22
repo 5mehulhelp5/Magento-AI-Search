@@ -40,19 +40,27 @@ class ProcessingResultHandler
      */
     public function completed(array $vectors, int $batchId): void
     {
+        $batch = $this->processingState->getBatch($batchId);
+        $affectedBacklogVersions = $batch->getBacklogVersions();
+        $errorStage = self::OPENSEARCH_ERROR_STAGE;
+
         try {
-            $batch = $this->processingState->getBatch($batchId);
+            $result = $this->vectorSync->upsert($batch, $vectors);
+            $successfulBacklogVersions = $result->getSuccessfulBacklogVersions();
 
-            try {
-                $result = $this->vectorSync->upsert($batch, $vectors);
-            } catch (Throwable $throwable) {
-                $this->processingState->stopAcceptingWork();
-                $this->openSearchFailed($batch->getBacklogVersions(), $throwable);
+            $this->recordVectorSyncResult($result);
 
-                return;
-            }
-
-            $this->handleVectorSyncResult($result);
+            $affectedBacklogVersions = $successfulBacklogVersions;
+            $errorStage = self::CACHE_ERROR_STAGE;
+            $this->registerCacheInvalidation($result, $successfulBacklogVersions);
+            $this->processingState->recordSuccesses($successfulBacklogVersions);
+        } catch (Throwable $throwable) {
+            $this->processingState->stopAcceptingWork();
+            $this->markBacklogItemsFailed(
+                $affectedBacklogVersions,
+                $errorStage,
+                $this->failureReasonMapper->map($throwable)
+            );
         } finally {
             $this->processingState->removeBatch($batchId);
         }
@@ -73,7 +81,28 @@ class ProcessingResultHandler
 
     public function completeDelete(Result $result): void
     {
-        $this->handleVectorSyncResult($result);
+        $successfulBacklogVersions = $result->getSuccessfulBacklogVersions();
+        $affectedBacklogVersions = array_replace(
+            $successfulBacklogVersions,
+            $result->getFailedBacklogVersions()
+        );
+        $errorStage = self::OPENSEARCH_ERROR_STAGE;
+
+        try {
+            $this->recordVectorSyncResult($result);
+
+            $affectedBacklogVersions = $successfulBacklogVersions;
+            $errorStage = self::CACHE_ERROR_STAGE;
+            $this->registerCacheInvalidation($result, $successfulBacklogVersions);
+            $this->processingState->recordSuccesses($successfulBacklogVersions);
+        } catch (Throwable $throwable) {
+            $this->processingState->stopAcceptingWork();
+            $this->markBacklogItemsFailed(
+                $affectedBacklogVersions,
+                $errorStage,
+                $this->failureReasonMapper->map($throwable)
+            );
+        }
     }
 
     /**
@@ -92,52 +121,37 @@ class ProcessingResultHandler
     {
         $successfulBacklogVersions = $this->processingState->getSuccessfulBacklogVersions();
 
-        try {
-            $this->cacheClean->flush();
-        } catch (Throwable $throwable) {
-            $this->markBacklogItemsFailed(
-                $successfulBacklogVersions,
-                self::CACHE_ERROR_STAGE,
-                $this->failureReasonMapper->map($throwable)
-            );
-
-            throw $throwable;
-        }
-
         $this->getResource()->markDoneByVersions($successfulBacklogVersions);
+        $this->cacheClean->flush();
 
         return $this->processingState->getProcessedCount();
     }
 
-    private function handleVectorSyncResult(Result $result): void
+    private function recordVectorSyncResult(Result $result): void
     {
-        $successfulBacklogVersions = $result->getSuccessfulBacklogVersions();
-
         $this->backlogIndexVersion->markFullReindexItemsIndexed(
             $result->getSuccessfulBacklogIndexVersions()
         );
 
         $this->markOpenSearchItemFailures($result->getFailedItems());
+    }
 
-        try {
-            foreach ($result->getSuccessfulSourceEntities() as $entityType => $entityIds) {
-                $this->cacheClean->register($entityType, $entityIds);
-            }
-
-            if ($successfulBacklogVersions !== []) {
-                $this->cacheClean->registerSearchResults();
-            }
-        } catch (Throwable $throwable) {
-            $this->markBacklogItemsFailed(
-                $successfulBacklogVersions,
-                self::CACHE_ERROR_STAGE,
-                $this->failureReasonMapper->map($throwable)
-            );
-
-            throw $throwable;
+    /**
+     * @param array<int, int> $successfulBacklogVersions
+     */
+    private function registerCacheInvalidation(
+        Result $result,
+        array $successfulBacklogVersions
+    ): void {
+        foreach ($result->getSuccessfulSourceEntities() as $entityType => $entityIds) {
+            $this->cacheClean->register($entityType, $entityIds);
         }
 
-        $this->processingState->recordSuccesses($successfulBacklogVersions);
+        if ($successfulBacklogVersions === []) {
+            return;
+        }
+
+        $this->cacheClean->registerSearchResults();
     }
 
     /**
