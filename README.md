@@ -76,10 +76,12 @@ sequenceDiagram
 
 ### Reindexing workflow
 
-| Reindexing mode | Product parsing | Text chunking | Vector embedding |
-|---|---|---|---|
-| Delta | Changed source content only | Changed source content only | Changed or new chunks, or all existing chunks when the document title changes |
-| Full | All eligible product sources | All non-empty documents | All current chunks |
+Only key configuration changes trigger automatic full reindexing. The Admin UI flags these settings with tooltips for administrators.
+
+| Reindexing mode | Product parsing | Text chunking | Vector embedding | Search indexing |
+|---|---|---|---|---|
+| Delta | Update documents for affected products | Parse and chunk changed documents | Embed only updated text chunks | Update index |
+| Full | Update documents for all eligible products | (Re-)parse and (re-)chunk all documents | Embed all text chunks | Build new index |
 
 ## ⚙️ System requirements
 
