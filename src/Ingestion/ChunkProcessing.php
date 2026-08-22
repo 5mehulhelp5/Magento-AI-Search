@@ -21,7 +21,7 @@ use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingResultHandlerFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingState;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingStateFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorEmbedding;
-use DavidBel\AiSearch\Log\ProcessingLogger;
+use DavidBel\AiSearch\Log\Logger;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use Generator;
 
@@ -41,13 +41,13 @@ class ChunkProcessing
         private readonly CacheClean $cacheClean,
         private readonly DataProcessingConfig $dataProcessingConfig,
         private readonly BacklogMaintenance $backlogMaintenance,
-        private readonly ProcessingLogger $processingLogger
+        private readonly Logger $logger
     ) {
     }
 
     public function execute(int $indexVersion): int
     {
-        $this->processingLogger->workerStarted(Operation::Upsert, $indexVersion);
+        $this->logger->workerStarted(Operation::Upsert, $indexVersion);
 
         $processingState = $this->processingStateFactory->create();
         $resultHandler = $this->processingResultHandlerFactory->create([
@@ -107,7 +107,7 @@ class ChunkProcessing
             $cursorUpdatedAt = $lastItem->backlogUpdatedAt;
             $cursorBacklogId = $lastItem->backlogId;
             $processingState->addBatch($batchId, $batch);
-            $this->processingLogger->batchStarted(
+            $this->logger->batchStarted(
                 Operation::Upsert,
                 $indexVersion,
                 $batchId,

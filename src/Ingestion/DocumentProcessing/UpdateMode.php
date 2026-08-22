@@ -8,8 +8,8 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\DocumentProcessing;
 
-enum UpdateMode
+enum UpdateMode: string
 {
-    case DeltaUpdate;
-    case FullUpdate;
+    case DeltaUpdate = 'delta';
+    case FullUpdate = 'full';
 }

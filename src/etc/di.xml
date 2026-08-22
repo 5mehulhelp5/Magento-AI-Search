@@ -24,13 +24,12 @@
                 type="DavidBel\AiSearch\Repository\ChunkRepository"/>
     <preference for="DavidBel\AiSearch\Api\EmbeddingBacklogRepositoryInterface"
                 type="DavidBel\AiSearch\Repository\EmbeddingBacklogRepository"/>
-    <virtualType name="DavidBel\AiSearch\Log\Handler"
-                 type="Magento\Framework\Logger\Handler\Base">
+    <type name="DavidBel\AiSearch\Log\Handler">
         <arguments>
             <argument name="fileName" xsi:type="string">/var/log/davidbel/ai-search.log</argument>
         </arguments>
-    </virtualType>
-    <virtualType name="DavidBel\AiSearch\Log\Logger"
+    </type>
+    <virtualType name="DavidBel\AiSearch\Log\MonologLogger"
                  type="Monolog\Logger">
         <arguments>
             <argument name="name" xsi:type="string">davidbel_ai_search</argument>
@@ -39,9 +38,9 @@
             </argument>
         </arguments>
     </virtualType>
-    <type name="DavidBel\AiSearch\Log\ProcessingLogger">
+    <type name="DavidBel\AiSearch\Log\Logger">
         <arguments>
-            <argument name="logger" xsi:type="object">DavidBel\AiSearch\Log\Logger</argument>
+            <argument name="logger" xsi:type="object">DavidBel\AiSearch\Log\MonologLogger</argument>
         </arguments>
     </type>
     <type name="DavidBel\AiSearch\Client\Embedding\Base\EmbedderClientPool">

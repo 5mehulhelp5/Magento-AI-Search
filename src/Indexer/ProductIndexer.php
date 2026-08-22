@@ -9,9 +9,12 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Indexer;
 
 use DavidBel\AiSearch\Ingestion\DocumentProcessing;
+use DavidBel\AiSearch\Ingestion\DocumentProcessing\UpdateMode;
+use DavidBel\AiSearch\Log\Logger;
 use InvalidArgumentException;
 use Magento\Framework\Indexer\ActionInterface as IndexerActionInterface;
 use Magento\Framework\Mview\ActionInterface as MviewActionInterface;
+use Throwable;
 
 class ProductIndexer implements IndexerActionInterface, MviewActionInterface
 {
@@ -19,15 +22,32 @@ class ProductIndexer implements IndexerActionInterface, MviewActionInterface
 
     public function __construct(
         private readonly DocumentProcessing $documentProcessing,
-        private readonly Versioning $versioning
+        private readonly Versioning $versioning,
+        private readonly Logger $logger
     ) {
     }
 
     public function executeFull(): void
     {
-        $this->versioning->prepareTargetForFullReindex();
-        $this->documentProcessing->fullUpdate($this->versioning->getTargetIndexVersion());
-        $this->versioning->markTargetDocumentProcessingComplete();
+        $updateMode = UpdateMode::FullUpdate;
+        $this->logger->indexerStarted(self::ID, $updateMode->value);
+
+        try {
+            $this->versioning->prepareTargetForFullReindex();
+            $this->documentProcessing->fullUpdate(
+                $this->versioning->getTargetIndexVersion()
+            );
+            $this->versioning->markTargetDocumentProcessingComplete();
+        } catch (Throwable $throwable) {
+            $this->logger->indexerFailed(
+                self::ID,
+                $updateMode->value,
+                $throwable
+            );
+            throw $throwable;
+        }
+
+        $this->logger->indexerCompleted(self::ID, $updateMode->value);
     }
 
     /**
@@ -35,16 +55,28 @@ class ProductIndexer implements IndexerActionInterface, MviewActionInterface
      */
     public function executeList(array $ids): void
     {
-        if (!$this->versioning->hasTargetOrActiveForCurrentConfiguration()) {
-            $this->versioning->invalidateProductIndexerWhenNeeded();
+        $updateMode = UpdateMode::DeltaUpdate;
+        $this->logger->indexerStarted(self::ID, $updateMode->value);
 
-            return;
+        try {
+            if (!$this->versioning->hasTargetOrActiveForCurrentConfiguration()) {
+                $this->versioning->invalidateProductIndexerWhenNeeded();
+            } else {
+                $this->documentProcessing->deltaUpdate(
+                    $this->normalizeIds($ids),
+                    $this->versioning->getIngestionIndexVersion()
+                );
+            }
+        } catch (Throwable $throwable) {
+            $this->logger->indexerFailed(
+                self::ID,
+                $updateMode->value,
+                $throwable
+            );
+            throw $throwable;
         }
 
-        $this->documentProcessing->deltaUpdate(
-            $this->normalizeIds($ids),
-            $this->versioning->getIngestionIndexVersion()
-        );
+        $this->logger->indexerCompleted(self::ID, $updateMode->value);
     }
 
     public function executeRow(mixed $id): void

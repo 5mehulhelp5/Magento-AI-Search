@@ -14,6 +14,7 @@ use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Result as Doc
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\DeletedProductIdProvider;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\UpdateMode;
+use DavidBel\AiSearch\Log\Logger;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory
@@ -31,7 +32,8 @@ class DocumentProcessing
         private readonly DeletedProductIdProvider $deletedProductIdProvider,
         private readonly DocumentUpdater $documentUpdater,
         private readonly EmbeddingBacklogCollectionFactory $embeddingBacklogCollectionFactory,
-        private readonly DataProcessingConfig $dataProcessingConfig
+        private readonly DataProcessingConfig $dataProcessingConfig,
+        private readonly Logger $logger
     ) {
     }
 
@@ -127,6 +129,12 @@ class DocumentProcessing
         UpdateMode $updateMode,
         int $indexVersion
     ): void {
+        $this->logger->documentBatchStarted(
+            $updateMode->value,
+            $indexVersion,
+            $productIds
+        );
+
         $sourcesByProductId = $this->sourceProvider->getSourcesByProductIds($productIds);
         $embeddingBacklogResource = $this->embeddingBacklogCollectionFactory
             ->create()

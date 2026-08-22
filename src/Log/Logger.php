@@ -13,7 +13,7 @@ use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
-class ProcessingLogger
+class Logger
 {
     public function __construct(
         private readonly LoggerInterface $logger
@@ -41,10 +41,72 @@ class ProcessingLogger
             'Cron failed.',
             [
                 'cron' => $cron,
-                'error_type' => $throwable::class,
                 'error_code' => $errorDetails->code,
                 'error_message' => $errorDetails->message,
-                'stack_trace' => $throwable->getTraceAsString(),
+                'exception' => $throwable,
+            ]
+        );
+    }
+
+    public function indexerStarted(string $indexer, string $updateMode): void
+    {
+        $this->logger->info(
+            'Indexer started.',
+            [
+                'indexer' => $indexer,
+                'update_mode' => $updateMode,
+            ]
+        );
+    }
+
+    public function indexerCompleted(string $indexer, string $updateMode): void
+    {
+        $this->logger->info(
+            'Indexer completed.',
+            [
+                'indexer' => $indexer,
+                'update_mode' => $updateMode,
+            ]
+        );
+    }
+
+    public function indexerFailed(
+        string $indexer,
+        string $updateMode,
+        Throwable $throwable
+    ): void {
+        $errorDetails = new ErrorDetails(
+            $throwable->getCode() > 0 ? (string) $throwable->getCode() : null,
+            $throwable->getMessage()
+        );
+
+        $this->logger->error(
+            'Indexer failed.',
+            [
+                'indexer' => $indexer,
+                'update_mode' => $updateMode,
+                'error_code' => $errorDetails->code,
+                'error_message' => $errorDetails->message,
+                'exception' => $throwable,
+            ]
+        );
+    }
+
+    /**
+     * @param list<int> $productIds
+     */
+    public function documentBatchStarted(
+        string $updateMode,
+        int $indexVersion,
+        array $productIds
+    ): void {
+        $this->logger->info(
+            'Document batch started.',
+            [
+                'update_mode' => $updateMode,
+                'index_version' => $indexVersion,
+                'product_count' => count($productIds),
+                'product_ids' => $productIds,
             ]
         );
     }
@@ -111,8 +173,7 @@ class ProcessingLogger
         ];
 
         if ($throwable !== null) {
-            $context['error_type'] = $throwable::class;
-            $context['stack_trace'] = $throwable->getTraceAsString();
+            $context['exception'] = $throwable;
         }
 
         $this->logger->error('Batch failed.', $context);

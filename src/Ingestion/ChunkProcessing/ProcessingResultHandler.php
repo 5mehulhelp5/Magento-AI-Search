@@ -15,7 +15,7 @@ use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\IndexVersion
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingResultHandler\FailureReasonMapper;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Result;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\Batch as DeleteBatch;
-use DavidBel\AiSearch\Log\ProcessingLogger;
+use DavidBel\AiSearch\Log\Logger;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\ErrorDetails;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use Throwable;
@@ -35,7 +35,7 @@ class ProcessingResultHandler
         private readonly ProcessingState $processingState,
         private readonly BacklogIndexVersion $backlogIndexVersion,
         private readonly FailureReasonMapper $failureReasonMapper,
-        private readonly ProcessingLogger $processingLogger
+        private readonly Logger $logger
     ) {
     }
 
@@ -66,7 +66,7 @@ class ProcessingResultHandler
         } catch (Throwable $throwable) {
             $errorDetails = $this->failureReasonMapper->map($throwable);
             $this->processingState->stopAcceptingWork();
-            $this->processingLogger->batchFailed(
+            $this->logger->batchFailed(
                 Operation::Upsert,
                 $errorStage,
                 $batch->getIndexVersion(),
@@ -91,7 +91,7 @@ class ProcessingResultHandler
         try {
             $batch = $this->processingState->getBatch($batchId);
             $errorDetails = $this->failureReasonMapper->map($reason);
-            $this->processingLogger->batchFailed(
+            $this->logger->batchFailed(
                 Operation::Upsert,
                 self::EMBEDDER_ERROR_STAGE,
                 $batch->getIndexVersion(),
@@ -138,7 +138,7 @@ class ProcessingResultHandler
         } catch (Throwable $throwable) {
             $errorDetails = $this->failureReasonMapper->map($throwable);
             $this->processingState->stopAcceptingWork();
-            $this->processingLogger->batchFailed(
+            $this->logger->batchFailed(
                 Operation::Delete,
                 $errorStage,
                 $batch->getIndexVersion(),
@@ -162,7 +162,7 @@ class ProcessingResultHandler
         mixed $reason
     ): void {
         $errorDetails = $this->failureReasonMapper->map($reason);
-        $this->processingLogger->batchFailed(
+        $this->logger->batchFailed(
             Operation::Delete,
             self::OPENSEARCH_ERROR_STAGE,
             $batch->getIndexVersion(),
@@ -261,7 +261,7 @@ class ProcessingResultHandler
         }
 
         foreach ($failureGroups as $failureGroup) {
-            $this->processingLogger->batchFailed(
+            $this->logger->batchFailed(
                 $operation,
                 self::OPENSEARCH_ERROR_STAGE,
                 $indexVersion,

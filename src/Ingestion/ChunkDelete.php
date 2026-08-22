@@ -19,7 +19,7 @@ use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingStateFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\BatchFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\ItemMapper;
-use DavidBel\AiSearch\Log\ProcessingLogger;
+use DavidBel\AiSearch\Log\Logger;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use Generator;
 use Throwable;
@@ -39,13 +39,13 @@ class ChunkDelete
         private readonly VectorSync $vectorSync,
         private readonly CacheClean $cacheClean,
         private readonly DataProcessingConfig $dataProcessingConfig,
-        private readonly ProcessingLogger $processingLogger
+        private readonly Logger $logger
     ) {
     }
 
     public function execute(int $indexVersion): int
     {
-        $this->processingLogger->workerStarted(Operation::Delete, $indexVersion);
+        $this->logger->workerStarted(Operation::Delete, $indexVersion);
 
         $processingState = $this->processingStateFactory->create();
         $resultHandler = $this->processingResultHandlerFactory->create([
@@ -64,7 +64,7 @@ class ChunkDelete
         int $indexVersion
     ): void {
         foreach ($this->createBatches($processingState, $indexVersion) as $batchId => $batch) {
-            $this->processingLogger->batchStarted(
+            $this->logger->batchStarted(
                 Operation::Delete,
                 $batch->getIndexVersion(),
                 $batchId,

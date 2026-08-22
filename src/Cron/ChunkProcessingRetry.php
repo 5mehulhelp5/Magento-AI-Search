@@ -10,7 +10,7 @@ namespace DavidBel\AiSearch\Cron;
 
 use DavidBel\AiSearch\Indexer\Versioning;
 use DavidBel\AiSearch\Ingestion\ChunkProcessingRetry as IngestionChunkProcessingRetry;
-use DavidBel\AiSearch\Log\ProcessingLogger;
+use DavidBel\AiSearch\Log\Logger;
 use Throwable;
 
 class ChunkProcessingRetry
@@ -18,13 +18,13 @@ class ChunkProcessingRetry
     public function __construct(
         private readonly IngestionChunkProcessingRetry $chunkProcessingRetry,
         private readonly Versioning $versioning,
-        private readonly ProcessingLogger $processingLogger
+        private readonly Logger $logger
     ) {
     }
 
     public function execute(): void
     {
-        $this->processingLogger->cronStarted(self::class);
+        $this->logger->cronStarted(self::class);
 
         try {
             if (!$this->versioning->hasIngestionIndexVersion()) {
@@ -35,10 +35,10 @@ class ChunkProcessingRetry
                 $this->versioning->getIngestionIndexVersion()
             );
         } catch (Throwable $throwable) {
-            $this->processingLogger->cronFailed(self::class, $throwable);
+            $this->logger->cronFailed(self::class, $throwable);
             throw $throwable;
         } finally {
-            $this->processingLogger->cronFinished(self::class);
+            $this->logger->cronFinished(self::class);
         }
     }
 }
