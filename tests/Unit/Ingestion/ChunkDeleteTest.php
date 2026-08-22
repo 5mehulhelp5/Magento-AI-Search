@@ -25,6 +25,7 @@ use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\Batch;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\BatchFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\ItemMapper;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Item;
+use DavidBel\AiSearch\Log\Logger;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -49,14 +50,15 @@ class ChunkDeleteTest extends TestCase
             ->willReturn([$this->createRow(10, 2, 42, '2026-08-04 10:00:00')]);
         $state = $this->createMock(ProcessingState::class);
         $state->expects(self::once())->method('isWithinRuntime')->willReturn(true);
+        $failure = new RuntimeException('OpenSearch unavailable');
         $vectorSync = $this->createMock(VectorSync::class);
         $vectorSync->expects(self::once())
             ->method('delete')
-            ->willThrowException(new RuntimeException('OpenSearch unavailable'));
+            ->willThrowException($failure);
         $handler = $this->createMock(ProcessingResultHandler::class);
         $handler->expects(self::once())
             ->method('openSearchFailed')
-            ->with([10 => 2]);
+            ->with(self::isInstanceOf(Batch::class), 0, $failure);
         $handler->expects(self::never())->method('completeDelete');
         $handler->expects(self::once())->method('finish')->willReturn(0);
         $cacheClean = $this->createMock(CacheClean::class);
@@ -70,7 +72,8 @@ class ChunkDeleteTest extends TestCase
             $this->createHandlerFactory($state, $handler),
             $vectorSync,
             $cacheClean,
-            $this->createDataProcessingConfig()
+            $this->createDataProcessingConfig(),
+            self::createStub(Logger::class)
         );
 
         self::assertSame(0, $workflow->execute(7));

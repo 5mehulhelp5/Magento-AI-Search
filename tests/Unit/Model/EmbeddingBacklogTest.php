@@ -41,7 +41,9 @@ class EmbeddingBacklogTest extends TestCase
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::OPERATION, 'delete');
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::STATUS, 'failed');
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::ATTEMPT_COUNT, '3');
-        $this->embeddingBacklog->setLastErrorCategory('provider_unavailable');
+        $this->embeddingBacklog->setLastErrorStage('embedder');
+        $this->embeddingBacklog->setLastErrorCode('provider_unavailable');
+        $this->embeddingBacklog->setLastErrorMessage('Embedding provider unavailable.');
         $this->embeddingBacklog->setCreatedAt('2026-07-29 10:00:00');
         $this->embeddingBacklog->setUpdatedAt('2026-07-29 11:00:00');
 
@@ -55,7 +57,12 @@ class EmbeddingBacklogTest extends TestCase
         self::assertSame(Operation::Delete, $this->embeddingBacklog->getOperation());
         self::assertSame(Status::Failed, $this->embeddingBacklog->getStatus());
         self::assertSame(3, $this->embeddingBacklog->getAttemptCount());
-        self::assertSame('provider_unavailable', $this->embeddingBacklog->getLastErrorCategory());
+        self::assertSame('embedder', $this->embeddingBacklog->getLastErrorStage());
+        self::assertSame('provider_unavailable', $this->embeddingBacklog->getLastErrorCode());
+        self::assertSame(
+            'Embedding provider unavailable.',
+            $this->embeddingBacklog->getLastErrorMessage()
+        );
         self::assertSame('2026-07-29 10:00:00', $this->embeddingBacklog->getCreatedAt());
         self::assertSame('2026-07-29 11:00:00', $this->embeddingBacklog->getUpdatedAt());
     }
@@ -89,7 +96,9 @@ class EmbeddingBacklogTest extends TestCase
         self::assertNull($this->embeddingBacklog->getBacklogId());
         self::assertNull($this->embeddingBacklog->getSourceEntityType());
         self::assertNull($this->embeddingBacklog->getSourceEntityId());
-        self::assertNull($this->embeddingBacklog->getLastErrorCategory());
+        self::assertNull($this->embeddingBacklog->getLastErrorStage());
+        self::assertNull($this->embeddingBacklog->getLastErrorCode());
+        self::assertNull($this->embeddingBacklog->getLastErrorMessage());
         self::assertNull($this->embeddingBacklog->getCreatedAt());
         self::assertNull($this->embeddingBacklog->getUpdatedAt());
     }
@@ -180,15 +189,15 @@ class EmbeddingBacklogTest extends TestCase
     public function testRejectsAnInvalidOptionalString(): void
     {
         $this->embeddingBacklog->setData(
-            EmbeddingBacklogInterface::LAST_ERROR_CATEGORY,
+            EmbeddingBacklogInterface::LAST_ERROR_STAGE,
             123
         );
 
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage(
-            'Embedding backlog field "last_error_category" is not a string.'
+            'Embedding backlog field "last_error_stage" is not a string.'
         );
 
-        $this->embeddingBacklog->getLastErrorCategory();
+        $this->embeddingBacklog->getLastErrorStage();
     }
 }

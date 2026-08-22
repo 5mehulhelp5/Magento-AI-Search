@@ -59,14 +59,7 @@ class ProductIndexer implements IndexerActionInterface, MviewActionInterface
         $this->logger->indexerStarted(self::ID, $updateMode->value);
 
         try {
-            if (!$this->versioning->hasTargetOrActiveForCurrentConfiguration()) {
-                $this->versioning->invalidateProductIndexerWhenNeeded();
-            } else {
-                $this->documentProcessing->deltaUpdate(
-                    $this->normalizeIds($ids),
-                    $this->versioning->getIngestionIndexVersion()
-                );
-            }
+            $this->executeDeltaUpdate($ids);
         } catch (Throwable $throwable) {
             $this->logger->indexerFailed(
                 self::ID,
@@ -77,6 +70,23 @@ class ProductIndexer implements IndexerActionInterface, MviewActionInterface
         }
 
         $this->logger->indexerCompleted(self::ID, $updateMode->value);
+    }
+
+    /**
+     * @param array<array-key, mixed> $ids
+     */
+    private function executeDeltaUpdate(array $ids): void
+    {
+        if (!$this->versioning->hasTargetOrActiveForCurrentConfiguration()) {
+            $this->versioning->invalidateProductIndexerWhenNeeded();
+
+            return;
+        }
+
+        $this->documentProcessing->deltaUpdate(
+            $this->normalizeIds($ids),
+            $this->versioning->getIngestionIndexVersion()
+        );
     }
 
     public function executeRow(mixed $id): void

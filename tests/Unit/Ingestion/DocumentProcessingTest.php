@@ -16,6 +16,7 @@ use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Result;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\DeletedProductIdProvider;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\SourceProvider;
+use DavidBel\AiSearch\Log\Logger;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
@@ -227,7 +228,8 @@ class DocumentProcessingTest extends TestCase
             self::createStub(DeletedProductIdProvider::class),
             $documentUpdater,
             $collectionFactory,
-            $config
+            $config,
+            self::createStub(Logger::class)
         );
     }
 

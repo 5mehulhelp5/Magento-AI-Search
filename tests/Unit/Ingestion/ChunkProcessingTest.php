@@ -28,6 +28,7 @@ use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingResultHandlerFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingState;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingStateFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorEmbedding;
+use DavidBel\AiSearch\Log\Logger;
 use PHPUnit\Framework\TestCase;
 
 class ChunkProcessingTest extends TestCase
@@ -68,7 +69,8 @@ class ChunkProcessingTest extends TestCase
             $this->createVectorEmbedding($handler),
             $cacheClean,
             $this->createDataProcessingConfig(),
-            $maintenance
+            $maintenance,
+            self::createStub(Logger::class)
         );
 
         self::assertSame(1, $workflow->execute(7));

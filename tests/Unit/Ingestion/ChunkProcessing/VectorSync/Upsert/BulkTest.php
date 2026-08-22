@@ -10,11 +10,14 @@ namespace DavidBel\AiSearch\Tests\Unit\Ingestion\ChunkProcessing\VectorSync\Upse
 
 use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\FailedItem;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Item;
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\OpenSearchErrorMapper;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Result;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\ResultFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Upsert\Bulk;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Upsert\Document;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\ErrorDetails;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use UnexpectedValueException;
@@ -55,13 +58,17 @@ class BulkTest extends TestCase
             ->method('create')
             ->with([
                 'successfulItems' => [$first->item],
-                'failedItems' => [$second->item],
+                'failedItems' => [$this->createFailedItem($second)],
             ])
             ->willReturn($result);
 
         self::assertSame(
             $result,
-            (new Bulk($openSearch, $factory))->execute([$first, $second])
+            (new Bulk(
+                $openSearch,
+                new OpenSearchErrorMapper(),
+                $factory
+            ))->execute([$first, $second])
         );
     }
 
@@ -101,7 +108,11 @@ class BulkTest extends TestCase
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage($message);
 
-        (new Bulk($openSearch, $factory))->execute([$this->createDocument(10, 42)]);
+        (new Bulk(
+            $openSearch,
+            new OpenSearchErrorMapper(),
+            $factory
+        ))->execute([$this->createDocument(10, 42)]);
     }
 
     private function createDocument(int $backlogId, int $chunkId): Document
@@ -121,6 +132,17 @@ class BulkTest extends TestCase
             'text',
             'hash',
             [0.1, 0.2]
+        );
+    }
+
+    private function createFailedItem(Document $document): FailedItem
+    {
+        return new FailedItem(
+            $document->item,
+            new ErrorDetails(
+                '500',
+                'OpenSearch bulk item failed with HTTP status 500.'
+            )
         );
     }
 

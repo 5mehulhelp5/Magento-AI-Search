@@ -16,6 +16,9 @@ use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogRe
 use Magento\Framework\Model\AbstractExtensibleModel;
 use UnexpectedValueException;
 
+/**
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ */
 class EmbeddingBacklog extends AbstractExtensibleModel implements EmbeddingBacklogInterface
 {
     protected function _construct(): void

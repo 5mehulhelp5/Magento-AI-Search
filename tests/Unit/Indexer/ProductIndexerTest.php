@@ -11,6 +11,7 @@ namespace DavidBel\AiSearch\Tests\Unit\Indexer;
 use DavidBel\AiSearch\Indexer\ProductIndexer;
 use DavidBel\AiSearch\Indexer\Versioning;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing;
+use DavidBel\AiSearch\Log\Logger;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -27,7 +28,11 @@ class ProductIndexerTest extends TestCase
         $versioning->expects(self::once())
             ->method('markTargetDocumentProcessingComplete');
 
-        (new ProductIndexer($documentProcessing, $versioning))->executeFull();
+        (new ProductIndexer(
+            $documentProcessing,
+            $versioning,
+            self::createStub(Logger::class)
+        ))->executeFull();
     }
 
     public function testNormalizesAndDelegatesADeltaUpdate(): void
@@ -39,7 +44,8 @@ class ProductIndexerTest extends TestCase
 
         (new ProductIndexer(
             $documentProcessing,
-            $this->createAvailableVersioning()
+            $this->createAvailableVersioning(),
+            self::createStub(Logger::class)
         ))->execute([2, 1, 2]);
     }
 
@@ -52,7 +58,8 @@ class ProductIndexerTest extends TestCase
 
         (new ProductIndexer(
             $documentProcessing,
-            $this->createAvailableVersioning()
+            $this->createAvailableVersioning(),
+            self::createStub(Logger::class)
         ))->executeRow(7);
     }
 
@@ -61,7 +68,8 @@ class ProductIndexerTest extends TestCase
         $documentProcessing = self::createStub(DocumentProcessing::class);
         $indexer = new ProductIndexer(
             $documentProcessing,
-            $this->createAvailableVersioning()
+            $this->createAvailableVersioning(),
+            self::createStub(Logger::class)
         );
 
         $this->expectException(InvalidArgumentException::class);

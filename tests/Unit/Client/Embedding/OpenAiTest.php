@@ -10,6 +10,9 @@ namespace DavidBel\AiSearch\Tests\Unit\Client\Embedding;
 
 use DavidBel\AiSearch\Client\Embedding\OpenAi;
 use DavidBel\AiSearch\Client\Embedding\Base\EmbeddingInput;
+use DavidBel\AiSearch\Client\Embedding\Base\HttpResponseDecoder;
+use DavidBel\AiSearch\Client\Embedding\Base\RequestBodySerializer;
+use DavidBel\AiSearch\Client\Embedding\Base\ResponseValidator;
 use DavidBel\AiSearch\Client\Embedding\OpenAi\ResponseDecoder;
 use DavidBel\AiSearch\Client\Embedding\OpenAi\ResponseDecoderFactory;
 use DavidBel\AiSearch\Config\EmbedderConfig;
@@ -181,8 +184,10 @@ class OpenAiTest extends TestCase
         $serializer = $this->createMock(SerializerInterface::class);
         $serializer->method('serialize')
             ->willReturn('serialized request');
-        $serializer->expects(self::never())
-            ->method('unserialize');
+        $serializer->expects(self::once())
+            ->method('unserialize')
+            ->with('')
+            ->willReturn(null);
         $httpClient = $this->createHttpClientForResponse(
             new Response($status)
         );
@@ -363,7 +368,8 @@ class OpenAiTest extends TestCase
                     self::assertIsInt($inputCount);
 
                     return new ResponseDecoder(
-                        $serializer,
+                        new HttpResponseDecoder($serializer),
+                        new ResponseValidator(),
                         $embeddingModel,
                         $vectorDimensions,
                         $inputCount
@@ -373,7 +379,7 @@ class OpenAiTest extends TestCase
 
         return new OpenAi(
             $httpClient,
-            $serializer,
+            new RequestBodySerializer($serializer),
             $config,
             $responseDecoderFactory
         );

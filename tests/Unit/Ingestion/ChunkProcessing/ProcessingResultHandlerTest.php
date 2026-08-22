@@ -16,10 +16,15 @@ use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\CacheClean;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingBatch;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingResultHandler;
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingResultHandler\FailureReasonMapper;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingState;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync;
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\Batch as DeleteBatch;
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\FailedItem;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Item;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Result;
+use DavidBel\AiSearch\Log\Logger;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\ErrorDetails;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -32,14 +37,15 @@ class ProcessingResultHandlerTest extends TestCase
 
     public function testCompletesAnEmbeddingBatchAndRecordsOnlySuccessfulRows(): void
     {
+        $errorDetails = new ErrorDetails('500', 'OpenSearch failed.');
         $resource = $this->createMock(EmbeddingBacklogResource::class);
         $resource->expects(self::once())
             ->method('markFailedByVersions')
-            ->with([20 => 3], 'opensearch');
+            ->with([20 => 3], 'opensearch', $errorDetails);
         $batch = self::createStub(ProcessingBatch::class);
         $result = new Result(
             [$this->createItem(10, 2, 99)],
-            [$this->createItem(20, 3, 100)]
+            [new FailedItem($this->createItem(20, 3, 100), $errorDetails)]
         );
         $vectorSync = $this->createMock(VectorSync::class);
         $vectorSync->expects(self::once())
@@ -66,10 +72,11 @@ class ProcessingResultHandlerTest extends TestCase
 
     public function testDoesNotRegisterSearchResultCacheWithoutSuccessfulRows(): void
     {
+        $errorDetails = new ErrorDetails('500', 'OpenSearch failed.');
         $resource = $this->createMock(EmbeddingBacklogResource::class);
         $resource->expects(self::once())
             ->method('markFailedByVersions')
-            ->with([20 => 3], 'opensearch');
+            ->with([20 => 3], 'opensearch', $errorDetails);
         $cacheClean = $this->createMock(CacheClean::class);
         $cacheClean->expects(self::never())->method('register');
         $cacheClean->expects(self::never())->method('registerSearchResults');
@@ -80,13 +87,18 @@ class ProcessingResultHandlerTest extends TestCase
             ->method('markFullReindexItemsIndexed')
             ->with([]);
 
+        $item = $this->createItem(20, 3, 100);
         $this->createHandler(
             $resource,
             self::createStub(VectorSync::class),
             $cacheClean,
             $state,
             $backlogIndexVersion
-        )->completeDelete(new Result([], [$this->createItem(20, 3, 100)]));
+        )->completeDelete(
+            new Result([], [new FailedItem($item, $errorDetails)]),
+            new DeleteBatch([$item]),
+            7
+        );
     }
 
     public function testMarksTheBatchFailedWhenOpenSearchThrows(): void
@@ -102,7 +114,11 @@ class ProcessingResultHandlerTest extends TestCase
         $resource = $this->createMock(EmbeddingBacklogResource::class);
         $resource->expects(self::once())
             ->method('markFailedByVersions')
-            ->with([10 => 2], 'opensearch');
+            ->with(
+                [10 => 2],
+                'opensearch',
+                new ErrorDetails(null, 'OpenSearch unavailable')
+            );
         $state = $this->createMock(ProcessingState::class);
         $state->method('getBatch')->with(5)->willReturn($batch);
         $state->expects(self::once())->method('removeBatch')->with(5);
@@ -118,13 +134,17 @@ class ProcessingResultHandlerTest extends TestCase
     public function testMarksAnEmbeddingPromiseFailureAndRemovesItsBatch(): void
     {
         $batch = $this->createMock(ProcessingBatch::class);
-        $batch->expects(self::once())
+        $batch->expects(self::exactly(2))
             ->method('getBacklogVersions')
             ->willReturn([30 => 4]);
         $resource = $this->createMock(EmbeddingBacklogResource::class);
         $resource->expects(self::once())
             ->method('markFailedByVersions')
-            ->with([30 => 4], 'embedder');
+            ->with(
+                [30 => 4],
+                'embedder',
+                new ErrorDetails(null, 'Embedding failed')
+            );
         $state = $this->createMock(ProcessingState::class);
         $state->method('getBatch')->with(9)->willReturn($batch);
         $state->expects(self::once())->method('removeBatch')->with(9);
@@ -160,14 +180,13 @@ class ProcessingResultHandlerTest extends TestCase
         );
     }
 
-    public function testMarksSuccessfulRowsFailedWhenCacheFlushFails(): void
+    public function testPropagatesCacheFailureAfterCompletingCurrentVersions(): void
     {
         $failure = new RuntimeException('Cache flush failed');
         $resource = $this->createMock(EmbeddingBacklogResource::class);
         $resource->expects(self::once())
-            ->method('markFailedByVersions')
-            ->with([10 => 2], 'cache');
-        $resource->expects(self::never())->method('markDoneByVersions');
+            ->method('markDoneByVersions')
+            ->with([10 => 2]);
         $cacheClean = self::createStub(CacheClean::class);
         $cacheClean->method('flush')->willThrowException($failure);
         $state = self::createStub(ProcessingState::class);
@@ -200,7 +219,9 @@ class ProcessingResultHandlerTest extends TestCase
             $vectorSync,
             $cacheClean,
             $state,
-            $backlogIndexVersion ?? self::createStub(BacklogIndexVersion::class)
+            $backlogIndexVersion ?? self::createStub(BacklogIndexVersion::class),
+            new FailureReasonMapper(),
+            self::createStub(Logger::class)
         );
     }
 

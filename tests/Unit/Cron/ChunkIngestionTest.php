@@ -19,6 +19,7 @@ use DavidBel\AiSearch\Ingestion\ChunkProcessing;
 use DavidBel\AiSearch\Ingestion\ChunkProcessingCleanup;
 use DavidBel\AiSearch\Ingestion\ChunkProcessingFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessingRetry;
+use DavidBel\AiSearch\Log\Logger;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use PHPUnit\Framework\TestCase;
 
@@ -43,7 +44,11 @@ class ChunkIngestionTest extends TestCase
         $versioning->expects(self::once())->method('getIngestionIndexVersion')->willReturn(7);
         $versioning->expects(self::once())->method('activateTargetWhenReady');
 
-        (new ChunkProcessingCron($factory, $versioning))->execute();
+        (new ChunkProcessingCron(
+            $factory,
+            $versioning,
+            self::createStub(Logger::class)
+        ))->execute();
     }
 
     public function testRunsAFactoryCreatedChunkDeleteWorkflow(): void
@@ -56,7 +61,11 @@ class ChunkIngestionTest extends TestCase
         $versioning->expects(self::once())->method('hasIngestionIndexVersion')->willReturn(true);
         $versioning->expects(self::once())->method('getIngestionIndexVersion')->willReturn(7);
 
-        (new ChunkDeleteCron($factory, $versioning))->execute();
+        (new ChunkDeleteCron(
+            $factory,
+            $versioning,
+            self::createStub(Logger::class)
+        ))->execute();
     }
 
     public function testRunsIngestionChunkProcessingRetry(): void
@@ -67,7 +76,11 @@ class ChunkIngestionTest extends TestCase
         $versioning->expects(self::once())->method('hasIngestionIndexVersion')->willReturn(true);
         $versioning->expects(self::once())->method('getIngestionIndexVersion')->willReturn(7);
 
-        (new ChunkProcessingRetryCron($workflow, $versioning))->execute();
+        (new ChunkProcessingRetryCron(
+            $workflow,
+            $versioning,
+            self::createStub(Logger::class)
+        ))->execute();
     }
 
     public function testRunsIngestionChunkProcessingCleanup(): void
@@ -81,6 +94,10 @@ class ChunkIngestionTest extends TestCase
         $versioning->expects(self::once())->method('getTargetIndexVersion')->willReturn(8);
         $versioning->expects(self::once())->method('deleteObsoletePhysicalIndexes');
 
-        (new ChunkProcessingCleanupCron($workflow, $versioning))->execute();
+        (new ChunkProcessingCleanupCron(
+            $workflow,
+            $versioning,
+            self::createStub(Logger::class)
+        ))->execute();
     }
 }

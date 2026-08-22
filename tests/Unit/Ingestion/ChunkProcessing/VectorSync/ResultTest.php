@@ -8,8 +8,10 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Unit\Ingestion\ChunkProcessing\VectorSync;
 
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\FailedItem;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Item;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Result;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\ErrorDetails;
 use PHPUnit\Framework\TestCase;
 
 class ResultTest extends TestCase
@@ -22,7 +24,12 @@ class ResultTest extends TestCase
                 $this->createItem(20, 3, 'product', 90),
                 $this->createItem(30, 1, 'category', 8),
             ],
-            [$this->createItem(40, 4, 'product', 91)]
+            [
+                new FailedItem(
+                    $this->createItem(40, 4, 'product', 91),
+                    new ErrorDetails('500', 'OpenSearch failed.')
+                ),
+            ]
         );
 
         self::assertSame([10 => 2, 20 => 3, 30 => 1], $result->getSuccessfulBacklogVersions());

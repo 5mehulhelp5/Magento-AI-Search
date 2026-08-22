@@ -10,9 +10,12 @@ namespace DavidBel\AiSearch\Tests\Unit\Ingestion\ChunkProcessing\VectorSync\Dele
 
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\ResponseMapper;
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\FailedItem;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Item;
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\OpenSearchErrorMapper;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Result;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\ResultFactory;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\ErrorDetails;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use UnexpectedValueException;
@@ -35,13 +38,21 @@ class ResponseMapperTest extends TestCase
             ->method('create')
             ->with([
                 'successfulItems' => [$created, $alreadyMissing],
-                'failedItems' => [$failed],
+                'failedItems' => [
+                    new FailedItem(
+                        $failed,
+                        new ErrorDetails(
+                            '500',
+                            'OpenSearch bulk item failed with HTTP status 500.'
+                        )
+                    ),
+                ],
             ])
             ->willReturn($result);
 
         self::assertSame(
             $result,
-            (new ResponseMapper($factory))->map(
+            (new ResponseMapper(new OpenSearchErrorMapper(), $factory))->map(
                 [
                     'errors' => true,
                     'items' => [
@@ -89,7 +100,10 @@ class ResponseMapperTest extends TestCase
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage($message);
 
-        (new ResponseMapper($factory))->map($response, [$this->createItem(10, 42)]);
+        (new ResponseMapper(new OpenSearchErrorMapper(), $factory))->map(
+            $response,
+            [$this->createItem(10, 42)]
+        );
     }
 
     private function createItem(int $backlogId, int $chunkId): Item

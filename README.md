@@ -208,4 +208,5 @@ pie showData title End-to-end processing time distribution
 | **Document, chunk, and backlog Admin grids and views** | Admin | Planned | ✅ Complete |
 | **Semantic search testing in Admin** | Admin | Planned | ✅ Complete |
 | **Headless GraphQL semantic search support** | GraphQL | Planned | ✅ Complete |
-| **Progress and error observability** | Operations | Planned | ⏳ Open |
+| **Progress and error observability** | Operations | Planned | ✅ Complete |
+| **Preparing the module for a stable release** | Release | Essential | ⏳ Open |

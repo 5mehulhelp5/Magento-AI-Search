@@ -12,6 +12,7 @@ use DavidBel\AiSearch\Api\Data\ChunkInterface;
 use DavidBel\AiSearch\Api\Data\DocumentInterface;
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\ErrorDetails;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Status;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog;
@@ -174,7 +175,9 @@ class EmbeddingBacklogTest extends TestCase
                     EmbeddingBacklogInterface::ATTEMPT_COUNT => new Expression(
                         EmbeddingBacklogInterface::ATTEMPT_COUNT . ' + 1'
                     ),
-                    EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
+                    EmbeddingBacklogInterface::LAST_ERROR_STAGE => null,
+                    EmbeddingBacklogInterface::LAST_ERROR_CODE => null,
+                    EmbeddingBacklogInterface::LAST_ERROR_MESSAGE => null,
                 ],
                 self::versionUpdateConditions([10 => 2, 20 => 3])
             );
@@ -199,7 +202,15 @@ class EmbeddingBacklogTest extends TestCase
                         );
                         self::assertSame(
                             'embedder',
-                            $values[EmbeddingBacklogInterface::LAST_ERROR_CATEGORY]
+                            $values[EmbeddingBacklogInterface::LAST_ERROR_STAGE]
+                        );
+                        self::assertSame(
+                            'provider_unavailable',
+                            $values[EmbeddingBacklogInterface::LAST_ERROR_CODE]
+                        );
+                        self::assertSame(
+                            'Embedding provider unavailable.',
+                            $values[EmbeddingBacklogInterface::LAST_ERROR_MESSAGE]
                         );
                         $attemptCount = $values[EmbeddingBacklogInterface::ATTEMPT_COUNT];
                         self::assertInstanceOf(Expression::class, $attemptCount);
@@ -212,7 +223,14 @@ class EmbeddingBacklogTest extends TestCase
             );
         $resource = $this->createUpdateResource($connection);
 
-        $resource->markFailedByVersions([30 => 4], 'embedder');
+        $resource->markFailedByVersions(
+            [30 => 4],
+            'embedder',
+            new ErrorDetails(
+                'provider_unavailable',
+                'Embedding provider unavailable.'
+            )
+        );
     }
 
     public function testDoesNotUpdateAnEmptyIdSet(): void
@@ -225,7 +243,11 @@ class EmbeddingBacklogTest extends TestCase
             ->method('getConnection');
 
         $resource->markDoneByVersions([]);
-        $resource->markFailedByVersions([], 'embedder');
+        $resource->markFailedByVersions(
+            [],
+            'embedder',
+            new ErrorDetails(null, 'Embedding failed.')
+        );
     }
 
     public function testRetriesFailedRowsBelowTheAttemptThreshold(): void
@@ -316,7 +338,9 @@ class EmbeddingBacklogTest extends TestCase
                     EmbeddingBacklogInterface::FULL_REINDEX_STATUS => FullReindexStatus::Pending->value,
                     EmbeddingBacklogInterface::BACKLOG_VERSION => 1,
                     EmbeddingBacklogInterface::ATTEMPT_COUNT => 0,
-                    EmbeddingBacklogInterface::LAST_ERROR_CATEGORY => null,
+                    EmbeddingBacklogInterface::LAST_ERROR_STAGE => null,
+                    EmbeddingBacklogInterface::LAST_ERROR_CODE => null,
+                    EmbeddingBacklogInterface::LAST_ERROR_MESSAGE => null,
                 ],
                 self::callback(self::duplicateFieldsAreVersioned(...))
             );
@@ -359,9 +383,11 @@ class EmbeddingBacklogTest extends TestCase
         self::assertSame(
             [
                 EmbeddingBacklogInterface::ATTEMPT_COUNT,
-                EmbeddingBacklogInterface::LAST_ERROR_CATEGORY,
+                EmbeddingBacklogInterface::LAST_ERROR_STAGE,
+                EmbeddingBacklogInterface::LAST_ERROR_CODE,
+                EmbeddingBacklogInterface::LAST_ERROR_MESSAGE,
             ],
-            [$fields[5], $fields[6]]
+            [$fields[5], $fields[6], $fields[7], $fields[8]]
         );
 
         return true;
