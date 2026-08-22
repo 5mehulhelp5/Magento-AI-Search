@@ -14,6 +14,14 @@
              sortOrder="90"
              parent="Magento_Backend::system"
              resource="DavidBel_AiSearch::system_ai_search"/>
+        <add id="DavidBel_AiSearch::ai_search_dashboard"
+             title="Dashboard"
+             translate="title"
+             module="DavidBel_AiSearch"
+             sortOrder="5"
+             parent="DavidBel_AiSearch::system_ai_search"
+             action="davidbel_ai_search/dashboard/index"
+             resource="DavidBel_AiSearch::dashboard"/>
         <add id="DavidBel_AiSearch::documents"
              title="Documents"
              translate="title"

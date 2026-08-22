@@ -20,6 +20,7 @@ use UnexpectedValueException;
 class TestSemanticSearch extends Action implements HttpPostActionInterface
 {
     public const ADMIN_RESOURCE = 'DavidBel_AiSearch::config_search_result';
+    private const string DASHBOARD_RESOURCE = 'DavidBel_AiSearch::dashboard';
 
     public function __construct(
         Context $context,
@@ -71,5 +72,10 @@ class TestSemanticSearch extends Action implements HttpPostActionInterface
         $storeId = $this->getRequest()->getParam('store_id');
 
         return (int) $storeId;
+    }
+
+    protected function _isAllowed(): bool
+    {
+        return parent::_isAllowed() || $this->_authorization->isAllowed(self::DASHBOARD_RESOURCE);
     }
 }

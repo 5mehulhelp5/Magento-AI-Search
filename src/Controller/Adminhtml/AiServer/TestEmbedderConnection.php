@@ -22,6 +22,7 @@ use UnexpectedValueException;
 class TestEmbedderConnection extends Action implements HttpPostActionInterface
 {
     public const ADMIN_RESOURCE = 'DavidBel_AiSearch::config_search_source';
+    private const string DASHBOARD_RESOURCE = 'DavidBel_AiSearch::dashboard';
     private const int EXPECTED_EMBEDDING_COUNT = 2;
 
     public function __construct(
@@ -105,5 +106,10 @@ class TestEmbedderConnection extends Action implements HttpPostActionInterface
         }
 
         return count($vector);
+    }
+
+    protected function _isAllowed(): bool
+    {
+        return parent::_isAllowed() || $this->_authorization->isAllowed(self::DASHBOARD_RESOURCE);
     }
 }

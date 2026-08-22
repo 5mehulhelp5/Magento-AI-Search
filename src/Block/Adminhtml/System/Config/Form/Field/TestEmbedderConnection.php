@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field;
 
-use Magento\Backend\Block\Widget\Button;
+use DavidBel\AiSearch\Block\Adminhtml\Test\EmbedderConnectionButton;
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 
@@ -26,19 +26,12 @@ class TestEmbedderConnection extends Field
     protected function _getElementHtml(AbstractElement $element): string
     {
         $button = $this->getLayout()->createBlock(
-            Button::class,
+            EmbedderConnectionButton::class,
             '',
             [
                 'data' => [
                     'id' => $element->getHtmlId(),
-                    'label' => __('Test Connection'),
-                    'data_attribute' => [
-                        'mage-init' => [
-                            'DavidBel_AiSearch/js/test-embedder-connection' => [
-                                'url' => $this->getUrl('davidbel_ai_search/aiServer/testEmbedderConnection'),
-                            ],
-                        ],
-                    ],
+                    'url' => $this->getUrl('davidbel_ai_search/aiServer/testEmbedderConnection'),
                 ],
             ]
         );

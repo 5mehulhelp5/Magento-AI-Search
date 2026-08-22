@@ -14,6 +14,10 @@
                               title="AI Search"
                               translate="title"
                               sortOrder="90">
+                        <resource id="DavidBel_AiSearch::dashboard"
+                                  title="Dashboard"
+                                  translate="title"
+                                  sortOrder="5"/>
                         <resource id="DavidBel_AiSearch::documents"
                                   title="Documents"
                                   translate="title"
