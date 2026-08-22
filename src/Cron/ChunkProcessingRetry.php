@@ -10,23 +10,35 @@ namespace DavidBel\AiSearch\Cron;
 
 use DavidBel\AiSearch\Indexer\Versioning;
 use DavidBel\AiSearch\Ingestion\ChunkProcessingRetry as IngestionChunkProcessingRetry;
+use DavidBel\AiSearch\Log\ProcessingLogger;
+use Throwable;
 
 class ChunkProcessingRetry
 {
     public function __construct(
         private readonly IngestionChunkProcessingRetry $chunkProcessingRetry,
-        private readonly Versioning $versioning
+        private readonly Versioning $versioning,
+        private readonly ProcessingLogger $processingLogger
     ) {
     }
 
     public function execute(): void
     {
-        if (!$this->versioning->hasIngestionIndexVersion()) {
-            return;
-        }
+        $this->processingLogger->cronStarted(self::class);
 
-        $this->chunkProcessingRetry->execute(
-            $this->versioning->getIngestionIndexVersion()
-        );
+        try {
+            if (!$this->versioning->hasIngestionIndexVersion()) {
+                return;
+            }
+
+            $this->chunkProcessingRetry->execute(
+                $this->versioning->getIngestionIndexVersion()
+            );
+        } catch (Throwable $throwable) {
+            $this->processingLogger->cronFailed(self::class, $throwable);
+            throw $throwable;
+        } finally {
+            $this->processingLogger->cronFinished(self::class);
+        }
     }
 }

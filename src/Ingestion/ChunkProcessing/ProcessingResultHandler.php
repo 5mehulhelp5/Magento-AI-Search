@@ -14,7 +14,10 @@ use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\IndexVersion
     as BacklogIndexVersion;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingResultHandler\FailureReasonMapper;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Result;
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\Batch as DeleteBatch;
+use DavidBel\AiSearch\Log\ProcessingLogger;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\ErrorDetails;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use Throwable;
 
 class ProcessingResultHandler
@@ -31,7 +34,8 @@ class ProcessingResultHandler
         private readonly CacheClean $cacheClean,
         private readonly ProcessingState $processingState,
         private readonly BacklogIndexVersion $backlogIndexVersion,
-        private readonly FailureReasonMapper $failureReasonMapper
+        private readonly FailureReasonMapper $failureReasonMapper,
+        private readonly ProcessingLogger $processingLogger
     ) {
     }
 
@@ -48,18 +52,34 @@ class ProcessingResultHandler
             $result = $this->vectorSync->upsert($batch, $vectors);
             $successfulBacklogVersions = $result->getSuccessfulBacklogVersions();
 
-            $this->recordVectorSyncResult($result);
+            $this->recordVectorSyncResult(
+                $result,
+                Operation::Upsert,
+                $batch->getIndexVersion(),
+                $batchId
+            );
 
             $affectedBacklogVersions = $successfulBacklogVersions;
             $errorStage = self::CACHE_ERROR_STAGE;
             $this->registerCacheInvalidation($result, $successfulBacklogVersions);
             $this->processingState->recordSuccesses($successfulBacklogVersions);
         } catch (Throwable $throwable) {
+            $errorDetails = $this->failureReasonMapper->map($throwable);
             $this->processingState->stopAcceptingWork();
+            $this->processingLogger->batchFailed(
+                Operation::Upsert,
+                $errorStage,
+                $batch->getIndexVersion(),
+                $batchId,
+                $batch->getSourceEntityIds(),
+                array_keys($affectedBacklogVersions),
+                $errorDetails,
+                $throwable
+            );
             $this->markBacklogItemsFailed(
                 $affectedBacklogVersions,
                 $errorStage,
-                $this->failureReasonMapper->map($throwable)
+                $errorDetails
             );
         } finally {
             $this->processingState->removeBatch($batchId);
@@ -69,18 +89,33 @@ class ProcessingResultHandler
     public function failed(mixed $reason, int $batchId): void
     {
         try {
-            $this->markBacklogItemsFailed(
-                $this->processingState->getBatch($batchId)->getBacklogVersions(),
+            $batch = $this->processingState->getBatch($batchId);
+            $errorDetails = $this->failureReasonMapper->map($reason);
+            $this->processingLogger->batchFailed(
+                Operation::Upsert,
                 self::EMBEDDER_ERROR_STAGE,
-                $this->failureReasonMapper->map($reason)
+                $batch->getIndexVersion(),
+                $batchId,
+                $batch->getSourceEntityIds(),
+                array_keys($batch->getBacklogVersions()),
+                $errorDetails,
+                $reason instanceof Throwable ? $reason : null
+            );
+            $this->markBacklogItemsFailed(
+                $batch->getBacklogVersions(),
+                self::EMBEDDER_ERROR_STAGE,
+                $errorDetails
             );
         } finally {
             $this->processingState->removeBatch($batchId);
         }
     }
 
-    public function completeDelete(Result $result): void
-    {
+    public function completeDelete(
+        Result $result,
+        DeleteBatch $batch,
+        int $batchId
+    ): void {
         $successfulBacklogVersions = $result->getSuccessfulBacklogVersions();
         $affectedBacklogVersions = array_replace(
             $successfulBacklogVersions,
@@ -89,31 +124,58 @@ class ProcessingResultHandler
         $errorStage = self::OPENSEARCH_ERROR_STAGE;
 
         try {
-            $this->recordVectorSyncResult($result);
+            $this->recordVectorSyncResult(
+                $result,
+                Operation::Delete,
+                $batch->getIndexVersion(),
+                $batchId
+            );
 
             $affectedBacklogVersions = $successfulBacklogVersions;
             $errorStage = self::CACHE_ERROR_STAGE;
             $this->registerCacheInvalidation($result, $successfulBacklogVersions);
             $this->processingState->recordSuccesses($successfulBacklogVersions);
         } catch (Throwable $throwable) {
+            $errorDetails = $this->failureReasonMapper->map($throwable);
             $this->processingState->stopAcceptingWork();
+            $this->processingLogger->batchFailed(
+                Operation::Delete,
+                $errorStage,
+                $batch->getIndexVersion(),
+                $batchId,
+                $batch->getSourceEntityIds(),
+                array_keys($affectedBacklogVersions),
+                $errorDetails,
+                $throwable
+            );
             $this->markBacklogItemsFailed(
                 $affectedBacklogVersions,
                 $errorStage,
-                $this->failureReasonMapper->map($throwable)
+                $errorDetails
             );
         }
     }
 
-    /**
-     * @param array<int, int> $backlogVersions
-     */
-    public function openSearchFailed(array $backlogVersions, mixed $reason): void
-    {
-        $this->markBacklogItemsFailed(
-            $backlogVersions,
+    public function openSearchFailed(
+        DeleteBatch $batch,
+        int $batchId,
+        mixed $reason
+    ): void {
+        $errorDetails = $this->failureReasonMapper->map($reason);
+        $this->processingLogger->batchFailed(
+            Operation::Delete,
             self::OPENSEARCH_ERROR_STAGE,
-            $this->failureReasonMapper->map($reason)
+            $batch->getIndexVersion(),
+            $batchId,
+            $batch->getSourceEntityIds(),
+            array_keys($batch->getBacklogVersions()),
+            $errorDetails,
+            $reason instanceof Throwable ? $reason : null
+        );
+        $this->markBacklogItemsFailed(
+            $batch->getBacklogVersions(),
+            self::OPENSEARCH_ERROR_STAGE,
+            $errorDetails
         );
     }
 
@@ -127,13 +189,22 @@ class ProcessingResultHandler
         return $this->processingState->getProcessedCount();
     }
 
-    private function recordVectorSyncResult(Result $result): void
-    {
+    private function recordVectorSyncResult(
+        Result $result,
+        Operation $operation,
+        int $indexVersion,
+        int $batchId
+    ): void {
         $this->backlogIndexVersion->markFullReindexItemsIndexed(
             $result->getSuccessfulBacklogIndexVersions()
         );
 
-        $this->markOpenSearchItemFailures($result->getFailedItems());
+        $this->markOpenSearchItemFailures(
+            $result->getFailedItems(),
+            $operation,
+            $indexVersion,
+            $batchId
+        );
     }
 
     /**
@@ -157,12 +228,17 @@ class ProcessingResultHandler
     /**
      * @param list<\DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\FailedItem> $failedItems
      */
-    private function markOpenSearchItemFailures(array $failedItems): void
-    {
+    private function markOpenSearchItemFailures(
+        array $failedItems,
+        Operation $operation,
+        int $indexVersion,
+        int $batchId
+    ): void {
         /**
          * @var array<string, array{
          *     error_details: \DavidBel\AiSearch\Model\EmbeddingBacklog\ErrorDetails,
-         *     backlog_versions: array<int, int>
+         *     backlog_versions: array<int, int>,
+         *     product_ids: array<int, true>
          * }> $failureGroups
          */
         $failureGroups = [];
@@ -175,14 +251,25 @@ class ProcessingResultHandler
                 $failureGroups[$groupKey] = [
                     'error_details' => $errorDetails,
                     'backlog_versions' => [],
+                    'product_ids' => [],
                 ];
             }
 
             $failureGroups[$groupKey]['backlog_versions'][$failedItem->item->backlogId]
                 = $failedItem->item->backlogVersion;
+            $failureGroups[$groupKey]['product_ids'][$failedItem->item->sourceEntityId] = true;
         }
 
         foreach ($failureGroups as $failureGroup) {
+            $this->processingLogger->batchFailed(
+                $operation,
+                self::OPENSEARCH_ERROR_STAGE,
+                $indexVersion,
+                $batchId,
+                array_keys($failureGroup['product_ids']),
+                array_keys($failureGroup['backlog_versions']),
+                $failureGroup['error_details']
+            );
             $this->markBacklogItemsFailed(
                 $failureGroup['backlog_versions'],
                 self::OPENSEARCH_ERROR_STAGE,

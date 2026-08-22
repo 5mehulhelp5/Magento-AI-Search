@@ -10,23 +10,35 @@ namespace DavidBel\AiSearch\Cron;
 
 use DavidBel\AiSearch\Indexer\Versioning;
 use DavidBel\AiSearch\Ingestion\ChunkProcessingFactory;
+use DavidBel\AiSearch\Log\ProcessingLogger;
+use Throwable;
 
 class ChunkProcessing
 {
     public function __construct(
         private readonly ChunkProcessingFactory $chunkProcessingFactory,
-        private readonly Versioning $versioning
+        private readonly Versioning $versioning,
+        private readonly ProcessingLogger $processingLogger
     ) {
     }
 
     public function execute(): void
     {
-        if ($this->versioning->hasIngestionIndexVersion()) {
-            $this->chunkProcessingFactory->create()->execute(
-                $this->versioning->getIngestionIndexVersion()
-            );
-        }
+        $this->processingLogger->cronStarted(self::class);
 
-        $this->versioning->activateTargetWhenReady();
+        try {
+            if ($this->versioning->hasIngestionIndexVersion()) {
+                $this->chunkProcessingFactory->create()->execute(
+                    $this->versioning->getIngestionIndexVersion()
+                );
+            }
+
+            $this->versioning->activateTargetWhenReady();
+        } catch (Throwable $throwable) {
+            $this->processingLogger->cronFailed(self::class, $throwable);
+            throw $throwable;
+        } finally {
+            $this->processingLogger->cronFinished(self::class);
+        }
     }
 }

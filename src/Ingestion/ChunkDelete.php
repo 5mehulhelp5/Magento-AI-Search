@@ -19,6 +19,8 @@ use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingStateFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\BatchFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete\ItemMapper;
+use DavidBel\AiSearch\Log\ProcessingLogger;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use Generator;
 use Throwable;
 
@@ -36,12 +38,15 @@ class ChunkDelete
         private readonly ProcessingResultHandlerFactory $processingResultHandlerFactory,
         private readonly VectorSync $vectorSync,
         private readonly CacheClean $cacheClean,
-        private readonly DataProcessingConfig $dataProcessingConfig
+        private readonly DataProcessingConfig $dataProcessingConfig,
+        private readonly ProcessingLogger $processingLogger
     ) {
     }
 
     public function execute(int $indexVersion): int
     {
+        $this->processingLogger->workerStarted(Operation::Delete, $indexVersion);
+
         $processingState = $this->processingStateFactory->create();
         $resultHandler = $this->processingResultHandlerFactory->create([
             'processingState' => $processingState,
@@ -58,19 +63,28 @@ class ChunkDelete
         ProcessingResultHandler $resultHandler,
         int $indexVersion
     ): void {
-        foreach ($this->createBatches($processingState, $indexVersion) as $batch) {
+        foreach ($this->createBatches($processingState, $indexVersion) as $batchId => $batch) {
+            $this->processingLogger->batchStarted(
+                Operation::Delete,
+                $batch->getIndexVersion(),
+                $batchId,
+                $batch->getSourceEntityIds(),
+                array_keys($batch->getBacklogVersions())
+            );
+
             try {
                 $result = $this->vectorSync->delete($batch);
             } catch (Throwable $throwable) {
                 $resultHandler->openSearchFailed(
-                    $batch->getBacklogVersions(),
+                    $batch,
+                    $batchId,
                     $throwable
                 );
 
                 break;
             }
 
-            $resultHandler->completeDelete($result);
+            $resultHandler->completeDelete($result, $batch, $batchId);
         }
     }
 

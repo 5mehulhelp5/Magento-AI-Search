@@ -59,6 +59,31 @@ class ProcessingBatch
         return $this->items[array_key_last($this->items)];
     }
 
+    public function getIndexVersion(): int
+    {
+        return $this->items[0]->indexVersion;
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getSourceEntityIds(): array
+    {
+        $sourceEntityIds = [];
+        $seenSourceEntityIds = [];
+
+        foreach ($this->items as $item) {
+            if (isset($seenSourceEntityIds[$item->sourceEntityId])) {
+                continue;
+            }
+
+            $seenSourceEntityIds[$item->sourceEntityId] = true;
+            $sourceEntityIds[] = $item->sourceEntityId;
+        }
+
+        return $sourceEntityIds;
+    }
+
     /**
      * @return non-empty-list<ProcessingItem>
      */
