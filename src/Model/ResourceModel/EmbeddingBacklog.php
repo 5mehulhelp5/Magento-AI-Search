@@ -11,6 +11,7 @@ namespace DavidBel\AiSearch\Model\ResourceModel;
 use DavidBel\AiSearch\Api\Data\ChunkInterface;
 use DavidBel\AiSearch\Api\Data\DocumentInterface;
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\ErrorDetails;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Status;
@@ -157,6 +158,8 @@ class EmbeddingBacklog extends AbstractDb
                     EmbeddingBacklogInterface::ATTEMPT_COUNT . ' + 1'
                 ),
                 EmbeddingBacklogInterface::LAST_ERROR_STAGE => null,
+                EmbeddingBacklogInterface::LAST_ERROR_CODE => null,
+                EmbeddingBacklogInterface::LAST_ERROR_MESSAGE => null,
             ]
         );
     }
@@ -164,8 +167,11 @@ class EmbeddingBacklog extends AbstractDb
     /**
      * @param array<int, int> $backlogVersions
      */
-    public function markFailedByVersions(array $backlogVersions, string $errorStage): void
-    {
+    public function markFailedByVersions(
+        array $backlogVersions,
+        string $errorStage,
+        ErrorDetails $errorDetails
+    ): void {
         if ($backlogVersions === []) {
             return;
         }
@@ -178,6 +184,8 @@ class EmbeddingBacklog extends AbstractDb
                     EmbeddingBacklogInterface::ATTEMPT_COUNT . ' + 1'
                 ),
                 EmbeddingBacklogInterface::LAST_ERROR_STAGE => $errorStage,
+                EmbeddingBacklogInterface::LAST_ERROR_CODE => $errorDetails->code,
+                EmbeddingBacklogInterface::LAST_ERROR_MESSAGE => $errorDetails->message,
             ]
         );
     }
@@ -391,6 +399,8 @@ class EmbeddingBacklog extends AbstractDb
             EmbeddingBacklogInterface::BACKLOG_VERSION => 1,
             EmbeddingBacklogInterface::ATTEMPT_COUNT => 0,
             EmbeddingBacklogInterface::LAST_ERROR_STAGE => null,
+            EmbeddingBacklogInterface::LAST_ERROR_CODE => null,
+            EmbeddingBacklogInterface::LAST_ERROR_MESSAGE => null,
         ];
     }
 
@@ -422,6 +432,8 @@ class EmbeddingBacklog extends AbstractDb
             ),
             EmbeddingBacklogInterface::ATTEMPT_COUNT,
             EmbeddingBacklogInterface::LAST_ERROR_STAGE,
+            EmbeddingBacklogInterface::LAST_ERROR_CODE,
+            EmbeddingBacklogInterface::LAST_ERROR_MESSAGE,
         ];
     }
 

@@ -9,7 +9,8 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Upsert;
 
 use DavidBel\AiSearch\Client\OpenSearch;
-use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Item;
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\FailedItem;
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\OpenSearchErrorMapper;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Result;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\ResultFactory;
 use UnexpectedValueException;
@@ -18,6 +19,7 @@ class Bulk
 {
     public function __construct(
         private readonly OpenSearch $openSearch,
+        private readonly OpenSearchErrorMapper $openSearchErrorMapper,
         private readonly ResultFactory $resultFactory
     ) {
     }
@@ -82,41 +84,48 @@ class Bulk
             throw new UnexpectedValueException('OpenSearch returned an unexpected bulk item count.');
         }
 
-        [$successfulDocuments, $failedDocuments] = $this->categorizeDocuments($items, $documents);
+        [$successfulDocuments, $failedItems] = $this->categorizeDocuments($items, $documents);
 
-        if ($errors !== ($failedDocuments !== [])) {
+        if ($errors !== ($failedItems !== [])) {
             throw new UnexpectedValueException('OpenSearch returned inconsistent bulk error information.');
         }
 
-        return $this->createResult($successfulDocuments, $failedDocuments);
+        return $this->createResult($successfulDocuments, $failedItems);
     }
 
     /**
      * @param list<mixed> $items
      * @param list<Document> $documents
-     * @return array{list<Document>, list<Document>}
+     * @return array{list<Document>, list<FailedItem>}
      */
     private function categorizeDocuments(array $items, array $documents): array
     {
         $successfulDocuments = [];
-        $failedDocuments = [];
+        $failedItems = [];
 
         foreach ($items as $index => $item) {
             $document = $documents[$index];
+            $operation = $this->getOperation($item, $document);
 
-            if ($this->isSuccessfulItem($item, $document)) {
+            if ($this->isSuccessfulStatus($operation['status'] ?? null)) {
                 $successfulDocuments[] = $document;
 
                 continue;
             }
 
-            $failedDocuments[] = $document;
+            $failedItems[] = new FailedItem(
+                $document->item,
+                $this->openSearchErrorMapper->map($operation)
+            );
         }
 
-        return [$successfulDocuments, $failedDocuments];
+        return [$successfulDocuments, $failedItems];
     }
 
-    private function isSuccessfulItem(mixed $item, Document $document): bool
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function getOperation(mixed $item, Document $document): array
     {
         $operation = is_array($item) ? ($item['index'] ?? null) : null;
 
@@ -124,7 +133,7 @@ class Bulk
             throw new UnexpectedValueException('OpenSearch returned an invalid bulk item.');
         }
 
-        return $this->isSuccessfulStatus($operation['status'] ?? null);
+        return $operation;
     }
 
     /**
@@ -142,28 +151,31 @@ class Bulk
 
     /**
      * @param list<Document> $successfulDocuments
-     * @param list<Document> $failedDocuments
+     * @param list<FailedItem> $failedItems
      */
     private function createResult(
         array $successfulDocuments,
-        array $failedDocuments
+        array $failedItems
     ): Result {
         return $this->resultFactory->create([
             'successfulItems' => $this->getItems($successfulDocuments),
-            'failedItems' => $this->getItems($failedDocuments),
+            'failedItems' => $failedItems,
         ]);
     }
 
     /**
      * @param list<Document> $documents
-     * @return list<Item>
+     * @return list<\DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Item>
      */
     private function getItems(array $documents): array
     {
-        return array_map(
-            static fn (Document $document): Item => $document->item,
-            $documents
-        );
+        $items = [];
+
+        foreach ($documents as $document) {
+            $items[] = $document->item;
+        }
+
+        return $items;
     }
 
     /**

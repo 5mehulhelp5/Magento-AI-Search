@@ -61,8 +61,11 @@ class ChunkDelete
         foreach ($this->createBatches($processingState, $indexVersion) as $batch) {
             try {
                 $result = $this->vectorSync->delete($batch);
-            } catch (Throwable) {
-                $resultHandler->openSearchFailed($batch->getBacklogVersions());
+            } catch (Throwable $throwable) {
+                $resultHandler->openSearchFailed(
+                    $batch->getBacklogVersions(),
+                    $throwable
+                );
 
                 break;
             }

@@ -12,7 +12,7 @@ class Result
 {
     /**
      * @param list<Item> $successfulItems
-     * @param list<Item> $failedItems
+     * @param list<FailedItem> $failedItems
      */
     public function __construct(
         private readonly array $successfulItems,
@@ -33,7 +33,21 @@ class Result
      */
     public function getFailedBacklogVersions(): array
     {
-        return $this->getBacklogVersions($this->failedItems);
+        $backlogVersions = [];
+
+        foreach ($this->failedItems as $failedItem) {
+            $backlogVersions[$failedItem->item->backlogId] = $failedItem->item->backlogVersion;
+        }
+
+        return $backlogVersions;
+    }
+
+    /**
+     * @return list<FailedItem>
+     */
+    public function getFailedItems(): array
+    {
+        return $this->failedItems;
     }
 
     /**

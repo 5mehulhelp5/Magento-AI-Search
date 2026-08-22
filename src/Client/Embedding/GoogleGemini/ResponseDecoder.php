@@ -11,6 +11,7 @@ namespace DavidBel\AiSearch\Client\Embedding\GoogleGemini;
 use Magento\Framework\Serialize\SerializerInterface;
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
+use Throwable;
 use UnexpectedValueException;
 
 use function is_finite;
@@ -32,10 +33,29 @@ class ResponseDecoder
         $status = $response->getStatusCode();
 
         if ($status < 200 || $status >= 300) {
-            throw new RuntimeException(sprintf('Embedding request failed with HTTP status %d.', $status));
+            throw new RuntimeException(
+                $this->getErrorMessage($response, $status),
+                $status
+            );
         }
 
         return $this->decodeResponse((string) $response->getBody());
+    }
+
+    private function getErrorMessage(ResponseInterface $response, int $status): string
+    {
+        try {
+            $responseData = $this->serializer->unserialize((string) $response->getBody());
+        } catch (Throwable) {
+            return sprintf('Embedding request failed with HTTP status %d.', $status);
+        }
+
+        $error = is_array($responseData) ? ($responseData['error'] ?? null) : null;
+        $message = is_array($error) ? ($error['message'] ?? null) : null;
+
+        return is_string($message) && trim($message) !== ''
+            ? $message
+            : sprintf('Embedding request failed with HTTP status %d.', $status);
     }
 
     /**

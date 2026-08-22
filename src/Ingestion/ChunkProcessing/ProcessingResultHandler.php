@@ -12,7 +12,9 @@ use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogRe
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\IndexVersion
     as BacklogIndexVersion;
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\ProcessingResultHandler\FailureReasonMapper;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Result;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\ErrorDetails;
 use Throwable;
 
 class ProcessingResultHandler
@@ -28,7 +30,8 @@ class ProcessingResultHandler
         private readonly VectorSync $vectorSync,
         private readonly CacheClean $cacheClean,
         private readonly ProcessingState $processingState,
-        private readonly BacklogIndexVersion $backlogIndexVersion
+        private readonly BacklogIndexVersion $backlogIndexVersion,
+        private readonly FailureReasonMapper $failureReasonMapper
     ) {
     }
 
@@ -42,9 +45,9 @@ class ProcessingResultHandler
 
             try {
                 $result = $this->vectorSync->upsert($batch, $vectors);
-            } catch (Throwable) {
+            } catch (Throwable $throwable) {
                 $this->processingState->stopAcceptingWork();
-                $this->openSearchFailed($batch->getBacklogVersions());
+                $this->openSearchFailed($batch->getBacklogVersions(), $throwable);
 
                 return;
             }
@@ -58,9 +61,10 @@ class ProcessingResultHandler
     public function failed(mixed $reason, int $batchId): void
     {
         try {
-            $this->getResource()->markFailedByVersions(
+            $this->markBacklogItemsFailed(
                 $this->processingState->getBatch($batchId)->getBacklogVersions(),
-                self::EMBEDDER_ERROR_STAGE
+                self::EMBEDDER_ERROR_STAGE,
+                $this->failureReasonMapper->map($reason)
             );
         } finally {
             $this->processingState->removeBatch($batchId);
@@ -75,11 +79,12 @@ class ProcessingResultHandler
     /**
      * @param array<int, int> $backlogVersions
      */
-    public function openSearchFailed(array $backlogVersions): void
+    public function openSearchFailed(array $backlogVersions, mixed $reason): void
     {
-        $this->getResource()->markFailedByVersions(
+        $this->markBacklogItemsFailed(
             $backlogVersions,
-            self::OPENSEARCH_ERROR_STAGE
+            self::OPENSEARCH_ERROR_STAGE,
+            $this->failureReasonMapper->map($reason)
         );
     }
 
@@ -90,9 +95,10 @@ class ProcessingResultHandler
         try {
             $this->cacheClean->flush();
         } catch (Throwable $throwable) {
-            $this->getResource()->markFailedByVersions(
+            $this->markBacklogItemsFailed(
                 $successfulBacklogVersions,
-                self::CACHE_ERROR_STAGE
+                self::CACHE_ERROR_STAGE,
+                $this->failureReasonMapper->map($throwable)
             );
 
             throw $throwable;
@@ -105,17 +111,13 @@ class ProcessingResultHandler
 
     private function handleVectorSyncResult(Result $result): void
     {
-        $failedBacklogVersions = $result->getFailedBacklogVersions();
         $successfulBacklogVersions = $result->getSuccessfulBacklogVersions();
 
         $this->backlogIndexVersion->markFullReindexItemsIndexed(
             $result->getSuccessfulBacklogIndexVersions()
         );
 
-        $this->getResource()->markFailedByVersions(
-            $failedBacklogVersions,
-            self::OPENSEARCH_ERROR_STAGE
-        );
+        $this->markOpenSearchItemFailures($result->getFailedItems());
 
         try {
             foreach ($result->getSuccessfulSourceEntities() as $entityType => $entityIds) {
@@ -126,15 +128,68 @@ class ProcessingResultHandler
                 $this->cacheClean->registerSearchResults();
             }
         } catch (Throwable $throwable) {
-            $this->getResource()->markFailedByVersions(
+            $this->markBacklogItemsFailed(
                 $successfulBacklogVersions,
-                self::CACHE_ERROR_STAGE
+                self::CACHE_ERROR_STAGE,
+                $this->failureReasonMapper->map($throwable)
             );
 
             throw $throwable;
         }
 
         $this->processingState->recordSuccesses($successfulBacklogVersions);
+    }
+
+    /**
+     * @param list<\DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\FailedItem> $failedItems
+     */
+    private function markOpenSearchItemFailures(array $failedItems): void
+    {
+        /**
+         * @var array<string, array{
+         *     error_details: \DavidBel\AiSearch\Model\EmbeddingBacklog\ErrorDetails,
+         *     backlog_versions: array<int, int>
+         * }> $failureGroups
+         */
+        $failureGroups = [];
+
+        foreach ($failedItems as $failedItem) {
+            $errorDetails = $failedItem->errorDetails;
+            $groupKey = ($errorDetails->code ?? '') . "\0" . $errorDetails->message;
+
+            if (!isset($failureGroups[$groupKey])) {
+                $failureGroups[$groupKey] = [
+                    'error_details' => $errorDetails,
+                    'backlog_versions' => [],
+                ];
+            }
+
+            $failureGroups[$groupKey]['backlog_versions'][$failedItem->item->backlogId]
+                = $failedItem->item->backlogVersion;
+        }
+
+        foreach ($failureGroups as $failureGroup) {
+            $this->markBacklogItemsFailed(
+                $failureGroup['backlog_versions'],
+                self::OPENSEARCH_ERROR_STAGE,
+                $failureGroup['error_details']
+            );
+        }
+    }
+
+    /**
+     * @param array<int, int> $backlogVersions
+     */
+    private function markBacklogItemsFailed(
+        array $backlogVersions,
+        string $errorStage,
+        ErrorDetails $errorDetails
+    ): void {
+        $this->getResource()->markFailedByVersions(
+            $backlogVersions,
+            $errorStage,
+            $errorDetails
+        );
     }
 
     private function getResource(): EmbeddingBacklogResource

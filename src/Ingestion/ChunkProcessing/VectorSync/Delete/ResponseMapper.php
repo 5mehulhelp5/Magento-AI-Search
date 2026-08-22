@@ -8,7 +8,9 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Delete;
 
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\FailedItem;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Item;
+use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\OpenSearchErrorMapper;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Result;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\ResultFactory;
 use UnexpectedValueException;
@@ -16,6 +18,7 @@ use UnexpectedValueException;
 class ResponseMapper
 {
     public function __construct(
+        private readonly OpenSearchErrorMapper $openSearchErrorMapper,
         private readonly ResultFactory $resultFactory
     ) {
     }
@@ -48,7 +51,7 @@ class ResponseMapper
     /**
      * @param list<mixed> $responseItems
      * @param list<Item> $items
-     * @return array{list<Item>, list<Item>}
+     * @return array{list<Item>, list<FailedItem>}
      */
     private function categorize(array $responseItems, array $items): array
     {
@@ -57,20 +60,27 @@ class ResponseMapper
 
         foreach ($responseItems as $index => $responseItem) {
             $item = $items[$index];
+            $operation = $this->getOperation($responseItem, $item);
 
-            if ($this->isSuccessful($responseItem, $item)) {
+            if ($this->isSuccessfulStatus($operation['status'] ?? null)) {
                 $successfulItems[] = $item;
 
                 continue;
             }
 
-            $failedItems[] = $item;
+            $failedItems[] = new FailedItem(
+                $item,
+                $this->openSearchErrorMapper->map($operation)
+            );
         }
 
         return [$successfulItems, $failedItems];
     }
 
-    private function isSuccessful(mixed $responseItem, Item $item): bool
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function getOperation(mixed $responseItem, Item $item): array
     {
         $operation = is_array($responseItem) ? ($responseItem['delete'] ?? null) : null;
 
@@ -80,14 +90,17 @@ class ResponseMapper
             throw new UnexpectedValueException('OpenSearch returned an invalid bulk delete item.');
         }
 
-        $status = $operation['status'] ?? null;
+        return $operation;
+    }
 
+    private function isSuccessfulStatus(mixed $status): bool
+    {
         return is_int($status) && (($status >= 200 && $status < 300) || $status === 404);
     }
 
     /**
      * @param list<Item> $successfulItems
-     * @param list<Item> $failedItems
+     * @param list<FailedItem> $failedItems
      */
     private function createResult(
         array $successfulItems,
