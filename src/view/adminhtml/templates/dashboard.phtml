@@ -10,6 +10,7 @@ declare(strict_types=1);
 /** @var \Magento\Framework\Escaper $escaper */
 ?>
 <div class="ai-search-dashboard">
+    <?= /* @noEscape */ $block->getChildHtml('progress') ?>
     <h2 class="ai-search-dashboard-title"><?= $escaper->escapeHtml(__('Testing')) ?></h2>
     <div class="ai-search-dashboard-action">
         <?= /* @noEscape */ $block->getChildHtml('test_embedder_connection') ?>

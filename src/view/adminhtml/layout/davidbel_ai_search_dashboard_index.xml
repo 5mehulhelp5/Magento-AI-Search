@@ -11,6 +11,10 @@
             <block class="Magento\Backend\Block\Template"
                    name="davidbel_ai_search_dashboard"
                    template="DavidBel_AiSearch::dashboard.phtml">
+                <block class="DavidBel\AiSearch\Block\Adminhtml\Dashboard\Progress"
+                       name="davidbel_ai_search_dashboard_progress"
+                       as="progress"
+                       template="DavidBel_AiSearch::dashboard/progress.phtml"/>
                 <block class="DavidBel\AiSearch\Block\Adminhtml\Test\EmbedderConnectionButton"
                        name="davidbel_ai_search_dashboard_test_embedder_connection"
                        as="test_embedder_connection">

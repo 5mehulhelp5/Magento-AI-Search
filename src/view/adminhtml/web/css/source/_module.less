@@ -4,6 +4,12 @@
  * https://github.com/DavidBelicza/Magento-AI-Search
  */
 
+@ai-search-progress-background: #e3e3e3;
+@ai-search-progress-done: #79a70a;
+@ai-search-progress-failed: #e22626;
+@ai-search-progress-outdated: #8a8a8a;
+@ai-search-progress-pending: #fdbb30;
+
 .ai-search-test-modal {
     .modal-inner-wrap {
         max-width: 110rem;
@@ -95,5 +101,90 @@
 
     .ai-search-dashboard-action + .ai-search-dashboard-action {
         margin-top: 2rem;
+    }
+
+    .ai-search-dashboard-progress {
+        margin-bottom: 3rem;
+    }
+
+    .ai-search-progress-description {
+        color: @color-gray40;
+        margin-bottom: 2rem;
+    }
+
+    .ai-search-progress-row {
+        margin: 1.5rem 0;
+    }
+
+    .ai-search-progress-version + .ai-search-progress-version {
+        margin-top: 3rem;
+    }
+
+    .ai-search-progress-version-title {
+        margin-bottom: 1rem;
+    }
+
+    .ai-search-progress-label {
+        font-weight: 600;
+        margin-bottom: .5rem;
+    }
+
+    .ai-search-progress-bar {
+        background: @ai-search-progress-background;
+        display: flex;
+        height: 3.2rem;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .ai-search-progress-segment,
+    .ai-search-progress-swatch {
+        display: inline-block;
+    }
+
+    .ai-search-progress-segment {
+        align-items: center;
+        color: @color-white;
+        display: flex;
+        flex-shrink: 0;
+        font-weight: 600;
+        height: 100%;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .ai-search-progress-empty {
+        color: @color-gray40;
+        font-size: 1.2rem;
+        line-height: 3.2rem;
+        text-align: center;
+        width: 100%;
+    }
+
+    .ai-search-progress-swatch {
+        height: .9rem;
+        margin-right: .35rem;
+        vertical-align: -1px;
+        width: .9rem;
+    }
+
+    .ai-search-progress-pending {
+        background: @ai-search-progress-pending;
+    }
+
+    .ai-search-progress-failed {
+        background: @ai-search-progress-failed;
+    }
+
+    .ai-search-progress-outdated {
+        background: @ai-search-progress-outdated;
+    }
+
+    .ai-search-progress-done {
+        background: @ai-search-progress-done;
+    }
+
+    .ai-search-progress-legend span {
+        margin-right: 1.5rem;
     }
 }

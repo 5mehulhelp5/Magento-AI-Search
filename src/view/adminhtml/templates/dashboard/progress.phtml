@@ -1,0 +1,76 @@
+<?php
+/**
+ * davidbel/magento-ai-search by David Belicza
+ * SPDX-License-Identifier: MIT
+ * https://github.com/DavidBelicza/Magento-AI-Search
+ */
+declare(strict_types=1);
+
+/** @var \DavidBel\AiSearch\Block\Adminhtml\Dashboard\Progress $block */
+/** @var \Magento\Framework\Escaper $escaper */
+?>
+<section class="ai-search-dashboard-progress">
+    <h2 class="ai-search-dashboard-title">
+        <?= $escaper->escapeHtml(__('Ingestion Pipeline Progress')) ?>
+    </h2>
+    <p class="ai-search-progress-description">
+        <?= $escaper->escapeHtml(
+            __('The ingestion cron runs embedding, OpenSearch indexing, and cache invalidation for generated chunks.')
+        ) ?>
+    </p>
+    <?php $indexVersionGroups = $block->getIndexVersionGroups(); ?>
+    <?php if ($indexVersionGroups === []): ?>
+        <div class="message message-notice"><?= $escaper->escapeHtml(__('No backlog items found.')) ?></div>
+    <?php endif; ?>
+    <?php foreach ($indexVersionGroups as $indexVersionGroup): ?>
+        <div class="ai-search-progress-version">
+            <h3 class="ai-search-progress-version-title">
+                <?= $escaper->escapeHtml(__('Index Version %1', $indexVersionGroup['index_version'])) ?>
+            </h3>
+            <?php foreach ($indexVersionGroup['bars'] as $bar): ?>
+                <div class="ai-search-progress-row">
+                    <div class="ai-search-progress-label">
+                        <?= $escaper->escapeHtml(sprintf(
+                            '%s, %s',
+                            $block->getOperationLabel($bar['operation']),
+                            $block->getModeLabel($bar['mode'])
+                        )) ?>
+                    </div>
+                    <div class="ai-search-progress-bar"
+                         role="img"
+                         aria-label="<?= $escaper->escapeHtmlAttr(__('%1 items', $bar['total'])) ?>">
+                        <?php if ($bar['total'] === 0): ?>
+                            <span class="ai-search-progress-empty">
+                                <?= $escaper->escapeHtml(__('No items')) ?>
+                            </span>
+                        <?php endif; ?>
+                        <?php foreach ($bar['segments'] as $segment): ?>
+                            <?php if ($segment['count'] > 0): ?>
+                                <span class="ai-search-progress-segment ai-search-progress-<?=
+                                    $escaper->escapeHtmlAttr($segment['status'])
+                                ?>"
+                                      style="width: <?=
+                                          $escaper->escapeHtmlAttr((string) $segment['percentage'])
+                                        ?>%"
+                                      title="<?= $escaper->escapeHtmlAttr(sprintf(
+                                          '%s: %d',
+                                          $block->getStatusLabel($segment['status']),
+                                          $segment['count']
+                                      )) ?>"><?= $escaper->escapeHtml((string) $segment['count']) ?></span>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endforeach; ?>
+    <div class="ai-search-progress-legend">
+        <?php foreach ($block->getLegendItems() as $legendItem): ?>
+            <span>
+                <i class="ai-search-progress-swatch ai-search-progress-<?=
+                    $escaper->escapeHtmlAttr($legendItem['status'])
+                ?>"></i><?= $escaper->escapeHtml($legendItem['label']) ?>
+            </span>
+        <?php endforeach; ?>
+    </div>
+</section>
