@@ -10,13 +10,61 @@ declare(strict_types=1);
 /** @var \Magento\Framework\Escaper $escaper */
 ?>
 <div class="ai-search-dashboard">
+    <section class="ai-search-dashboard-controls"
+             aria-label="<?= $escaper->escapeHtmlAttr(__('AI Search controls')) ?>">
+        <div class="ai-search-dashboard-control-group">
+            <strong class="ai-search-dashboard-control-label">
+                <?= $escaper->escapeHtml(__('Settings')) ?>
+            </strong>
+            <nav class="ai-search-dashboard-control-actions"
+                 aria-label="<?= $escaper->escapeHtmlAttr(__('AI Search settings')) ?>">
+                <a class="action-default"
+                   href="<?= $escaper->escapeUrl($block->getUrl(
+                       'adminhtml/system_config/edit',
+                       ['section' => 'davidbel_ai_search_search_result']
+                   )) ?>"><?= $escaper->escapeHtml(__('Search Result')) ?></a>
+                <a class="action-default"
+                   href="<?= $escaper->escapeUrl($block->getUrl(
+                       'adminhtml/system_config/edit',
+                       ['section' => 'davidbel_ai_search_search_source']
+                   )) ?>"><?= $escaper->escapeHtml(__('Search Source')) ?></a>
+                <a class="action-default"
+                   href="<?= $escaper->escapeUrl($block->getUrl(
+                       'adminhtml/system_config/edit',
+                       ['section' => 'davidbel_ai_search_data_processing']
+                   )) ?>"><?= $escaper->escapeHtml(__('Data Processing')) ?></a>
+            </nav>
+        </div>
+        <div class="ai-search-dashboard-control-group">
+            <strong class="ai-search-dashboard-control-label">
+                <?= $escaper->escapeHtml(__('Data')) ?>
+            </strong>
+            <nav class="ai-search-dashboard-control-actions"
+                 aria-label="<?= $escaper->escapeHtmlAttr(__('AI Search data')) ?>">
+                <a class="action-default"
+                   href="<?= $escaper->escapeUrl($block->getUrl('davidbel_ai_search/document/index')) ?>">
+                    <?= $escaper->escapeHtml(__('Documents')) ?>
+                </a>
+                <a class="action-default"
+                   href="<?= $escaper->escapeUrl($block->getUrl('davidbel_ai_search/chunk/index')) ?>">
+                    <?= $escaper->escapeHtml(__('Chunks')) ?>
+                </a>
+                <a class="action-default"
+                   href="<?= $escaper->escapeUrl($block->getUrl('davidbel_ai_search/backlog/index')) ?>">
+                    <?= $escaper->escapeHtml(__('Backlog Items')) ?>
+                </a>
+            </nav>
+        </div>
+        <div class="ai-search-dashboard-control-group">
+            <strong class="ai-search-dashboard-control-label">
+                <?= $escaper->escapeHtml(__('Testing')) ?>
+            </strong>
+            <div class="ai-search-dashboard-control-actions">
+                <?= /* @noEscape */ $block->getChildHtml('test_embedder_connection') ?>
+                <?= /* @noEscape */ $block->getChildHtml('test_semantic_search') ?>
+            </div>
+        </div>
+    </section>
     <?= /* @noEscape */ $block->getChildHtml('indexing') ?>
     <?= /* @noEscape */ $block->getChildHtml('progress') ?>
-    <h2 class="ai-search-dashboard-title"><?= $escaper->escapeHtml(__('Testing')) ?></h2>
-    <div class="ai-search-dashboard-action">
-        <?= /* @noEscape */ $block->getChildHtml('test_embedder_connection') ?>
-    </div>
-    <div class="ai-search-dashboard-action">
-        <?= /* @noEscape */ $block->getChildHtml('test_semantic_search') ?>
-    </div>
 </div>

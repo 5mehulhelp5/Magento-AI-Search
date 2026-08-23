@@ -6,10 +6,11 @@
 -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
-    <update handle="davidbel_ai_search_dashboard_button"/>
     <body>
-        <referenceContainer name="content">
-            <uiComponent name="davidbel_ai_search_chunk_view_form"/>
-        </referenceContainer>
+        <referenceBlock name="page.actions.toolbar">
+            <block class="DavidBel\AiSearch\Block\Adminhtml\DashboardButton"
+                   name="davidbel_ai_search_dashboard_button"
+                   before="-"/>
+        </referenceBlock>
     </body>
 </page>

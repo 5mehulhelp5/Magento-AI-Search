@@ -95,12 +95,32 @@
 }
 
 .ai-search-dashboard {
-    .ai-search-dashboard-title {
-        margin-top: 0;
+    .ai-search-dashboard-controls {
+        align-items: center;
+        background: @color-white;
+        border: 1px solid @color-gray80;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem 2rem;
+        margin-bottom: 3rem;
+        padding: 1.5rem 2rem;
     }
 
-    .ai-search-dashboard-action + .ai-search-dashboard-action {
-        margin-top: 2rem;
+    .ai-search-dashboard-control-group,
+    .ai-search-dashboard-control-actions {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .ai-search-dashboard-control-group + .ai-search-dashboard-control-group {
+        border-left: 1px solid @color-gray80;
+        padding-left: 2rem;
+    }
+
+    .ai-search-dashboard-control-label {
+        font-weight: 600;
     }
 
     .ai-search-dashboard-progress {
@@ -118,6 +138,12 @@
 
     .ai-search-progress-row {
         margin: 1.5rem 0;
+    }
+
+    .ai-search-progress-versions {
+        display: grid;
+        gap: 2rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .ai-search-progress-version {
@@ -150,10 +176,6 @@
         &.has-items {
             background: @ai-search-progress-pending;
         }
-    }
-
-    .ai-search-progress-version + .ai-search-progress-version {
-        margin-top: 2rem;
     }
 
     .ai-search-progress-version-title {
@@ -225,6 +247,30 @@
 
         span {
             margin-right: 1.5rem;
+        }
+    }
+
+    @media only screen and (max-width: 1439px) {
+        .ai-search-dashboard-control-group:last-child {
+            border-left: 0;
+            flex-basis: 100%;
+            padding-left: 0;
+        }
+    }
+
+    @media only screen and (max-width: 1023px) {
+        .ai-search-dashboard-controls {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .ai-search-dashboard-control-group + .ai-search-dashboard-control-group {
+            border-left: 0;
+            padding-left: 0;
+        }
+
+        .ai-search-progress-versions {
+            grid-template-columns: minmax(0, 1fr);
         }
     }
 }

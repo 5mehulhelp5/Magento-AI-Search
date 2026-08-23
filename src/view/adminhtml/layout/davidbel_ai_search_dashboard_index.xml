@@ -24,6 +24,7 @@
                        as="test_embedder_connection">
                     <arguments>
                         <argument name="id" xsi:type="string">ai_search_test_embedder_connection</argument>
+                        <argument name="class" xsi:type="string">primary</argument>
                     </arguments>
                 </block>
                 <block class="DavidBel\AiSearch\Block\Adminhtml\Test\SemanticSearchButton"
@@ -31,6 +32,7 @@
                        as="test_semantic_search">
                     <arguments>
                         <argument name="id" xsi:type="string">ai_search_test_semantic_search</argument>
+                        <argument name="class" xsi:type="string">primary</argument>
                     </arguments>
                 </block>
             </block>

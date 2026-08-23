@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Block\Adminhtml\Dashboard;
 
+use DavidBel\AiSearch\Indexer\Versioning;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Status;
@@ -33,6 +34,7 @@ class Progress extends Template
     public function __construct(
         Template\Context $context,
         private readonly BacklogProgress $backlogProgress,
+        private readonly Versioning $versioning,
         array $data = []
     ) {
         parent::__construct($context, $data);
@@ -41,6 +43,7 @@ class Progress extends Template
     /**
      * @return list<array{
      *     index_version: int,
+     *     roles: list<string>,
      *     bars: list<array{
      *         operation: string,
      *         mode: string,
@@ -66,15 +69,49 @@ class Progress extends Template
         $indexVersions = array_keys($counts);
         rsort($indexVersions, SORT_NUMERIC);
         $indexVersionGroups = [];
+        $ingestionIndexVersion = $this->versioning->hasIngestionIndexVersion()
+            ? $this->versioning->getIngestionIndexVersion()
+            : null;
+        $searchIndexVersion = $this->versioning->getSearchIndex(true)?->number;
 
         foreach ($indexVersions as $indexVersion) {
             $indexVersionGroups[] = [
                 'index_version' => $indexVersion,
+                'roles' => $this->getIndexVersionRoles(
+                    $indexVersion,
+                    $ingestionIndexVersion,
+                    $searchIndexVersion
+                ),
                 'bars' => $this->createBars($counts[$indexVersion]),
             ];
         }
 
         return $indexVersionGroups;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function getIndexVersionRoles(
+        int $indexVersion,
+        ?int $ingestionIndexVersion,
+        ?int $searchIndexVersion
+    ): array {
+        $roles = [];
+
+        if ($indexVersion === $ingestionIndexVersion) {
+            $roles[] = (string) __('Active for ingestion');
+        }
+
+        if ($indexVersion === $searchIndexVersion) {
+            $roles[] = (string) __('Active for search');
+        }
+
+        if ($roles === []) {
+            $roles[] = (string) __('Inactive, will be deleted');
+        }
+
+        return $roles;
     }
 
     public function getOperationLabel(string $operation): string
