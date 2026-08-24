@@ -4,11 +4,26 @@
  * https://github.com/DavidBelicza/Magento-AI-Search
  */
 
-@ai-search-progress-background: #e3e3e3;
-@ai-search-progress-done: #79a70a;
-@ai-search-progress-failed: #e22626;
-@ai-search-progress-outdated: #8a8a8a;
-@ai-search-progress-pending: #fdbb30;
+@ai-search-progress-background: @color-gray94;
+@ai-search-progress-done: @message-success__background;
+@ai-search-progress-failed: @message-error__background;
+@ai-search-progress-outdated: @color-gray89;
+@ai-search-progress-pending: @message-warning__background;
+
+.ai-search-config-dashboard-navigation {
+    align-items: center;
+    background: @color-white;
+    border: 1px solid @color-gray80;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem 2rem;
+}
+
+.ai-search-config-dashboard-description {
+    color: @color-gray40;
+}
 
 .ai-search-test-modal {
     .modal-inner-wrap {
@@ -99,24 +114,25 @@
         align-items: center;
         background: @color-white;
         border: 1px solid @color-gray80;
-        display: flex;
-        flex-wrap: nowrap;
-        gap: 1.5rem 2rem;
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: minmax(0, 1fr);
         margin-bottom: 3rem;
         padding: 1.5rem 2rem;
     }
 
-    .ai-search-dashboard-control-group,
+    .ai-search-dashboard-control-group {
+        align-items: center;
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: 8rem minmax(0, 1fr);
+    }
+
     .ai-search-dashboard-control-actions {
         align-items: center;
         display: flex;
         flex-wrap: wrap;
         gap: 1rem;
-    }
-
-    .ai-search-dashboard-control-group + .ai-search-dashboard-control-group {
-        border-left: 1px solid @color-gray80;
-        padding-left: 2rem;
     }
 
     .ai-search-dashboard-control-label {
@@ -167,7 +183,7 @@
 
     .ai-search-indexing-count {
         align-items: center;
-        color: @color-white;
+        color: @message-success__color;
         display: flex;
         font-weight: 600;
         height: 100%;
@@ -175,6 +191,7 @@
 
         &.has-items {
             background: @ai-search-progress-pending;
+            color: @message-warning__color;
         }
     }
 
@@ -202,7 +219,6 @@
 
     .ai-search-progress-segment {
         align-items: center;
-        color: @color-white;
         display: flex;
         flex-shrink: 0;
         font-weight: 600;
@@ -228,18 +244,22 @@
 
     .ai-search-progress-pending {
         background: @ai-search-progress-pending;
+        color: @message-warning__color;
     }
 
     .ai-search-progress-failed {
         background: @ai-search-progress-failed;
+        color: @message-error__color;
     }
 
     .ai-search-progress-outdated {
         background: @ai-search-progress-outdated;
+        color: @color-gray40;
     }
 
     .ai-search-progress-done {
         background: @ai-search-progress-done;
+        color: @message-success__color;
     }
 
     .ai-search-progress-legend {
@@ -250,29 +270,7 @@
         }
     }
 
-    @media only screen and (max-width: 1799px) {
-        .ai-search-dashboard-controls {
-            flex-wrap: wrap;
-        }
-
-        .ai-search-dashboard-control-group:last-child {
-            border-left: 0;
-            flex-basis: 100%;
-            padding-left: 0;
-        }
-    }
-
     @media only screen and (max-width: 1023px) {
-        .ai-search-dashboard-controls {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-
-        .ai-search-dashboard-control-group + .ai-search-dashboard-control-group {
-            border-left: 0;
-            padding-left: 0;
-        }
-
         .ai-search-progress-versions {
             grid-template-columns: minmax(0, 1fr);
         }

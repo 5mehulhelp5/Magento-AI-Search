@@ -27,7 +27,9 @@ class DashboardButton extends Button
         array $data = []
     ) {
         $data['label'] = __('AI Search Dashboard');
-        $data['class'] = 'primary';
+        if (!array_key_exists('class', $data)) {
+            $data['class'] = 'primary';
+        }
         $data['on_click'] = sprintf(
             "location.href = '%s';",
             $this->backendUrl->getUrl('davidbel_ai_search/dashboard/index')

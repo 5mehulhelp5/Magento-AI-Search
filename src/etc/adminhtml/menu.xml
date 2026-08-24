@@ -8,7 +8,7 @@
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
     <menu>
         <add id="DavidBel_AiSearch::system_ai_search"
-             title="AI Search"
+             title="✨ AI Search"
              translate="title"
              module="DavidBel_AiSearch"
              sortOrder="90"

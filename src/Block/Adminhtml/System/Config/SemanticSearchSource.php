@@ -8,9 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Block\Adminhtml\System\Config;
 
-use Magento\Config\Block\System\Config\Form;
-
-class SemanticSearchSource extends Form
+class SemanticSearchSource extends DashboardNavigation
 {
     public function getFormHtml(): string
     {

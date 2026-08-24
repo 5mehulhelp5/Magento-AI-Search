@@ -7,8 +7,8 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
     <system>
-        <tab id="davidbel" translate="label" sortOrder="500">
-            <label>AI Search</label>
+        <tab id="davidbel" translate="label" sortOrder="390">
+            <label>✨ AI Search</label>
         </tab>
         <section id="davidbel_ai_search_semantic_search_result"
                  translate="label"
@@ -20,6 +20,7 @@
             <label>Semantic Search Result</label>
             <tab>davidbel</tab>
             <resource>DavidBel_AiSearch::config_semantic_search_result</resource>
+            <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\DashboardNavigation</frontend_model>
             <group id="general"
                    translate="label"
                    type="text"
@@ -373,6 +374,7 @@
             <label>Semantic Data Processing</label>
             <tab>davidbel</tab>
             <resource>DavidBel_AiSearch::config_semantic_data_processing</resource>
+            <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\DashboardNavigation</frontend_model>
             <group id="document_processing"
                    translate="label"
                    type="text"
