@@ -81,6 +81,20 @@ class SearchTest extends TestCase
         self::assertSame('', (new RequestReader())->getQueryText($request));
     }
 
+    public function testReturnsEmptyQueryWhenBooleanListHasNoSearchMatch(): void
+    {
+        $query = new BoolExpression(
+            'bool',
+            null,
+            [self::createStub(QueryInterface::class)],
+            []
+        );
+        $request = self::createStub(RequestInterface::class);
+        $request->method('getQuery')->willReturn($query);
+
+        self::assertSame('', (new RequestReader())->getQueryText($request));
+    }
+
     public function testReadsAnIntegerStoreId(): void
     {
         $request = self::createStub(RequestInterface::class);

@@ -127,6 +127,80 @@ class AdminSearchResultProviderTest extends TestCase
         self::assertSame([], $result['products'][0]['documents']);
     }
 
+    public function testAddsScoresAndReturnsOnlyDocumentsWithScoredChunks(): void
+    {
+        $result = $this->createScorePopulatingResultProvider()->getSearchResults('shoes', 1);
+
+        self::assertSame(0.9, $result['products'][0]['score']);
+        $documents = $result['products'][0]['documents'];
+        self::assertCount(1, $documents);
+        $firstDocument = $documents[0];
+        $chunks = $firstDocument['chunks'];
+        self::assertIsArray($chunks);
+        $firstChunk = $chunks[0];
+        self::assertIsArray($firstChunk);
+        self::assertSame(0.8, $firstChunk['score']);
+    }
+
+    private function createScorePopulatingResultProvider(): ResultProvider
+    {
+        $scores = new SearchScores();
+        $store = $this->store(1, 'Store', 'store');
+        $storeRepository = self::createStub(StoreRepositoryInterface::class);
+        $storeRepository->method('getById')->willReturn($store);
+        $storeManager = self::createStub(StoreManagerInterface::class);
+        $storeManager->method('getStore')->willReturn($store);
+        [$resultConfig, $searchConfig] = $this->searchConfigurations();
+
+        return new ResultProvider(
+            $this->scorePopulatingResolver($scores),
+            $storeManager,
+            $storeRepository,
+            self::createStub(UrlInterface::class),
+            $this->scoredRelatedDocuments(),
+            $resultConfig,
+            $searchConfig,
+            $scores
+        );
+    }
+
+    private function scorePopulatingResolver(SearchScores $scores): Resolver
+    {
+        $product = self::createStub(Product::class);
+        $product->method('getId')->willReturn(10);
+        $product->method('getName')->willReturn('Product');
+        $product->method('getSku')->willReturn('sku');
+        $product->method('getTypeId')->willReturn('simple');
+        $collection = new ScorePopulatingProductCollection(
+            $scores,
+            [$product],
+            [10 => 0.9],
+            [100 => 0.8]
+        );
+        $layer = self::createStub(Layer::class);
+        $layer->method('getProductCollection')->willReturn($collection);
+        $resolver = self::createStub(Resolver::class);
+        $resolver->method('get')->willReturn($layer);
+
+        return $resolver;
+    }
+
+    private function scoredRelatedDocuments(): RelatedDocuments
+    {
+        $related = self::createStub(RelatedDocuments::class);
+        $related->method('getByProductIds')->willReturn([
+            10 => [
+                ['id' => 1, 'chunks' => [
+                    ['id' => 100, 'content' => 'returned'],
+                    ['id' => 101, 'content' => 'not returned'],
+                ]],
+                ['id' => 2, 'chunks' => [['id' => 102, 'content' => 'not returned']]],
+            ],
+        ]);
+
+        return $related;
+    }
+
     private function createResultProvider(): ResultProvider
     {
         $resolver = $this->searchLayerResolver();

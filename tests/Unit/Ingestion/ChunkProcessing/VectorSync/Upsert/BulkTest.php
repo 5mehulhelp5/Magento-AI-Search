@@ -72,6 +72,35 @@ class BulkTest extends TestCase
         );
     }
 
+    public function testReturnsEmptyResultWithoutCallingOpenSearch(): void
+    {
+        $openSearch = $this->createMock(OpenSearch::class);
+        $openSearch->expects(self::never())->method('bulkQuery');
+        $result = self::createStub(Result::class);
+        $factory = self::createStub(ResultFactory::class);
+        $factory->method('create')->willReturn($result);
+
+        self::assertSame(
+            $result,
+            (new Bulk($openSearch, new OpenSearchErrorMapper(), $factory))->execute([])
+        );
+    }
+
+    public function testRejectsDocumentsFromDifferentIndexVersions(): void
+    {
+        $openSearch = $this->createMock(OpenSearch::class);
+        $openSearch->expects(self::never())->method('bulkQuery');
+
+        $this->expectException(UnexpectedValueException::class);
+        $this->expectExceptionMessage('must contain one index version');
+
+        (new Bulk(
+            $openSearch,
+            new OpenSearchErrorMapper(),
+            self::createStub(ResultFactory::class)
+        ))->execute([$this->createDocument(10, 42), $this->createDocument(20, 43, 2)]);
+    }
+
     /**
      * @return iterable<string, array{array<array-key, mixed>, string}>
      */
@@ -115,7 +144,7 @@ class BulkTest extends TestCase
         ))->execute([$this->createDocument(10, 42)]);
     }
 
-    private function createDocument(int $backlogId, int $chunkId): Document
+    private function createDocument(int $backlogId, int $chunkId, int $indexVersion = 1): Document
     {
         return new Document(
             new Item(
@@ -124,7 +153,8 @@ class BulkTest extends TestCase
                 '2026-08-04 10:00:00',
                 $chunkId,
                 'product',
-                99
+                99,
+                $indexVersion
             ),
             1,
             'catalog_product_99',

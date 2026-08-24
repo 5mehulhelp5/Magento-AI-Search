@@ -65,4 +65,18 @@ class SearchResultsTest extends TestCase
 
         $searchResults->getSearchCriteria();
     }
+
+    public function testDocumentResultsRequireSearchCriteria(): void
+    {
+        $this->expectException(UnexpectedValueException::class);
+
+        (new DocumentSearchResults())->getSearchCriteria();
+    }
+
+    public function testRejectsAnInvalidChunkResult(): void
+    {
+        $this->expectException(UnexpectedValueException::class);
+
+        (new ChunkSearchResults())->setItems([self::createStub(DocumentInterface::class)]);
+    }
 }

@@ -45,6 +45,7 @@ use Magento\Framework\Lock\LockManagerInterface;
 use Magento\Framework\Serialize\SerializerInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 use RuntimeException;
 use UnexpectedValueException;
 
@@ -356,6 +357,19 @@ class VersioningTest extends TestCase
         );
     }
 
+    public function testPhysicalIndexProviderRejectsTargetFromDifferentConfiguration(): void
+    {
+        $target = new Target($this->physicalIndex(), false);
+        $flag = self::createStub(Flag::class);
+        $flag->method('get')->willReturn(new State(null, $target));
+        $fingerprint = self::createStub(ConfigurationFingerprint::class);
+        $fingerprint->method('get')->willReturn('different');
+
+        self::assertNull(
+            (new PhysicalIndexProvider($flag, $fingerprint))->getTargetForCurrentConfiguration()
+        );
+    }
+
     public function testVersionLockDelegatesToLockManager(): void
     {
         $manager = $this->createMock(LockManagerInterface::class);
@@ -542,6 +556,20 @@ class VersioningTest extends TestCase
         $this->createPreparation($flag, $openSearch, $this->createSuccessfulLock())->prepare();
     }
 
+    public function testPreparationSkipsExistingVersionName(): void
+    {
+        $flag = $this->createMock(Flag::class);
+        $flag->method('get')->willReturn(new State($this->physicalIndex(2)));
+        $flag->expects(self::once())->method('save');
+        $openSearch = $this->createMock(OpenSearch::class);
+        $openSearch->expects(self::exactly(2))
+            ->method('indexExists')
+            ->willReturnOnConsecutiveCalls(true, false);
+        $openSearch->expects(self::once())->method('createIndex');
+
+        $this->createPreparation($flag, $openSearch, $this->createSuccessfulLock())->prepare();
+    }
+
     public function testPreparationRejectsUnavailableLock(): void
     {
         $lock = self::createStub(VersionLock::class);
@@ -555,6 +583,21 @@ class VersioningTest extends TestCase
             self::createStub(OpenSearch::class),
             $lock
         )->prepare();
+    }
+
+    public function testPreparationRejectsMissingTargetWhenResuming(): void
+    {
+        $preparation = $this->createPreparation(
+            self::createStub(Flag::class),
+            self::createStub(OpenSearch::class),
+            self::createStub(VersionLock::class)
+        );
+        $method = new ReflectionMethod(Preparation::class, 'resume');
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('required for resuming');
+
+        $method->invoke($preparation, new State(), null);
     }
 
     public function testPreparationMarksDocumentProcessingComplete(): void
@@ -594,6 +637,17 @@ class VersioningTest extends TestCase
         $lock->method('lock')->willReturn(false);
 
         self::assertFalse($this->createActivation(versionLock: $lock)->execute());
+    }
+
+    public function testActivationRejectsMissingTargetDuringActivation(): void
+    {
+        $activation = $this->createActivation();
+        $method = new ReflectionMethod(Activation::class, 'activate');
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('required for activation');
+
+        $method->invoke($activation, new State());
     }
 
     public function testActivationReturnsFalseWithoutCompletedTarget(): void

@@ -10,12 +10,17 @@ namespace DavidBel\AiSearch\Tests\Unit\Model;
 
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
 use DavidBel\AiSearch\Model\EmbeddingBacklog;
+use DavidBel\AiSearch\Model\EmbeddingBacklog\ErrorDetails;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\FullReindexStatus;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Status;
+use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as BacklogResource;
+use Magento\Framework\Api\AttributeValueFactory;
+use Magento\Framework\Api\ExtensionAttributesFactory;
+use Magento\Framework\Model\Context;
+use Magento\Framework\Registry;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use UnexpectedValueException;
 use ValueError;
 
@@ -25,8 +30,13 @@ class EmbeddingBacklogTest extends TestCase
 
     protected function setUp(): void
     {
-        $reflection = new ReflectionClass(EmbeddingBacklog::class);
-        $this->embeddingBacklog = $reflection->newInstanceWithoutConstructor();
+        $this->embeddingBacklog = new EmbeddingBacklog(
+            self::createStub(Context::class),
+            self::createStub(Registry::class),
+            self::createStub(ExtensionAttributesFactory::class),
+            self::createStub(AttributeValueFactory::class),
+            self::createStub(BacklogResource::class)
+        );
     }
 
     public function testMapsPersistedDataToTheServiceContract(): void
@@ -36,11 +46,13 @@ class EmbeddingBacklogTest extends TestCase
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::INDEX_VERSION, '7');
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::FULL_REINDEX_STATUS, '1');
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::CHUNK_ID, '42');
+        $this->embeddingBacklog->setChunkId(42);
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::SOURCE_ENTITY_TYPE, 'product');
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::SOURCE_ENTITY_ID, '81');
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::OPERATION, 'delete');
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::STATUS, 'failed');
         $this->embeddingBacklog->setData(EmbeddingBacklogInterface::ATTEMPT_COUNT, '3');
+        $this->embeddingBacklog->setAttemptCount(3);
         $this->embeddingBacklog->setLastErrorStage('embedder');
         $this->embeddingBacklog->setLastErrorCode('provider_unavailable');
         $this->embeddingBacklog->setLastErrorMessage('Embedding provider unavailable.');
@@ -65,6 +77,14 @@ class EmbeddingBacklogTest extends TestCase
         );
         self::assertSame('2026-07-29 10:00:00', $this->embeddingBacklog->getCreatedAt());
         self::assertSame('2026-07-29 11:00:00', $this->embeddingBacklog->getUpdatedAt());
+    }
+
+    public function testErrorDetailsUsesFallbackForEmptyMessage(): void
+    {
+        $details = new ErrorDetails(' ', '  ');
+
+        self::assertNull($details->code);
+        self::assertSame('Processing failed.', $details->message);
     }
 
     public function testStoresEnumValuesThroughTheServiceContract(): void

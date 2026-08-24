@@ -9,7 +9,9 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Ingestion\DocumentProcessing\Chunking;
 
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Chunking\GeneralChunking;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 class GeneralChunkingTest extends TestCase
 {
@@ -80,5 +82,43 @@ class GeneralChunkingTest extends TestCase
         foreach ($chunks as $chunk) {
             self::assertLessThanOrEqual(20, mb_strlen($chunk));
         }
+    }
+
+    public function testRejectsInvalidUtf8(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->chunking->chunk("\xC3\x28", 10, 0, 4);
+    }
+
+    public function testSplitsLongSentenceUsingWords(): void
+    {
+        self::assertSame(
+            ['alpha beta', 'gamma', 'delta'],
+            $this->chunking->chunk('alpha beta gamma delta', 10, 0, 1)
+        );
+    }
+
+    public function testOmitsOverlapWhenNextChunkUsesAllAvailableSpace(): void
+    {
+        self::assertSame(
+            ['alpha beta', '12345678'],
+            $this->chunking->chunk("alpha beta\n\n12345678", 10, 5, 1)
+        );
+    }
+
+    public function testUsesContinuousTailWhenThereIsNoWordBoundary(): void
+    {
+        self::assertSame(
+            ['abcdefghij', "hij\n\n12345"],
+            $this->chunking->chunk("abcdefghij\n\n12345", 10, 3, 1)
+        );
+    }
+
+    public function testKeepsWholeTailWhenItFits(): void
+    {
+        $method = new ReflectionMethod(GeneralChunking::class, 'tailAtWordBoundary');
+
+        self::assertSame('short tail', $method->invoke($this->chunking, ' short tail ', 20));
     }
 }

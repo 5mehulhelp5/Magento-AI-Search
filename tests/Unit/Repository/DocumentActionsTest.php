@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Repository;
 
 use DavidBel\AiSearch\Model\Document;
+use DavidBel\AiSearch\Api\Data\DocumentInterface;
 use DavidBel\AiSearch\Model\DocumentFactory;
 use DavidBel\AiSearch\Model\ResourceModel\Document as DocumentResource;
 use DavidBel\AiSearch\Model\ResourceModel\Document\Collection;
@@ -19,6 +20,10 @@ use DavidBel\AiSearch\Repository\Document\Save;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use RuntimeException;
+use Magento\Framework\Exception\CouldNotDeleteException;
+use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 class DocumentActionsTest extends TestCase
 {
@@ -33,6 +38,7 @@ class DocumentActionsTest extends TestCase
     public function testSaveUsesTheCollectionResourceModel(): void
     {
         $document = $this->createDocument();
+        $document->setDocumentId(12);
         $resource = $this->createMock(DocumentResource::class);
         $resource->expects(self::once())
             ->method('save')
@@ -45,6 +51,7 @@ class DocumentActionsTest extends TestCase
     public function testGetUsesTheCollectionResourceModel(): void
     {
         $document = $this->createDocument();
+        $document->setDocumentId(12);
         $documentFactory = $this->createMock(DocumentFactory::class);
         $documentFactory->expects(self::once())
             ->method('create')
@@ -53,19 +60,61 @@ class DocumentActionsTest extends TestCase
         $resource->expects(self::once())
             ->method('load')
             ->with($document, 12)
-            ->willReturnCallback(
-                static function (Document $model) use ($resource): DocumentResource {
-                    $model->setDocumentId(12);
-
-                    return $resource;
-                }
-            );
+            ->willReturn($resource);
         $collectionFactory = $this->createCollectionFactory($resource);
 
         self::assertSame(
             $document,
             (new Get($documentFactory, $collectionFactory))->execute(12)
         );
+    }
+
+    public function testGetRejectsMissingDocument(): void
+    {
+        $document = $this->createDocument();
+        $documentFactory = self::createStub(DocumentFactory::class);
+        $documentFactory->method('create')->willReturn($document);
+        $resource = self::createStub(DocumentResource::class);
+
+        $this->expectException(NoSuchEntityException::class);
+        (new Get($documentFactory, $this->createCollectionFactory($resource)))->execute(12);
+    }
+
+    public function testSaveRejectsNonModelImplementation(): void
+    {
+        $this->expectException(CouldNotSaveException::class);
+
+        (new Save(self::createStub(CollectionFactory::class)))
+            ->execute(self::createStub(DocumentInterface::class));
+    }
+
+    public function testSaveWrapsResourceFailure(): void
+    {
+        $resource = self::createStub(DocumentResource::class);
+        $resource->method('save')->willThrowException(new RuntimeException('save failed'));
+
+        $this->expectException(CouldNotSaveException::class);
+        (new Save($this->createCollectionFactory($resource)))->execute($this->createDocument());
+    }
+
+    public function testDeleteRejectsNonModelImplementation(): void
+    {
+        $get = self::createStub(Get::class);
+        $get->method('execute')->willReturn(self::createStub(DocumentInterface::class));
+
+        $this->expectException(CouldNotDeleteException::class);
+        (new DeleteById($get, self::createStub(CollectionFactory::class)))->execute(12);
+    }
+
+    public function testDeleteWrapsResourceFailure(): void
+    {
+        $get = self::createStub(Get::class);
+        $get->method('execute')->willReturn($this->createDocument());
+        $resource = self::createStub(DocumentResource::class);
+        $resource->method('delete')->willThrowException(new RuntimeException('delete failed'));
+
+        $this->expectException(CouldNotDeleteException::class);
+        (new DeleteById($get, $this->createCollectionFactory($resource)))->execute(12);
     }
 
     public function testDeleteUsesTheCollectionResourceModel(): void

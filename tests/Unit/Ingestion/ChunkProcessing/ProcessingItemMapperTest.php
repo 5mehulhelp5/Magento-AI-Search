@@ -33,6 +33,7 @@ class ProcessingItemMapperTest extends TestCase
         self::assertSame(0, $items[0]->chunkIndex);
         self::assertSame('text', $items[0]->content);
         self::assertSame('hash', $items[0]->contentHash);
+        self::assertSame('Title', $items[0]->title);
     }
 
     public function testRejectsANonPositiveBacklogVersion(): void
@@ -57,6 +58,17 @@ class ProcessingItemMapperTest extends TestCase
         (new ProcessingItemMapper())->mapRows([$row]);
     }
 
+    public function testRejectsNegativeIdentifier(): void
+    {
+        $row = $this->createRow();
+        $row[EmbeddingBacklogInterface::BACKLOG_ID] = '-1';
+
+        $this->expectException(UnexpectedValueException::class);
+        $this->expectExceptionMessage('backlog_id must be a non-negative integer');
+
+        (new ProcessingItemMapper())->mapRows([$row]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -75,6 +87,7 @@ class ProcessingItemMapperTest extends TestCase
             ChunkInterface::CHUNK_INDEX => '0',
             ChunkInterface::CONTENT => 'text',
             ChunkInterface::CONTENT_HASH => 'hash',
+            DocumentInterface::TITLE => 'Title',
         ];
     }
 }

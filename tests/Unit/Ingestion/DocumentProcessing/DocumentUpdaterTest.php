@@ -28,6 +28,7 @@ use Magento\Framework\Api\SearchCriteriaBuilderFactory;
 use Magento\Framework\Api\SearchCriteriaInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 class DocumentUpdaterTest extends TestCase
 {
@@ -279,6 +280,84 @@ class DocumentUpdaterTest extends TestCase
             self::createStub(Chunking::class),
             self::createStub(ChunkPersistence::class)
         )->deleteDocuments([1 => $document]);
+    }
+
+    public function testRejectsDuplicateSourceCodes(): void
+    {
+        $source = $this->createSource('content');
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('source code cannot be processed more than once');
+
+        $this->createUpdater(
+            $this->createRepository([]),
+            self::createStub(Parsing::class),
+            self::createStub(Chunking::class),
+            self::createStub(ChunkPersistence::class)
+        )->deltaUpdate('product', 42, [$source, $source]);
+    }
+
+    public function testDeletesDocumentsForMissingSourceCode(): void
+    {
+        $document = $this->createDocumentStub(1, 10, 'hash');
+        $sourceUpdater = $this->createMock(DocumentSourceUpdater::class);
+        $sourceUpdater->expects(self::once())
+            ->method('deleteDocuments')
+            ->with([1 => $document])
+            ->willReturn(new Result([], [100]));
+        $builder = self::createStub(SearchCriteriaBuilder::class);
+        $builder->method('addFilter')->willReturnSelf();
+        $builder->method('create')->willReturn(self::createStub(SearchCriteriaInterface::class));
+        $builderFactory = self::createStub(SearchCriteriaBuilderFactory::class);
+        $builderFactory->method('create')->willReturn($builder);
+
+        $result = (new DocumentUpdater(
+            $builderFactory,
+            $this->createRepository([$document]),
+            $sourceUpdater
+        ))->deltaUpdate('product', 42, []);
+
+        self::assertSame([100], $result->deleteChunkIds);
+    }
+
+    public function testRequiresIdAfterUpdatingOnlyTheTitle(): void
+    {
+        $content = 'Unchanged source';
+        $document = $this->createDocumentMock(1, null, hash('sha256', $content), 'Old title');
+        $document->method('setTitle')->willReturnSelf();
+        $repository = $this->createRepository([$document]);
+        $repository->method('save')->willReturn($document);
+        $source = new DocumentSource(
+            'description',
+            'text_as_is',
+            [new StoreScopedSource(1, $content, 'New title')]
+        );
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('persisted AI search document must have an ID');
+
+        $this->createSourceUpdater(
+            $repository,
+            self::createStub(Parsing::class),
+            self::createStub(Chunking::class),
+            self::createStub(ChunkPersistence::class)
+        )->update('product', 42, $source, [1 => $document], UpdateMode::DeltaUpdate);
+    }
+
+    public function testRejectsMissingDocumentForTitleOnlyUpdate(): void
+    {
+        $updater = $this->createSourceUpdater(
+            self::createStub(DocumentRepositoryInterface::class),
+            self::createStub(Parsing::class),
+            self::createStub(Chunking::class),
+            self::createStub(ChunkPersistence::class)
+        );
+        $method = new ReflectionMethod(DocumentSourceUpdater::class, 'updateDocumentTitle');
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('unchanged source must have a persisted document');
+
+        $method->invoke($updater, null, 'Title');
     }
 
     private function createUpdater(

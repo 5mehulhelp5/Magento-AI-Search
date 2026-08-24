@@ -215,17 +215,59 @@ class DocumentProcessingTest extends TestCase
         );
     }
 
+    public function testFullUpdateProcessesDeletedProducts(): void
+    {
+        $sourceProvider = self::createStub(SourceProvider::class);
+        $sourceProvider->method('getProductIdsAfter')->willReturn([]);
+        $sourceProvider->method('getSourcesByProductIds')->willReturn([30 => []]);
+        $deletedProvider = $this->createMock(DeletedProductIdProvider::class);
+        $deletedProvider->expects(self::exactly(2))
+            ->method('getProductIdsFrom')
+            ->willReturnOnConsecutiveCalls([30], []);
+        $documentUpdater = $this->createMock(DocumentUpdater::class);
+        $documentUpdater->expects(self::once())
+            ->method('fullUpdate')
+            ->with('product', 30, [])
+            ->willReturn(new Result([], []));
+        $resource = $this->createBacklogResourceStub($this->createTransactionConnection());
+
+        $this->createProcessing(
+            $sourceProvider,
+            $documentUpdater,
+            $this->createCollectionFactory($resource),
+            $deletedProvider
+        )->fullUpdate(self::INDEX_VERSION);
+    }
+
+    public function testRejectsProductWithoutResolvedSources(): void
+    {
+        $sourceProvider = $this->createDeltaSourceProvider([10], []);
+        $collectionFactory = $this->createCollectionFactory(
+            $this->createBacklogResourceStub(self::createStub(AdapterInterface::class))
+        );
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Product sources could not be resolved');
+
+        $this->createProcessing(
+            $sourceProvider,
+            self::createStub(DocumentUpdater::class),
+            $collectionFactory
+        )->deltaUpdate([10], self::INDEX_VERSION);
+    }
+
     private function createProcessing(
         SourceProvider $sourceProvider,
         DocumentUpdater $documentUpdater,
-        CollectionFactory $collectionFactory
+        CollectionFactory $collectionFactory,
+        ?DeletedProductIdProvider $deletedProductIdProvider = null
     ): DocumentProcessing {
         $config = self::createStub(SemanticDataProcessingConfig::class);
         $config->method('getDocumentProcessingBatchSize')->willReturn(self::BATCH_SIZE);
 
         return new DocumentProcessing(
             $sourceProvider,
-            self::createStub(DeletedProductIdProvider::class),
+            $deletedProductIdProvider ?? self::createStub(DeletedProductIdProvider::class),
             $documentUpdater,
             $collectionFactory,
             $config,

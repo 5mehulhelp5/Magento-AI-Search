@@ -79,6 +79,39 @@ class ChunkDeleteTest extends TestCase
         self::assertSame(0, $workflow->execute(7));
     }
 
+    public function testCompletesDeleteAndStopsWhenNoRowsRemain(): void
+    {
+        $row = $this->createRow(10, 2, 42, '2026-08-04 10:00:00');
+        $resource = $this->createMock(EmbeddingBacklogResource::class);
+        $resource->expects(self::exactly(2))
+            ->method('getItemsToDelete')
+            ->willReturnOnConsecutiveCalls([$row], []);
+        $state = self::createStub(ProcessingState::class);
+        $state->method('isWithinRuntime')->willReturn(true);
+        $result = self::createStub(\DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorSync\Result::class);
+        $vectorSync = self::createStub(VectorSync::class);
+        $vectorSync->method('delete')->willReturn($result);
+        $handler = $this->createMock(ProcessingResultHandler::class);
+        $handler->expects(self::once())
+            ->method('completeDelete')
+            ->with($result, self::isInstanceOf(Batch::class), 0);
+        $handler->expects(self::once())->method('finish')->willReturn(1);
+
+        $workflow = new ChunkDelete(
+            $this->createCollectionFactory($resource),
+            new ItemMapper(),
+            $this->createBatchFactory(),
+            $this->createStateFactory($state),
+            $this->createHandlerFactory($state, $handler),
+            $vectorSync,
+            self::createStub(CacheClean::class),
+            $this->createSemanticDataProcessingConfig(),
+            self::createStub(Logger::class)
+        );
+
+        self::assertSame(1, $workflow->execute(7));
+    }
+
     private function createCollectionFactory(
         EmbeddingBacklogResource $resource
     ): CollectionFactory {

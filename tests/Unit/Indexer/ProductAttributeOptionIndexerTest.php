@@ -221,6 +221,26 @@ class ProductAttributeOptionIndexerTest extends TestCase
         );
     }
 
+    public function testAffectedProductProviderSkipsAttributesWithoutValueConditions(): void
+    {
+        $connection = $this->createAffectedProductConnection([]);
+        $filters = self::createStub(AttributeOptionFilterProvider::class);
+        $filters->method('getByBackendType')->willReturn([
+            'varchar' => [
+                2 => ['frontend_input' => 'multiselect', 'option_ids' => []],
+            ],
+        ]);
+        $scope = self::createStub(IndexingScopeConfig::class);
+        $scope->method('getStoreIdsForIndexing')->willReturn([1]);
+        $provider = new AffectedProductIdProvider(
+            $this->createCollectionFactory($connection),
+            $filters,
+            $scope
+        );
+
+        self::assertSame([], iterator_to_array($provider->getProductIdBatches([5], 10)));
+    }
+
     public function testAffectedProductProviderRejectsInvalidDatabaseProductId(): void
     {
         $connection = $this->createAffectedProductConnection([[0]]);

@@ -49,6 +49,17 @@ class ItemMapperTest extends TestCase
         (new ItemMapper())->mapRows([$row]);
     }
 
+    public function testRejectsNegativeIdentifier(): void
+    {
+        $row = $this->createRow();
+        $row[EmbeddingBacklogInterface::BACKLOG_ID] = '-1';
+
+        $this->expectException(UnexpectedValueException::class);
+        $this->expectExceptionMessage('backlog_id must be a non-negative integer');
+
+        (new ItemMapper())->mapRows([$row]);
+    }
+
     /**
      * @return array<string, mixed>
      */

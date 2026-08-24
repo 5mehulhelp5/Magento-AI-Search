@@ -72,4 +72,16 @@ class CacheCleanTest extends TestCase
             self::createStub(DeferredCacheCleanerInterface::class)
         ))->registerSearchResults();
     }
+
+    public function testUsesConfiguredCacheTag(): void
+    {
+        $context = $this->createMock(CacheContext::class);
+        $context->expects(self::once())->method('registerEntities')->with('category_tag', [5]);
+
+        (new CacheClean(
+            $context,
+            self::createStub(DeferredCacheCleanerInterface::class),
+            ['category' => 'category_tag']
+        ))->register('category', [5]);
+    }
 }

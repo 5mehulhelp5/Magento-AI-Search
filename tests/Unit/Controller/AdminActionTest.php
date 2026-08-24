@@ -12,14 +12,20 @@ use DavidBel\AiSearch\Client\Embedding\Base\EmbedderClientInterface;
 use DavidBel\AiSearch\Client\Embedding\Base\EmbedderClientPool;
 use DavidBel\AiSearch\Config\EmbedderConfig;
 use DavidBel\AiSearch\Controller\Adminhtml\AiServer\TestEmbedderConnection;
+use DavidBel\AiSearch\Controller\Adminhtml\Dashboard\Index as DashboardIndex;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use GuzzleHttp\Promise\Create;
 use Magento\Backend\App\Action\Context;
+use Magento\Backend\Model\View\Result\Page;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\AuthorizationInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\View\Page\Config;
+use Magento\Framework\View\Page\Title;
+use Magento\Framework\View\Result\PageFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -28,7 +34,29 @@ class AdminActionTest extends TestCase
 {
     public static function setUpBeforeClass(): void
     {
-        GeneratedFactoryStub::register(JsonFactory::class);
+        GeneratedFactoryStub::register(JsonFactory::class, PageFactory::class);
+    }
+
+    public function testDashboardActionBuildsDashboardPage(): void
+    {
+        $title = $this->createMock(Title::class);
+        $title->expects(self::once())->method('prepend')->with('AI Search Dashboard');
+        $config = self::createStub(Config::class);
+        $config->method('getTitle')->willReturn($title);
+        $page = $this->createMock(Page::class);
+        $page->expects(self::once())
+            ->method('setActiveMenu')
+            ->with('DavidBel_AiSearch::ai_search_dashboard')
+            ->willReturnSelf();
+        $page->expects(self::exactly(2))
+            ->method('addBreadcrumb')
+            ->willReturnSelf();
+        $page->method('getConfig')->willReturn($config);
+        $factory = self::createStub(PageFactory::class);
+        $factory->method('create')->willReturn($page);
+        $action = new DashboardIndex(self::createStub(Context::class), $factory);
+
+        self::assertSame($page, $action->execute());
     }
 
     public function testSemanticSearchActionReturnsResults(): void
@@ -50,6 +78,43 @@ class AdminActionTest extends TestCase
         );
 
         self::assertSame($json, $action->execute());
+    }
+
+    public function testSemanticSearchActionAllowsDashboardPermission(): void
+    {
+        $authorization = self::createStub(AuthorizationInterface::class);
+        $authorization->method('isAllowed')->willReturnMap([
+            ['DavidBel_AiSearch::config_semantic_search_result', false],
+            ['DavidBel_AiSearch::dashboard', true],
+        ]);
+        $context = self::createStub(Context::class);
+        $context->method('getAuthorization')->willReturn($authorization);
+        $action = new TestableSemanticSearchAction(
+            $context,
+            self::createStub(JsonFactory::class),
+            self::createStub(ResultProvider::class)
+        );
+
+        self::assertTrue($action->isAllowed());
+    }
+
+    public function testEmbedderConnectionActionAllowsDashboardPermission(): void
+    {
+        $authorization = self::createStub(AuthorizationInterface::class);
+        $authorization->method('isAllowed')->willReturnMap([
+            ['DavidBel_AiSearch::config_semantic_search_source', false],
+            ['DavidBel_AiSearch::dashboard', true],
+        ]);
+        $context = self::createStub(Context::class);
+        $context->method('getAuthorization')->willReturn($authorization);
+        $action = new TestableEmbedderConnectionAction(
+            $context,
+            self::createStub(JsonFactory::class),
+            self::createStub(EmbedderClientPool::class),
+            self::createStub(EmbedderConfig::class)
+        );
+
+        self::assertTrue($action->isAllowed());
     }
 
     public function testSemanticSearchActionReturnsValidationFailure(): void

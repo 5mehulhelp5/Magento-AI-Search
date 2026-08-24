@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Repository;
 
 use DavidBel\AiSearch\Model\Chunk;
+use DavidBel\AiSearch\Api\Data\ChunkInterface;
 use DavidBel\AiSearch\Model\ChunkFactory;
 use DavidBel\AiSearch\Model\ResourceModel\Chunk as ChunkResource;
 use DavidBel\AiSearch\Model\ResourceModel\Chunk\Collection;
@@ -19,6 +20,10 @@ use DavidBel\AiSearch\Repository\Chunk\Save;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use RuntimeException;
+use Magento\Framework\Exception\CouldNotDeleteException;
+use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 class ChunkActionsTest extends TestCase
 {
@@ -45,6 +50,7 @@ class ChunkActionsTest extends TestCase
     public function testGetUsesTheCollectionResourceModel(): void
     {
         $chunk = $this->createChunk();
+        $chunk->setChunkId(15);
         $chunkFactory = $this->createMock(ChunkFactory::class);
         $chunkFactory->expects(self::once())
             ->method('create')
@@ -53,19 +59,61 @@ class ChunkActionsTest extends TestCase
         $resource->expects(self::once())
             ->method('load')
             ->with($chunk, 15)
-            ->willReturnCallback(
-                static function (Chunk $model) use ($resource): ChunkResource {
-                    $model->setChunkId(15);
-
-                    return $resource;
-                }
-            );
+            ->willReturn($resource);
         $collectionFactory = $this->createCollectionFactory($resource);
 
         self::assertSame(
             $chunk,
             (new Get($chunkFactory, $collectionFactory))->execute(15)
         );
+    }
+
+    public function testGetRejectsMissingChunk(): void
+    {
+        $chunk = $this->createChunk();
+        $chunkFactory = self::createStub(ChunkFactory::class);
+        $chunkFactory->method('create')->willReturn($chunk);
+        $resource = self::createStub(ChunkResource::class);
+
+        $this->expectException(NoSuchEntityException::class);
+        (new Get($chunkFactory, $this->createCollectionFactory($resource)))->execute(15);
+    }
+
+    public function testSaveRejectsNonModelImplementation(): void
+    {
+        $this->expectException(CouldNotSaveException::class);
+
+        (new Save(self::createStub(CollectionFactory::class)))
+            ->execute(self::createStub(ChunkInterface::class));
+    }
+
+    public function testSaveWrapsResourceFailure(): void
+    {
+        $resource = self::createStub(ChunkResource::class);
+        $resource->method('save')->willThrowException(new RuntimeException('save failed'));
+
+        $this->expectException(CouldNotSaveException::class);
+        (new Save($this->createCollectionFactory($resource)))->execute($this->createChunk());
+    }
+
+    public function testDeleteRejectsNonModelImplementation(): void
+    {
+        $get = self::createStub(Get::class);
+        $get->method('execute')->willReturn(self::createStub(ChunkInterface::class));
+
+        $this->expectException(CouldNotDeleteException::class);
+        (new DeleteById($get, self::createStub(CollectionFactory::class)))->execute(15);
+    }
+
+    public function testDeleteWrapsResourceFailure(): void
+    {
+        $get = self::createStub(Get::class);
+        $get->method('execute')->willReturn($this->createChunk());
+        $resource = self::createStub(ChunkResource::class);
+        $resource->method('delete')->willThrowException(new RuntimeException('delete failed'));
+
+        $this->expectException(CouldNotDeleteException::class);
+        (new DeleteById($get, $this->createCollectionFactory($resource)))->execute(15);
     }
 
     public function testDeleteUsesTheCollectionResourceModel(): void

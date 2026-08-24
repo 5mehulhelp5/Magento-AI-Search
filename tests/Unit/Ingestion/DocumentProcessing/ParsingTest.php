@@ -40,6 +40,11 @@ class ParsingTest extends TestCase
         self::assertSame('', (new HtmlToText())->parse(''));
     }
 
+    public function testIgnoresHtmlComments(): void
+    {
+        self::assertSame('Visible', (new HtmlToText())->parse('<!-- hidden --><p>Visible</p>'));
+    }
+
     public function testParsingRegistryListsAndDelegatesToStrategies(): void
     {
         $strategy = $this->createMock(ParsingInterface::class);

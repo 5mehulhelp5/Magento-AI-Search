@@ -239,6 +239,22 @@ class SourceCompositionTest extends TestCase
         self::assertSame([], $resolver->getValuesByAttributeCode(['name'], [1], []));
     }
 
+    public function testAttributeValueResolverSkipsEmptyResolvedOptionLists(): void
+    {
+        $data = new AttributeData(
+            [1 => ['code' => 'sizes', 'backend_type' => 'varchar', 'frontend_input' => 'multiselect']],
+            ['sizes' => ['10:0' => '0, ,']],
+            []
+        );
+        $provider = self::createStub(AttributeDataProvider::class);
+        $provider->method('get')->willReturn($data);
+
+        self::assertSame(
+            ['sizes' => []],
+            (new AttributeValueResolver($provider))->getValuesByAttributeCode(['sizes'], [10], [1])
+        );
+    }
+
     #[PHPUnitDataProvider('invalidOptionValues')]
     public function testAttributeValueResolverRejectsInvalidOptions(
         string $rawValue,

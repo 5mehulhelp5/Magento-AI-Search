@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Unit;
 
+use LogicException;
 use Magento\Framework\Component\ComponentRegistrar;
 use PHPUnit\Framework\TestCase;
 
@@ -20,5 +21,18 @@ class RegistrationTest extends TestCase
 
         self::assertNotNull($modulePath);
         self::assertSame(realpath(__DIR__ . '/../../src'), realpath($modulePath));
+    }
+
+    public function testRegistersMagentoModule(): void
+    {
+        try {
+            require dirname(__DIR__, 2) . '/src/registration.php';
+            self::fail('The Composer bootstrap should already register the module.');
+        } catch (LogicException $exception) {
+            self::assertStringContainsString(
+                "Module 'DavidBel_AiSearch'",
+                $exception->getMessage()
+            );
+        }
     }
 }

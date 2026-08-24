@@ -22,6 +22,7 @@ use DavidBel\AiSearch\Ingestion\ChunkProcessingRetry;
 use DavidBel\AiSearch\Log\Logger;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 class ChunkIngestionTest extends TestCase
 {
@@ -99,5 +100,99 @@ class ChunkIngestionTest extends TestCase
             $versioning,
             self::createStub(Logger::class)
         ))->execute();
+    }
+
+    public function testChunkDeleteStopsWhenNoIngestionVersionExists(): void
+    {
+        $factory = $this->createMock(ChunkDeleteFactory::class);
+        $factory->expects(self::never())->method('create');
+        $versioning = self::createStub(Versioning::class);
+        $versioning->method('hasIngestionIndexVersion')->willReturn(false);
+
+        (new ChunkDeleteCron($factory, $versioning, self::createStub(Logger::class)))->execute();
+    }
+
+    public function testChunkRetryStopsWhenNoIngestionVersionExists(): void
+    {
+        $workflow = $this->createMock(ChunkProcessingRetry::class);
+        $workflow->expects(self::never())->method('execute');
+        $versioning = self::createStub(Versioning::class);
+        $versioning->method('hasIngestionIndexVersion')->willReturn(false);
+
+        (new ChunkProcessingRetryCron(
+            $workflow,
+            $versioning,
+            self::createStub(Logger::class)
+        ))->execute();
+    }
+
+    public function testChunkProcessingLogsAndRethrowsFailure(): void
+    {
+        $exception = new RuntimeException('processing failed');
+        $versioning = self::createStub(Versioning::class);
+        $versioning->method('activateTargetWhenReady')->willThrowException($exception);
+        $logger = $this->failureLogger(ChunkProcessingCron::class, $exception);
+
+        $this->expectExceptionObject($exception);
+        (new ChunkProcessingCron(
+            self::createStub(ChunkProcessingFactory::class),
+            $versioning,
+            $logger
+        ))->execute();
+    }
+
+    public function testChunkDeleteLogsAndRethrowsFailure(): void
+    {
+        $exception = new RuntimeException('delete failed');
+        $versioning = self::createStub(Versioning::class);
+        $versioning->method('hasIngestionIndexVersion')->willThrowException($exception);
+        $logger = $this->failureLogger(ChunkDeleteCron::class, $exception);
+
+        $this->expectExceptionObject($exception);
+        (new ChunkDeleteCron(
+            self::createStub(ChunkDeleteFactory::class),
+            $versioning,
+            $logger
+        ))->execute();
+    }
+
+    public function testChunkRetryLogsAndRethrowsFailure(): void
+    {
+        $exception = new RuntimeException('retry failed');
+        $versioning = self::createStub(Versioning::class);
+        $versioning->method('hasIngestionIndexVersion')->willThrowException($exception);
+        $logger = $this->failureLogger(ChunkProcessingRetryCron::class, $exception);
+
+        $this->expectExceptionObject($exception);
+        (new ChunkProcessingRetryCron(
+            self::createStub(ChunkProcessingRetry::class),
+            $versioning,
+            $logger
+        ))->execute();
+    }
+
+    public function testChunkCleanupLogsAndRethrowsFailure(): void
+    {
+        $exception = new RuntimeException('cleanup failed');
+        $versioning = self::createStub(Versioning::class);
+        $versioning->method('hasIngestionIndexVersion')->willThrowException($exception);
+        $logger = $this->failureLogger(ChunkProcessingCleanupCron::class, $exception);
+
+        $this->expectExceptionObject($exception);
+        (new ChunkProcessingCleanupCron(
+            self::createStub(ChunkProcessingCleanup::class),
+            $versioning,
+            $logger
+        ))->execute();
+    }
+
+    private function failureLogger(string $cronClass, RuntimeException $exception): Logger
+    {
+        $logger = $this->createMock(Logger::class);
+        $logger->expects(self::once())->method('cronStarted')->with($cronClass);
+        $logger->expects(self::once())->method('cronFailed')->with($cronClass, $exception);
+        $logger->expects(self::once())->method('cronFinished')->with($cronClass);
+
+        return $logger;
     }
 }

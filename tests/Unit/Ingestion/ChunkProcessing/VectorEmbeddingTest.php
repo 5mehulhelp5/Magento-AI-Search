@@ -20,9 +20,13 @@ use DavidBel\AiSearch\Ingestion\ChunkProcessing\VectorEmbedding\RequestBatchFact
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use GuzzleHttp\Promise\FulfilledPromise;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use Throwable;
 
 class VectorEmbeddingTest extends TestCase
 {
+    private ?Throwable $recordedFailure = null;
+
     public static function setUpBeforeClass(): void
     {
         GeneratedFactoryStub::register(RequestBatchFactory::class);
@@ -69,6 +73,36 @@ class VectorEmbeddingTest extends TestCase
         );
 
         self::assertTrue($completed);
+    }
+
+    public function testConvertsRequestConstructionFailureToRejectedPromise(): void
+    {
+        $batch = new ProcessingBatch([$this->createItem(10)]);
+        $factory = self::createStub(RequestBatchFactory::class);
+        $factory->method('create')->willThrowException(new RuntimeException('factory failed'));
+        $clientPool = self::createStub(EmbedderClientPool::class);
+        $clientPool->method('getClient')->willReturn(self::createStub(EmbedderClientInterface::class));
+
+        (new VectorEmbedding($clientPool, new PromisePool(), $factory))->execute(
+            [3 => $batch],
+            1,
+            [$this, 'recordUnexpectedEmbeddingCompletion'],
+            [$this, 'recordEmbeddingFailure']
+        );
+
+        self::assertInstanceOf(RuntimeException::class, $this->recordedFailure);
+        self::assertSame('factory failed', $this->recordedFailure->getMessage());
+    }
+
+    public function recordUnexpectedEmbeddingCompletion(): void
+    {
+        self::fail('The embedding request was expected to fail.');
+    }
+
+    public function recordEmbeddingFailure(Throwable $throwable, int $batchId): void
+    {
+        self::assertSame(3, $batchId);
+        $this->recordedFailure = $throwable;
     }
 
     private function createItem(int $backlogId): ProcessingItem
