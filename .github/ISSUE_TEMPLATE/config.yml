@@ -1,0 +1,9 @@
+# davidbel/magento-ai-search by David Belicza
+# SPDX-License-Identifier: MIT
+# https://github.com/DavidBelicza/Magento-AI-Search
+
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/DavidBelicza/Magento-AI-Search/security/advisories/new
+    about: Report security issues privately, never as a public issue.

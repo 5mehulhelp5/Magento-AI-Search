@@ -1,0 +1,29 @@
+# davidbel/magento-ai-search by David Belicza
+# SPDX-License-Identifier: MIT
+# https://github.com/DavidBelicza/Magento-AI-Search
+
+name: Feature request
+description: Suggest an improvement to Magento AI Search
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: use-case
+    attributes:
+      label: What are you trying to achieve
+      description: Describe the problem or business use case behind the request.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe how you would expect Magento AI Search to support the use case.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe any existing Magento or module behavior you have considered.

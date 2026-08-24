@@ -1,0 +1,65 @@
+# davidbel/magento-ai-search by David Belicza
+# SPDX-License-Identifier: MIT
+# https://github.com/DavidBelicza/Magento-AI-Search
+
+name: Bug report
+description: Report behavior that does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Please search existing issues before submitting a new bug report.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Describe what you expected and what happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How to reproduce
+      description: Provide the smallest sequence of steps that demonstrates the problem.
+    validations:
+      required: true
+
+  - type: input
+    id: module-version
+    attributes:
+      label: Magento AI Search version
+      placeholder: 0.10.0
+    validations:
+      required: true
+
+  - type: input
+    id: magento-version
+    attributes:
+      label: Magento or Adobe Commerce version
+      placeholder: Magento Open Source 2.4.8-p3
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: PHP and OpenSearch versions
+      placeholder: PHP 8.4, OpenSearch 3.0
+    validations:
+      required: true
+
+  - type: input
+    id: ai-server
+    attributes:
+      label: AI server and embedding model
+      description: Leave blank if the problem happens before an AI server request.
+      placeholder: LM Studio, text-embedding-embeddinggemma-300m-qat
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Remove API keys, credentials, customer data, and other sensitive values.
+      render: shell
