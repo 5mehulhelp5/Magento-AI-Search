@@ -17,9 +17,9 @@ class SearchConfig
     private const int INDEX_SCHEMA_VERSION = 1;
     private const string VECTOR_METHOD = 'hnsw';
     private const string XML_PATH_VECTOR_ENGINE =
-        'davidbel_ai_search_search_source/search_engine/vector_engine';
+        'davidbel_ai_search_semantic_search_source/search_engine/vector_engine';
     private const string XML_PATH_VECTOR_SPACE =
-        'davidbel_ai_search_search_source/search_engine/vector_space';
+        'davidbel_ai_search_semantic_search_source/search_engine/vector_space';
 
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig

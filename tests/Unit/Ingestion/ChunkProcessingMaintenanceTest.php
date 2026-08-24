@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Unit\Ingestion;
 
-use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
 use DavidBel\AiSearch\Ingestion\ChunkProcessingCleanup;
 use DavidBel\AiSearch\Ingestion\ChunkProcessingRetry;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\IndexVersion as BacklogIndexVersion;
@@ -30,7 +30,7 @@ class ChunkProcessingMaintenanceTest extends TestCase
             7,
             (new ChunkProcessingRetry(
                 $maintenance,
-                $this->createDataProcessingConfig()
+                $this->createSemanticDataProcessingConfig()
             ))->execute(7)
         );
     }
@@ -59,14 +59,14 @@ class ChunkProcessingMaintenanceTest extends TestCase
                 $backlogIndexVersion,
                 $maintenance,
                 $dateTime,
-                $this->createDataProcessingConfig()
+                $this->createSemanticDataProcessingConfig()
             ))->execute(7, 8)
         );
     }
 
-    private function createDataProcessingConfig(): DataProcessingConfig
+    private function createSemanticDataProcessingConfig(): SemanticDataProcessingConfig
     {
-        $config = self::createStub(DataProcessingConfig::class);
+        $config = self::createStub(SemanticDataProcessingConfig::class);
         $config->method('getRetryAttemptThreshold')->willReturn(3);
         $config->method('getCleanupAttemptThreshold')->willReturn(3);
         $config->method('getCleanupResultRetentionHours')->willReturn(24);

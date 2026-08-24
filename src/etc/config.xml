@@ -7,7 +7,7 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/config.xsd">
     <default>
-        <davidbel_ai_search_search_source>
+        <davidbel_ai_search_semantic_search_source>
             <indexing_scope>
                 <indexed_store_views/>
             </indexing_scope>
@@ -92,8 +92,8 @@
                     }
                 ]]></dynamic_document>
             </document_configuration>
-        </davidbel_ai_search_search_source>
-        <davidbel_ai_search_data_processing>
+        </davidbel_ai_search_semantic_search_source>
+        <davidbel_ai_search_semantic_data_processing>
             <document_processing>
                 <batch_size>200</batch_size>
             </document_processing>
@@ -118,8 +118,8 @@
                 <lock_timeout_seconds>10</lock_timeout_seconds>
                 <minimum_success_percentage>50</minimum_success_percentage>
             </indexer>
-        </davidbel_ai_search_data_processing>
-        <davidbel_ai_search_search_result>
+        </davidbel_ai_search_semantic_data_processing>
+        <davidbel_ai_search_semantic_search_result>
             <general>
                 <enabled>1</enabled>
                 <request_timeout_seconds>2</request_timeout_seconds>
@@ -134,6 +134,6 @@
             <embedding>
                 <embedder_query_template>task: search result | query: {text}</embedder_query_template>
             </embedding>
-        </davidbel_ai_search_search_result>
+        </davidbel_ai_search_semantic_search_result>
     </default>
 </config>

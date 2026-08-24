@@ -12,24 +12,24 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
 use UnexpectedValueException;
 
-class SearchResultConfig
+class SemanticSearchResultConfig
 {
     private const string XML_PATH_ENABLED =
-        'davidbel_ai_search_search_result/general/enabled';
+        'davidbel_ai_search_semantic_search_result/general/enabled';
     private const string XML_PATH_REQUEST_TIMEOUT_SECONDS =
-        'davidbel_ai_search_search_result/general/request_timeout_seconds';
+        'davidbel_ai_search_semantic_search_result/general/request_timeout_seconds';
     private const string XML_PATH_USE_PREVIOUS_SEMANTIC_INDEX_DURING_REBUILD =
-        'davidbel_ai_search_search_result/general/use_previous_semantic_index_during_rebuild';
+        'davidbel_ai_search_semantic_search_result/general/use_previous_semantic_index_during_rebuild';
     private const string XML_PATH_COLLAPSE_RESULTS_BY_PRODUCT =
-        'davidbel_ai_search_search_result/search_relevance/collapse_results_by_product';
+        'davidbel_ai_search_semantic_search_result/search_relevance/collapse_results_by_product';
     private const string XML_PATH_PRODUCT_RESULT_LIMIT =
-        'davidbel_ai_search_search_result/search_relevance/product_result_limit';
+        'davidbel_ai_search_semantic_search_result/search_relevance/product_result_limit';
     private const string XML_PATH_CHUNK_CANDIDATE_LIMIT =
-        'davidbel_ai_search_search_result/search_relevance/chunk_candidate_limit';
+        'davidbel_ai_search_semantic_search_result/search_relevance/chunk_candidate_limit';
     private const string XML_PATH_MINIMUM_SCORE =
-        'davidbel_ai_search_search_result/search_relevance/minimum_score';
+        'davidbel_ai_search_semantic_search_result/search_relevance/minimum_score';
     private const string XML_PATH_EMBEDDER_QUERY_TEMPLATE =
-        'davidbel_ai_search_search_result/embedding/embedder_query_template';
+        'davidbel_ai_search_semantic_search_result/embedding/embedder_query_template';
 
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig

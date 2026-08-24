@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Plugin\Adminhtml\Search\TestSemanticSearch;
 
 use DavidBel\AiSearch\Client\OpenSearch;
-use DavidBel\AiSearch\Config\SearchResultConfig;
+use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider\SearchScores;
 use Magento\Store\Model\StoreManagerInterface;
 
@@ -17,7 +17,7 @@ class ChunkScoreCapture
 {
     public function __construct(
         private readonly SearchScores $searchScores,
-        private readonly SearchResultConfig $searchResultConfig,
+        private readonly SemanticSearchResultConfig $semanticSearchResultConfig,
         private readonly StoreManagerInterface $storeManager
     ) {
     }
@@ -33,7 +33,7 @@ class ChunkScoreCapture
     public function afterSearch(OpenSearch $subject, array $response): array
     {
         $storeId = (int) (string) $this->storeManager->getStore()->getId();
-        $minimumScore = $this->searchResultConfig->getMinimumScore($storeId);
+        $minimumScore = $this->semanticSearchResultConfig->getMinimumScore($storeId);
         $this->searchScores->scoresByChunkId = $this->getScoresByChunkId(
             $response,
             $minimumScore

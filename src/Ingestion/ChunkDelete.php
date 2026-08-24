@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion;
 
-use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
 use DavidBel\AiSearch\Ingestion\ChunkProcessing\CacheClean;
@@ -38,7 +38,7 @@ class ChunkDelete
         private readonly ProcessingResultHandlerFactory $processingResultHandlerFactory,
         private readonly VectorSync $vectorSync,
         private readonly CacheClean $cacheClean,
-        private readonly DataProcessingConfig $dataProcessingConfig,
+        private readonly SemanticDataProcessingConfig $semanticDataProcessingConfig,
         private readonly Logger $logger
     ) {
     }
@@ -97,10 +97,10 @@ class ChunkDelete
     ): Generator {
         $cursorUpdatedAt = null;
         $cursorBacklogId = null;
-        $batchSize = $this->dataProcessingConfig->getVectorDeleteBatchSize();
-        $upsertAttemptThreshold = $this->dataProcessingConfig
+        $batchSize = $this->semanticDataProcessingConfig->getVectorDeleteBatchSize();
+        $upsertAttemptThreshold = $this->semanticDataProcessingConfig
             ->getVectorDeleteUpsertAttemptThreshold();
-        $maxRuntimeNanoseconds = $this->dataProcessingConfig
+        $maxRuntimeNanoseconds = $this->semanticDataProcessingConfig
             ->getVectorDeleteMaximumRuntimeSeconds() * self::NANOSECONDS_PER_SECOND;
 
         while ($processingState->isWithinRuntime($maxRuntimeNanoseconds)) {

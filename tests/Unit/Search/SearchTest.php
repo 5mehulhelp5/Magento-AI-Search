@@ -11,7 +11,7 @@ namespace DavidBel\AiSearch\Tests\Unit\Search;
 use DavidBel\AiSearch\Client\Embedding\Base\EmbedderClientInterface;
 use DavidBel\AiSearch\Client\Embedding\Base\EmbedderClientPool;
 use DavidBel\AiSearch\Client\OpenSearch;
-use DavidBel\AiSearch\Config\SearchResultConfig;
+use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
 use DavidBel\AiSearch\Indexer\Versioning;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex\QueryConfigurationSnapshot;
@@ -120,7 +120,7 @@ class SearchTest extends TestCase
             ->willReturn(Create::promiseFor([[0.1, 0.2]]));
         $pool = self::createStub(EmbedderClientPool::class);
         $pool->method('getClient')->willReturn($client);
-        $config = self::createStub(SearchResultConfig::class);
+        $config = self::createStub(SemanticSearchResultConfig::class);
         $config->method('getEmbedderQueryTemplate')->willReturn('new {text}');
         $config->method('getRequestTimeoutSeconds')->willReturn(10);
 
@@ -152,7 +152,7 @@ class SearchTest extends TestCase
         $client->method('embedQueryAsync')->willReturn(Create::promiseFor($response));
         $pool = self::createStub(EmbedderClientPool::class);
         $pool->method('getClient')->willReturn($client);
-        $config = self::createStub(SearchResultConfig::class);
+        $config = self::createStub(SemanticSearchResultConfig::class);
         $config->method('getEmbedderQueryTemplate')->willReturn('query');
 
         $this->expectException(UnexpectedValueException::class);
@@ -168,7 +168,7 @@ class SearchTest extends TestCase
     public function testSearchesVectorsAndKeepsTheHighestRelevantProductScores(): void
     {
         $index = $this->createPhysicalIndex();
-        $config = $this->createSearchResultConfig(true);
+        $config = $this->createSemanticSearchResultConfig(true);
         $openSearch = $this->createMock(OpenSearch::class);
         $openSearch->expects(self::once())
             ->method('search')
@@ -201,7 +201,7 @@ class SearchTest extends TestCase
 
         self::assertSame(
             [],
-            (new VectorSearch($openSearch, $this->createSearchResultConfig(false)))
+            (new VectorSearch($openSearch, $this->createSemanticSearchResultConfig(false)))
                 ->execute([0.1, 0.2], 2, $index)
                 ->scoresByProductId
         );
@@ -240,7 +240,7 @@ class SearchTest extends TestCase
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage($message);
 
-        (new VectorSearch($openSearch, $this->createSearchResultConfig(false)))
+        (new VectorSearch($openSearch, $this->createSemanticSearchResultConfig(false)))
             ->execute([0.1], 2, $this->createPhysicalIndex());
     }
 
@@ -321,7 +321,7 @@ class SearchTest extends TestCase
         $reader->method('isSemanticSearchRequest')->willReturn(true);
         $reader->method('getStoreId')->willReturn(2);
         $reader->method('getQueryText')->willReturn('shoes');
-        $config = self::createStub(SearchResultConfig::class);
+        $config = self::createStub(SemanticSearchResultConfig::class);
         $config->method('isEnabled')->willReturn(true);
         $index = $this->createPhysicalIndex();
         $versioning = self::createStub(Versioning::class);
@@ -371,7 +371,7 @@ class SearchTest extends TestCase
         $reader = self::createStub(RequestReader::class);
         $reader->method('isSemanticSearchRequest')->willReturn(true);
         $reader->method('getStoreId')->willReturn(2);
-        $config = self::createStub(SearchResultConfig::class);
+        $config = self::createStub(SemanticSearchResultConfig::class);
         $config->method('isEnabled')->willReturn(true);
 
         self::assertSame(
@@ -389,7 +389,7 @@ class SearchTest extends TestCase
         $reader->method('isSemanticSearchRequest')->willReturn(true);
         $reader->method('getStoreId')->willReturn(2);
         $reader->method('getQueryText')->willReturn('shoes');
-        $config = self::createStub(SearchResultConfig::class);
+        $config = self::createStub(SemanticSearchResultConfig::class);
         $config->method('isEnabled')->willReturn(true);
 
         self::assertSame(
@@ -411,9 +411,9 @@ class SearchTest extends TestCase
         );
     }
 
-    private function createSearchResultConfig(bool $collapse): SearchResultConfig
+    private function createSemanticSearchResultConfig(bool $collapse): SemanticSearchResultConfig
     {
-        $config = self::createStub(SearchResultConfig::class);
+        $config = self::createStub(SemanticSearchResultConfig::class);
         $config->method('getProductResultLimit')->willReturn(10);
         $config->method('getChunkCandidateLimit')->willReturn(20);
         $config->method('shouldCollapseResultsByProduct')->willReturn($collapse);
@@ -449,7 +449,7 @@ class SearchTest extends TestCase
 
     private function createQuickSearch(
         RequestReader $requestReader,
-        ?SearchResultConfig $config = null
+        ?SemanticSearchResultConfig $config = null
     ): QuickSearch {
         return new QuickSearch(
             $requestReader,
@@ -457,7 +457,7 @@ class SearchTest extends TestCase
             self::createStub(VectorSearch::class),
             self::createStub(CatalogQueryModifier::class),
             self::createStub(Versioning::class),
-            $config ?? self::createStub(SearchResultConfig::class)
+            $config ?? self::createStub(SemanticSearchResultConfig::class)
         );
     }
 }

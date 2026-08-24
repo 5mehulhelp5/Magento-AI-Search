@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Search;
 
-use DavidBel\AiSearch\Config\SearchResultConfig;
+use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
 use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
 use UnexpectedValueException;
@@ -19,7 +19,7 @@ class VectorSearch
 {
     public function __construct(
         private readonly OpenSearch $openSearch,
-        private readonly SearchResultConfig $searchResultConfig
+        private readonly SemanticSearchResultConfig $semanticSearchResultConfig
     ) {
     }
 
@@ -36,7 +36,7 @@ class VectorSearch
         return new Candidates(
             $this->getScoresByProductId(
                 $response,
-                $this->searchResultConfig->getMinimumScore($storeId)
+                $this->semanticSearchResultConfig->getMinimumScore($storeId)
             )
         );
     }
@@ -48,13 +48,13 @@ class VectorSearch
     private function createQuery(array $vector, int $storeId): array
     {
         $query = [
-            'size' => $this->searchResultConfig->getProductResultLimit($storeId),
+            'size' => $this->semanticSearchResultConfig->getProductResultLimit($storeId),
             '_source' => ['source_entity_id'],
             'query' => [
                 'knn' => [
                     'vector' => [
                         'vector' => $vector,
-                        'k' => $this->searchResultConfig->getChunkCandidateLimit($storeId),
+                        'k' => $this->semanticSearchResultConfig->getChunkCandidateLimit($storeId),
                         'filter' => [
                             'bool' => [
                                 'filter' => [
@@ -68,7 +68,7 @@ class VectorSearch
             ],
         ];
 
-        if (!$this->searchResultConfig->shouldCollapseResultsByProduct($storeId)) {
+        if (!$this->semanticSearchResultConfig->shouldCollapseResultsByProduct($storeId)) {
             return $query;
         }
 

@@ -19,7 +19,7 @@ use UnexpectedValueException;
 
 class TestSemanticSearch extends Action implements HttpPostActionInterface
 {
-    public const ADMIN_RESOURCE = 'DavidBel_AiSearch::config_search_result';
+    public const ADMIN_RESOURCE = 'DavidBel_AiSearch::config_semantic_search_result';
     private const string DASHBOARD_RESOURCE = 'DavidBel_AiSearch::dashboard';
 
     public function __construct(

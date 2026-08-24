@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Search;
 
 use DavidBel\AiSearch\Client\Embedding\Base\EmbedderClientPool;
-use DavidBel\AiSearch\Config\SearchResultConfig;
+use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex\QueryConfigurationSnapshot;
 use UnexpectedValueException;
 
@@ -17,7 +17,7 @@ class QueryEmbedding
 {
     public function __construct(
         private readonly EmbedderClientPool $embedderClientPool,
-        private readonly SearchResultConfig $searchResultConfig
+        private readonly SemanticSearchResultConfig $semanticSearchResultConfig
     ) {
     }
 
@@ -32,13 +32,13 @@ class QueryEmbedding
         $requestConfiguration = new QueryConfigurationSnapshot(
             $indexConfiguration->embeddingModel,
             $indexConfiguration->vectorDimensions,
-            $this->searchResultConfig->getEmbedderQueryTemplate($storeId)
+            $this->semanticSearchResultConfig->getEmbedderQueryTemplate($storeId)
         );
         $vectors = $this->embedderClientPool
             ->getClient()
             ->embedQueryAsync(
                 $queryText,
-                $this->searchResultConfig->getRequestTimeoutSeconds($storeId),
+                $this->semanticSearchResultConfig->getRequestTimeoutSeconds($storeId),
                 $requestConfiguration
             )
             ->wait();

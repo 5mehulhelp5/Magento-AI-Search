@@ -19,7 +19,7 @@ use UnexpectedValueException;
 class DocumentsTest extends TestCase
 {
     private const string CONFIGURATION_PATH =
-        'davidbel_ai_search_search_source/document_configuration/documents';
+        'davidbel_ai_search_semantic_search_source/document_configuration/documents';
 
     public function testBuildsAndCachesConfiguredDocuments(): void
     {

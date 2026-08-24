@@ -11,7 +11,7 @@ namespace DavidBel\AiSearch\Tests\Unit\Ingestion;
 use DavidBel\AiSearch\Api\Data\ChunkInterface;
 use DavidBel\AiSearch\Api\Data\DocumentInterface;
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
-use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
@@ -68,7 +68,7 @@ class ChunkProcessingTest extends TestCase
             $this->createHandlerFactory($state, $handler),
             $this->createVectorEmbedding($handler),
             $cacheClean,
-            $this->createDataProcessingConfig(),
+            $this->createSemanticDataProcessingConfig(),
             $maintenance,
             self::createStub(Logger::class)
         );
@@ -143,9 +143,9 @@ class ChunkProcessingTest extends TestCase
         return $factory;
     }
 
-    private function createDataProcessingConfig(): DataProcessingConfig
+    private function createSemanticDataProcessingConfig(): SemanticDataProcessingConfig
     {
-        $config = self::createStub(DataProcessingConfig::class);
+        $config = self::createStub(SemanticDataProcessingConfig::class);
         $config->method('getVectorEmbeddingBatchSize')->willReturn(100);
         $config->method('getVectorEmbeddingConcurrentRequests')->willReturn(3);
         $config->method('getVectorEmbeddingMaximumRuntimeSeconds')->willReturn(600);

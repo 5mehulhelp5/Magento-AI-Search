@@ -13,8 +13,8 @@ use Magento\Config\Console\Command\ConfigSet\ProcessorFacade;
 
 class InvalidateProductIndexer
 {
-    private const string SEARCH_SOURCE_PATH_PREFIX =
-        'davidbel_ai_search_search_source/';
+    private const string SEMANTIC_SEARCH_SOURCE_PATH_PREFIX =
+        'davidbel_ai_search_semantic_search_source/';
 
     public function __construct(
         private readonly Versioning $versioning
@@ -26,7 +26,7 @@ class InvalidateProductIndexer
         string $result,
         string $path
     ): string {
-        if (!str_starts_with($path, self::SEARCH_SOURCE_PATH_PREFIX)) {
+        if (!str_starts_with($path, self::SEMANTIC_SEARCH_SOURCE_PATH_PREFIX)) {
             return $result;
         }
 

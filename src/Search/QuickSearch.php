@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Search;
 
-use DavidBel\AiSearch\Config\SearchResultConfig;
+use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
 use DavidBel\AiSearch\Indexer\Versioning;
 use Magento\Framework\Search\RequestInterface;
 
@@ -20,7 +20,7 @@ class QuickSearch
         private readonly VectorSearch $vectorSearch,
         private readonly CatalogQueryModifier $catalogQueryModifier,
         private readonly Versioning $versioning,
-        private readonly SearchResultConfig $searchResultConfig
+        private readonly SemanticSearchResultConfig $semanticSearchResultConfig
     ) {
     }
 
@@ -36,7 +36,7 @@ class QuickSearch
 
         $storeId = $this->requestReader->getStoreId($request);
 
-        if (!$this->searchResultConfig->isEnabled($storeId)) {
+        if (!$this->semanticSearchResultConfig->isEnabled($storeId)) {
             return $catalogQuery;
         }
 
@@ -47,7 +47,7 @@ class QuickSearch
         }
 
         $searchIndex = $this->versioning->getSearchIndex(
-            $this->searchResultConfig->usePreviousSemanticIndexDuringRebuild($storeId)
+            $this->semanticSearchResultConfig->usePreviousSemanticIndexDuringRebuild($storeId)
         );
 
         if ($searchIndex === null) {

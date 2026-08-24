@@ -10,16 +10,16 @@
         <tab id="davidbel" translate="label" sortOrder="500">
             <label>AI Search</label>
         </tab>
-        <section id="davidbel_ai_search_search_result"
+        <section id="davidbel_ai_search_semantic_search_result"
                  translate="label"
                  type="text"
                  sortOrder="500"
                  showInDefault="1"
                  showInWebsite="1"
                  showInStore="1">
-            <label>Search Result</label>
+            <label>Semantic Search Result</label>
             <tab>davidbel</tab>
-            <resource>DavidBel_AiSearch::config_search_result</resource>
+            <resource>DavidBel_AiSearch::config_semantic_search_result</resource>
             <group id="general"
                    translate="label"
                    type="text"
@@ -133,16 +133,16 @@
                 </field>
             </group>
         </section>
-        <section id="davidbel_ai_search_search_source"
+        <section id="davidbel_ai_search_semantic_search_source"
                  translate="label"
                  type="text"
                  sortOrder="510"
                  showInDefault="1"
                  showInStore="1">
-            <label>Search Source</label>
+            <label>Semantic Search Source</label>
             <tab>davidbel</tab>
-            <resource>DavidBel_AiSearch::config_search_source</resource>
-            <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\SearchSource</frontend_model>
+            <resource>DavidBel_AiSearch::config_semantic_search_source</resource>
+            <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\SemanticSearchSource</frontend_model>
             <group id="indexing_scope"
                    translate="label"
                    type="text"
@@ -365,14 +365,14 @@
                 </field>
             </group>
         </section>
-        <section id="davidbel_ai_search_data_processing"
+        <section id="davidbel_ai_search_semantic_data_processing"
                  translate="label"
                  type="text"
                  sortOrder="520"
                  showInDefault="1">
-            <label>Data Processing</label>
+            <label>Semantic Data Processing</label>
             <tab>davidbel</tab>
-            <resource>DavidBel_AiSearch::config_data_processing</resource>
+            <resource>DavidBel_AiSearch::config_semantic_data_processing</resource>
             <group id="document_processing"
                    translate="label"
                    type="text"

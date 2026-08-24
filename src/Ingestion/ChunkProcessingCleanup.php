@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion;
 
-use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\IndexVersion
     as BacklogIndexVersion;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Maintenance
@@ -21,7 +21,7 @@ class ChunkProcessingCleanup
         private readonly BacklogIndexVersion $backlogIndexVersion,
         private readonly BacklogMaintenance $backlogMaintenance,
         private readonly DateTime $dateTime,
-        private readonly DataProcessingConfig $dataProcessingConfig
+        private readonly SemanticDataProcessingConfig $semanticDataProcessingConfig
     ) {
     }
 
@@ -33,7 +33,7 @@ class ChunkProcessingCleanup
             null,
             sprintf(
                 '-%d hours',
-                $this->dataProcessingConfig->getCleanupResultRetentionHours()
+                $this->semanticDataProcessingConfig->getCleanupResultRetentionHours()
             )
         );
 
@@ -46,7 +46,7 @@ class ChunkProcessingCleanup
         }
 
         return $deletedCount + $this->backlogMaintenance->deleteExhaustedUpsertsOrExpiredResults(
-            $this->dataProcessingConfig->getCleanupAttemptThreshold(),
+            $this->semanticDataProcessingConfig->getCleanupAttemptThreshold(),
             $expiredBefore,
             $targetIndexVersion
         );

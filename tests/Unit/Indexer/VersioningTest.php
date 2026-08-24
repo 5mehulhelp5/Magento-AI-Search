@@ -9,13 +9,13 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Indexer;
 
 use DavidBel\AiSearch\Client\OpenSearch;
-use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
 use DavidBel\AiSearch\Config\EmbeddedAttribute;
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
 use DavidBel\AiSearch\Config\EmbedderConfig;
 use DavidBel\AiSearch\Config\IndexingScopeConfig;
 use DavidBel\AiSearch\Config\SearchConfig;
-use DavidBel\AiSearch\Config\SearchResultConfig;
+use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
 use DavidBel\AiSearch\Indexer\Versioning\ConfigurationFingerprint;
 use DavidBel\AiSearch\Indexer\Versioning\IndexName;
 use DavidBel\AiSearch\Indexer\Versioning\PhysicalIndex;
@@ -388,7 +388,7 @@ class VersioningTest extends TestCase
     {
         $backlog = self::createStub(BacklogIndexVersion::class);
         $backlog->method('getFullReindexProgress')->willReturn($progress);
-        $config = self::createStub(DataProcessingConfig::class);
+        $config = self::createStub(SemanticDataProcessingConfig::class);
         $config->method('getIndexerMinimumSuccessPercentage')->willReturn(80);
 
         self::assertSame($expected, (new Readiness($backlog, $config))->isReady(2));
@@ -844,9 +844,9 @@ class VersioningTest extends TestCase
         $embedder = self::createStub(EmbedderConfig::class);
         $embedder->method('getEmbeddingModel')->willReturn('model');
         $embedder->method('getVectorDimensions')->willReturn(3);
-        $processing = self::createStub(DataProcessingConfig::class);
+        $processing = self::createStub(SemanticDataProcessingConfig::class);
         $processing->method('getIndexerLockTimeoutSeconds')->willReturn(10);
-        $result = self::createStub(SearchResultConfig::class);
+        $result = self::createStub(SemanticSearchResultConfig::class);
         $result->method('getEmbedderQueryTemplate')->willReturn('{text}');
         $indexName = self::createStub(IndexName::class);
         $indexName->method('getVersionName')->willReturn('alias_v3');

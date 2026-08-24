@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Indexer\Versioning\Target\Activation;
 
-use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\IndexVersion
     as BacklogIndexVersion;
 
@@ -16,7 +16,7 @@ class Readiness
 {
     public function __construct(
         private readonly BacklogIndexVersion $backlogIndexVersion,
-        private readonly DataProcessingConfig $dataProcessingConfig
+        private readonly SemanticDataProcessingConfig $semanticDataProcessingConfig
     ) {
     }
 
@@ -33,6 +33,6 @@ class Readiness
         }
 
         return $progress['indexed'] * 100 >= $progress['total']
-            * $this->dataProcessingConfig->getIndexerMinimumSuccessPercentage();
+            * $this->semanticDataProcessingConfig->getIndexerMinimumSuccessPercentage();
     }
 }

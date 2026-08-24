@@ -100,7 +100,7 @@
         background: @color-white;
         border: 1px solid @color-gray80;
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 1.5rem 2rem;
         margin-bottom: 3rem;
         padding: 1.5rem 2rem;
@@ -250,7 +250,11 @@
         }
     }
 
-    @media only screen and (max-width: 1439px) {
+    @media only screen and (max-width: 1799px) {
+        .ai-search-dashboard-controls {
+            flex-wrap: wrap;
+        }
+
         .ai-search-dashboard-control-group:last-child {
             border-left: 0;
             flex-basis: 100%;

@@ -14,7 +14,7 @@ use UnexpectedValueException;
 class IndexingScopeConfig
 {
     private const string XML_PATH_INDEXED_STORE_VIEWS =
-        'davidbel_ai_search_search_source/indexing_scope/indexed_store_views';
+        'davidbel_ai_search_semantic_search_source/indexing_scope/indexed_store_views';
 
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig

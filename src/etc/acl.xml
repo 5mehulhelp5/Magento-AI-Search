@@ -35,16 +35,16 @@
                 <resource id="Magento_Backend::stores">
                     <resource id="Magento_Backend::stores_settings">
                         <resource id="Magento_Config::config">
-                            <resource id="DavidBel_AiSearch::config_search_result"
-                                      title="AI Search Result Configuration"
+                            <resource id="DavidBel_AiSearch::config_semantic_search_result"
+                                      title="Semantic Search Result Configuration"
                                       translate="title"
                                       sortOrder="500"/>
-                            <resource id="DavidBel_AiSearch::config_search_source"
-                                      title="AI Search Source Configuration"
+                            <resource id="DavidBel_AiSearch::config_semantic_search_source"
+                                      title="Semantic Search Source Configuration"
                                       translate="title"
                                       sortOrder="510"/>
-                            <resource id="DavidBel_AiSearch::config_data_processing"
-                                      title="AI Search Data Processing Configuration"
+                            <resource id="DavidBel_AiSearch::config_semantic_data_processing"
+                                      title="Semantic Data Processing Configuration"
                                       translate="title"
                                       sortOrder="520"/>
                         </resource>

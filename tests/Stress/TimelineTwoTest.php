@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Stress;
 
-use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Operation;
 use DavidBel\AiSearch\Model\EmbeddingBacklog\Status;
 use DavidBel\AiSearch\Tests\Stress\Support\CatalogDataset;
@@ -116,7 +116,7 @@ class TimelineTwoTest extends StressTestCase
         array $invocations,
         array $scheduleRecords
     ): void {
-        $dataProcessingConfig = $this->get(DataProcessingConfig::class);
+        $semanticDataProcessingConfig = $this->get(SemanticDataProcessingConfig::class);
         $measurement = $this->create(Measurement::class);
         $duration = $observedUntil - $observedFrom;
         $stage = array_merge($metrics, [
@@ -126,11 +126,12 @@ class TimelineTwoTest extends StressTestCase
             'failed_upserts' => $pipelineState->getAllBacklogCount(Operation::Upsert, Status::Failed),
             'upserts_per_second' => round($initialPendingCount / $duration, 3),
             'stress_remote_documents' => $pipelineState->getRemoteDocumentCount($parentIds),
-            'embedding_batch_size' => $dataProcessingConfig->getVectorEmbeddingBatchSize(),
+            'embedding_batch_size' =>
+                $semanticDataProcessingConfig->getVectorEmbeddingBatchSize(),
             'concurrent_embedding_requests' =>
-                $dataProcessingConfig->getVectorEmbeddingConcurrentRequests(),
+                $semanticDataProcessingConfig->getVectorEmbeddingConcurrentRequests(),
             'worker_runtime_boundary_seconds' =>
-                $dataProcessingConfig->getVectorEmbeddingMaximumRuntimeSeconds(),
+                $semanticDataProcessingConfig->getVectorEmbeddingMaximumRuntimeSeconds(),
             'peak_memory_bytes' => memory_get_peak_usage(true),
         ]);
         $measurement->recordStage('timeline_two_scheduler', $stage);

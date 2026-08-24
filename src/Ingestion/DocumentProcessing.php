@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion;
 
-use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentUpdater\Result as DocumentUpdateResult;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Product\DeletedProductIdProvider;
@@ -32,14 +32,14 @@ class DocumentProcessing
         private readonly DeletedProductIdProvider $deletedProductIdProvider,
         private readonly DocumentUpdater $documentUpdater,
         private readonly EmbeddingBacklogCollectionFactory $embeddingBacklogCollectionFactory,
-        private readonly DataProcessingConfig $dataProcessingConfig,
+        private readonly SemanticDataProcessingConfig $semanticDataProcessingConfig,
         private readonly Logger $logger
     ) {
     }
 
     public function fullUpdate(int $indexVersion): void
     {
-        $batchSize = $this->dataProcessingConfig->getDocumentProcessingBatchSize();
+        $batchSize = $this->semanticDataProcessingConfig->getDocumentProcessingBatchSize();
 
         $this->processCurrentProducts($indexVersion, $batchSize);
         $this->processDeletedProducts($indexVersion, $batchSize);
@@ -94,7 +94,7 @@ class DocumentProcessing
      */
     public function deltaUpdate(array $productIds, int $indexVersion): void
     {
-        $batchSize = $this->dataProcessingConfig->getDocumentProcessingBatchSize();
+        $batchSize = $this->semanticDataProcessingConfig->getDocumentProcessingBatchSize();
         $affectedProductIds = $this->getAffectedProductIds($productIds, $batchSize);
 
         foreach (array_chunk($affectedProductIds, $batchSize) as $productIdBatch) {

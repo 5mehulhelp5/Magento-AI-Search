@@ -15,25 +15,25 @@ use UnexpectedValueException;
 class EmbedderConfig
 {
     private const string XML_PATH_EMBEDDING_API_PROTOCOL =
-        'davidbel_ai_search_search_source/ai_server/embedding_api_protocol';
+        'davidbel_ai_search_semantic_search_source/ai_server/embedding_api_protocol';
     private const string XML_PATH_EMBEDDING_ENDPOINT =
-        'davidbel_ai_search_search_source/ai_server/embedding_endpoint';
+        'davidbel_ai_search_semantic_search_source/ai_server/embedding_endpoint';
     private const string XML_PATH_API_KEY =
-        'davidbel_ai_search_search_source/ai_server/api_key';
+        'davidbel_ai_search_semantic_search_source/ai_server/api_key';
     private const string XML_PATH_EMBEDDING_MODEL =
-        'davidbel_ai_search_search_source/ai_server/embedding_model';
+        'davidbel_ai_search_semantic_search_source/ai_server/embedding_model';
     private const string XML_PATH_VECTOR_DIMENSIONS =
-        'davidbel_ai_search_search_source/ai_server/vector_dimensions';
+        'davidbel_ai_search_semantic_search_source/ai_server/vector_dimensions';
     private const string XML_PATH_REQUEST_TIMEOUT_SECONDS =
-        'davidbel_ai_search_search_source/ai_server/request_timeout_seconds';
+        'davidbel_ai_search_semantic_search_source/ai_server/request_timeout_seconds';
     private const string XML_PATH_EMBEDDER_DOCUMENT_TEMPLATE =
-        'davidbel_ai_search_search_source/ai_server/embedder_document_template';
+        'davidbel_ai_search_semantic_search_source/ai_server/embedder_document_template';
     private const string XML_PATH_MAXIMUM_CHUNK_TOKENS =
-        'davidbel_ai_search_search_source/ai_server/maximum_chunk_tokens';
+        'davidbel_ai_search_semantic_search_source/ai_server/maximum_chunk_tokens';
     private const string XML_PATH_CHUNK_OVERLAP_TOKENS =
-        'davidbel_ai_search_search_source/ai_server/chunk_overlap_tokens';
+        'davidbel_ai_search_semantic_search_source/ai_server/chunk_overlap_tokens';
     private const string XML_PATH_ESTIMATED_CHARACTERS_PER_TOKEN =
-        'davidbel_ai_search_search_source/ai_server/estimated_characters_per_token';
+        'davidbel_ai_search_semantic_search_source/ai_server/estimated_characters_per_token';
 
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig,

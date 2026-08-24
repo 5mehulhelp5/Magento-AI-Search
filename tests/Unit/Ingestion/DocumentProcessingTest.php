@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Unit\Ingestion;
 
-use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\DocumentSource\StoreScopedSource;
@@ -220,7 +220,7 @@ class DocumentProcessingTest extends TestCase
         DocumentUpdater $documentUpdater,
         CollectionFactory $collectionFactory
     ): DocumentProcessing {
-        $config = self::createStub(DataProcessingConfig::class);
+        $config = self::createStub(SemanticDataProcessingConfig::class);
         $config->method('getDocumentProcessingBatchSize')->willReturn(self::BATCH_SIZE);
 
         return new DocumentProcessing(

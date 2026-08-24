@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Plugin;
 
 use DavidBel\AiSearch\Client\OpenSearch;
-use DavidBel\AiSearch\Config\SearchResultConfig;
+use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider\SearchScores;
 use DavidBel\AiSearch\Indexer\Versioning;
 use DavidBel\AiSearch\Log\Logger;
@@ -122,13 +122,13 @@ class PluginTest extends TestCase
         self::assertSame(['imported'], $result);
     }
 
-    public function testInvalidatesAfterSearchSourceConfigurationChange(): void
+    public function testInvalidatesAfterSemanticSearchSourceConfigurationChange(): void
     {
         $versioning = $this->expectIndexerInvalidation();
         $result = (new ProcessorPlugin($versioning))->afterProcessWithLockTarget(
             self::createStub(ProcessorFacade::class),
             'saved',
-            'davidbel_ai_search_search_source/search_engine/vector_space'
+            'davidbel_ai_search_semantic_search_source/search_engine/vector_space'
         );
 
         self::assertSame('saved', $result);
@@ -156,7 +156,7 @@ class PluginTest extends TestCase
     public function testCapturesRelevantChunkScores(): void
     {
         $scores = new SearchScores();
-        $config = self::createStub(SearchResultConfig::class);
+        $config = self::createStub(SemanticSearchResultConfig::class);
         $config->method('getMinimumScore')->willReturn(0.5);
         $store = self::createStub(StoreInterface::class);
         $store->method('getId')->willReturn(2);

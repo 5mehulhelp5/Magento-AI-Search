@@ -9,8 +9,8 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Indexer\Versioning\Target;
 
 use DavidBel\AiSearch\Config\EmbedderConfig;
-use DavidBel\AiSearch\Config\DataProcessingConfig;
-use DavidBel\AiSearch\Config\SearchResultConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
 use DavidBel\AiSearch\Client\OpenSearch;
 use DavidBel\AiSearch\Indexer\Versioning\ConfigurationFingerprint;
 use DavidBel\AiSearch\Indexer\Versioning\IndexName;
@@ -27,8 +27,8 @@ class Preparation
     public function __construct(
         private readonly ConfigurationFingerprint $configurationFingerprint,
         private readonly EmbedderConfig $embedderConfig,
-        private readonly DataProcessingConfig $dataProcessingConfig,
-        private readonly SearchResultConfig $searchResultConfig,
+        private readonly SemanticDataProcessingConfig $semanticDataProcessingConfig,
+        private readonly SemanticSearchResultConfig $semanticSearchResultConfig,
         private readonly IndexName $indexName,
         private readonly Flag $stateFlag,
         private readonly OpenSearch $openSearch,
@@ -127,7 +127,7 @@ class Preparation
             new QueryConfigurationSnapshot(
                 $this->embedderConfig->getEmbeddingModel(),
                 $this->embedderConfig->getVectorDimensions(),
-                $this->searchResultConfig->getEmbedderQueryTemplate()
+                $this->semanticSearchResultConfig->getEmbedderQueryTemplate()
             )
         );
         $this->openSearch->createIndex($physicalIndex);
@@ -137,7 +137,9 @@ class Preparation
 
     private function lock(): void
     {
-        if (!$this->versionLock->lock($this->dataProcessingConfig->getIndexerLockTimeoutSeconds())) {
+        if (!$this->versionLock->lock(
+            $this->semanticDataProcessingConfig->getIndexerLockTimeoutSeconds()
+        )) {
             throw new RuntimeException('The search index version is currently being changed.');
         }
     }

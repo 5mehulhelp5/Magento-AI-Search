@@ -15,7 +15,7 @@ use DavidBel\AiSearch\Api\Data\DocumentInterface;
 use DavidBel\AiSearch\Api\Data\DocumentSearchResultsInterface;
 use DavidBel\AiSearch\Api\DocumentRepositoryInterface;
 use DavidBel\AiSearch\Config\SearchConfig;
-use DavidBel\AiSearch\Config\SearchResultConfig;
+use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider\RelatedDocuments;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider\SearchScores;
@@ -183,11 +183,11 @@ class AdminSearchResultProviderTest extends TestCase
     }
 
     /**
-     * @return array{SearchResultConfig, SearchConfig}
+     * @return array{SemanticSearchResultConfig, SearchConfig}
      */
     private function searchConfigurations(): array
     {
-        $resultConfig = self::createStub(SearchResultConfig::class);
+        $resultConfig = self::createStub(SemanticSearchResultConfig::class);
         $resultConfig->method('shouldCollapseResultsByProduct')->willReturn(true);
         $resultConfig->method('getMinimumScore')->willReturn(0.5);
         $resultConfig->method('getEmbedderQueryTemplate')->willReturn('Query: {text}');

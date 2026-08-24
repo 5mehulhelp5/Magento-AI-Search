@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Ingestion;
 
-use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Maintenance
     as BacklogMaintenance;
 
@@ -16,7 +16,7 @@ class ChunkProcessingRetry
 {
     public function __construct(
         private readonly BacklogMaintenance $backlogMaintenance,
-        private readonly DataProcessingConfig $dataProcessingConfig
+        private readonly SemanticDataProcessingConfig $semanticDataProcessingConfig
     ) {
     }
 
@@ -24,7 +24,7 @@ class ChunkProcessingRetry
     {
         return $this->backlogMaintenance->markFailedAsPending(
             $indexVersion,
-            $this->dataProcessingConfig->getRetryAttemptThreshold()
+            $this->semanticDataProcessingConfig->getRetryAttemptThreshold()
         );
     }
 }

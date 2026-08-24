@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch;
 
 use DavidBel\AiSearch\Config\SearchConfig;
-use DavidBel\AiSearch\Config\SearchResultConfig;
+use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider\RelatedDocuments;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider\SearchScores;
 use Magento\Backend\Model\UrlInterface;
@@ -28,7 +28,7 @@ class ResultProvider
         private readonly StoreRepositoryInterface $storeRepository,
         private readonly UrlInterface $backendUrl,
         private readonly RelatedDocuments $relatedDocuments,
-        private readonly SearchResultConfig $searchResultConfig,
+        private readonly SemanticSearchResultConfig $semanticSearchResultConfig,
         private readonly SearchConfig $searchConfig,
         private readonly SearchScores $searchScores
     ) {
@@ -153,9 +153,10 @@ class ResultProvider
     {
         return [
             'collapse_results_by_product' =>
-                $this->searchResultConfig->shouldCollapseResultsByProduct($storeId),
-            'minimum_score' => $this->searchResultConfig->getMinimumScore($storeId),
-            'embedder_query_template' => $this->searchResultConfig->getEmbedderQueryTemplate($storeId),
+                $this->semanticSearchResultConfig->shouldCollapseResultsByProduct($storeId),
+            'minimum_score' => $this->semanticSearchResultConfig->getMinimumScore($storeId),
+            'embedder_query_template' =>
+                $this->semanticSearchResultConfig->getEmbedderQueryTemplate($storeId),
             'vector_engine' => $this->searchConfig->getVectorEngine(),
             'vector_space' => $this->searchConfig->getVectorSpace(),
         ];

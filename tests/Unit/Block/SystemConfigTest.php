@@ -12,7 +12,7 @@ use ArrayIterator;
 use DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\AttributeConfiguration\Composition;
 use DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\AttributeConfiguration\ParsingStrategy;
 use DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\AttributeConfiguration\ProductAttribute;
-use DavidBel\AiSearch\Block\Adminhtml\System\Config\SearchSource;
+use DavidBel\AiSearch\Block\Adminhtml\System\Config\SemanticSearchSource;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Parsing;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Parsing\HtmlToText;
 use DavidBel\AiSearch\Ingestion\DocumentProcessing\Parsing\TextAsIs;
@@ -226,11 +226,11 @@ class SystemConfigTest extends TestCase
         );
     }
 
-    public function testSearchSourcePrependsWarningToFormHtml(): void
+    public function testSemanticSearchSourcePrependsWarningToFormHtml(): void
     {
         $form = self::createStub(Form::class);
         $form->method('getHtml')->willReturn('<form>settings</form>');
-        $block = $this->getMockBuilder(SearchSource::class)
+        $block = $this->getMockBuilder(SemanticSearchSource::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['getForm', 'escapeHtml'])
             ->getMock();

@@ -8,11 +8,11 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Unit\Config;
 
-use DavidBel\AiSearch\Config\DataProcessingConfig;
 use DavidBel\AiSearch\Config\EmbedderConfig;
 use DavidBel\AiSearch\Config\IndexingScopeConfig;
 use DavidBel\AiSearch\Config\SearchConfig;
-use DavidBel\AiSearch\Config\SearchResultConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
 use PHPUnit\Framework\TestCase;
@@ -21,9 +21,9 @@ use UnexpectedValueException;
 
 class ConfigTest extends TestCase
 {
-    public function testReadsDataProcessingValues(): void
+    public function testReadsSemanticDataProcessingValues(): void
     {
-        $config = new DataProcessingConfig($this->scopeConfigWithValue('5'));
+        $config = new SemanticDataProcessingConfig($this->scopeConfigWithValue('5'));
 
         self::assertSame(5, $config->getDocumentProcessingBatchSize());
         self::assertSame(5, $config->getVectorEmbeddingBatchSize());
@@ -39,12 +39,12 @@ class ConfigTest extends TestCase
         self::assertSame(5, $config->getIndexerMinimumSuccessPercentage());
     }
 
-    public function testRejectsInvalidDataProcessingValues(): void
+    public function testRejectsInvalidSemanticDataProcessingValues(): void
     {
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('must contain a positive integer');
 
-        (new DataProcessingConfig($this->scopeConfigWithValue('0')))
+        (new SemanticDataProcessingConfig($this->scopeConfigWithValue('0')))
             ->getDocumentProcessingBatchSize();
     }
 
@@ -53,7 +53,7 @@ class ConfigTest extends TestCase
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('must not exceed 100');
 
-        (new DataProcessingConfig($this->scopeConfigWithValue('101')))
+        (new SemanticDataProcessingConfig($this->scopeConfigWithValue('101')))
             ->getIndexerMinimumSuccessPercentage();
     }
 
@@ -189,11 +189,11 @@ class ConfigTest extends TestCase
         (new SearchConfig($this->scopeConfigWithValue(null)))->getVectorEngine();
     }
 
-    public function testReadsStoreScopedSearchResultConfiguration(): void
+    public function testReadsStoreScopedSemanticSearchResultConfiguration(): void
     {
         $scopeConfig = $this->scopeConfigWithValue('5');
         $scopeConfig->method('isSetFlag')->willReturn(true);
-        $config = new SearchResultConfig($scopeConfig);
+        $config = new SemanticSearchResultConfig($scopeConfig);
 
         self::assertTrue($config->isEnabled(2));
         self::assertSame(5, $config->getRequestTimeoutSeconds(2));
@@ -206,12 +206,12 @@ class ConfigTest extends TestCase
         self::assertSame('5', $config->getEmbedderQueryTemplate(2));
     }
 
-    public function testRejectsAnInvalidSearchResultLimit(): void
+    public function testRejectsAnInvalidSemanticSearchResultLimit(): void
     {
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('must contain a positive integer');
 
-        (new SearchResultConfig($this->scopeConfigWithValue('0')))
+        (new SemanticSearchResultConfig($this->scopeConfigWithValue('0')))
             ->getProductResultLimit(2);
     }
 
@@ -220,7 +220,7 @@ class ConfigTest extends TestCase
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('must contain a non-negative number');
 
-        (new SearchResultConfig($this->scopeConfigWithValue('-0.1')))
+        (new SemanticSearchResultConfig($this->scopeConfigWithValue('-0.1')))
             ->getMinimumScore(2);
     }
 
@@ -229,7 +229,7 @@ class ConfigTest extends TestCase
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('must contain a string');
 
-        (new SearchResultConfig($this->scopeConfigWithValue(null)))
+        (new SemanticSearchResultConfig($this->scopeConfigWithValue(null)))
             ->getEmbedderQueryTemplate();
     }
 

@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Unit\Search;
 
-use DavidBel\AiSearch\Config\SearchResultConfig;
+use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
 use DavidBel\AiSearch\Search\ResultCache;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -42,12 +42,12 @@ class ResultCacheTest extends TestCase
         $store->method('getId')->willReturn($storeId);
         $storeManager = self::createStub(StoreManagerInterface::class);
         $storeManager->method('getStore')->willReturn($store);
-        $searchResultConfig = $this->createMock(SearchResultConfig::class);
-        $searchResultConfig->expects(self::once())
+        $semanticSearchResultConfig = $this->createMock(SemanticSearchResultConfig::class);
+        $semanticSearchResultConfig->expects(self::once())
             ->method('isEnabled')
             ->with($storeId)
             ->willReturn($enabled);
 
-        return new ResultCache($searchResultConfig, $storeManager);
+        return new ResultCache($semanticSearchResultConfig, $storeManager);
     }
 }

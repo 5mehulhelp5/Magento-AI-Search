@@ -19,9 +19,9 @@ use UnexpectedValueException;
 class DynamicDocumentTest extends TestCase
 {
     private const string ENABLED_PATH =
-        'davidbel_ai_search_search_source/document_configuration/enable_dynamic_document';
+        'davidbel_ai_search_semantic_search_source/document_configuration/enable_dynamic_document';
     private const string CONFIGURATION_PATH =
-        'davidbel_ai_search_search_source/document_configuration/dynamic_document';
+        'davidbel_ai_search_semantic_search_source/document_configuration/dynamic_document';
 
     public function testBuildsAndCachesAStoreScopedDynamicDocument(): void
     {

@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Indexer;
 
-use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
 use DavidBel\AiSearch\Indexer\ProductAttributeOptionIndexer\AffectedProductIdProvider;
 use DavidBel\AiSearch\Indexer\ProductAttributeOptionIndexer\ProductIndexerPublisher;
 use InvalidArgumentException;
@@ -22,7 +22,7 @@ class ProductAttributeOptionIndexer implements IndexerActionInterface, MviewActi
     public function __construct(
         private readonly AffectedProductIdProvider $affectedProductIdProvider,
         private readonly ProductIndexerPublisher $productIndexerPublisher,
-        private readonly DataProcessingConfig $dataProcessingConfig
+        private readonly SemanticDataProcessingConfig $semanticDataProcessingConfig
     ) {
     }
 
@@ -37,7 +37,7 @@ class ProductAttributeOptionIndexer implements IndexerActionInterface, MviewActi
     public function executeList(array $ids): void
     {
         $optionIds = $this->normalizeOptionIds($ids);
-        $batchSize = $this->dataProcessingConfig->getDocumentProcessingBatchSize();
+        $batchSize = $this->semanticDataProcessingConfig->getDocumentProcessingBatchSize();
         $productIdBatches = $this->affectedProductIdProvider->getProductIdBatches(
             $optionIds,
             $batchSize

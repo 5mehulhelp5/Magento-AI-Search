@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Tests\Unit\Ingestion;
 
 use DavidBel\AiSearch\Api\Data\EmbeddingBacklogInterface;
-use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog as EmbeddingBacklogResource;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Collection;
 use DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\CollectionFactory;
@@ -72,7 +72,7 @@ class ChunkDeleteTest extends TestCase
             $this->createHandlerFactory($state, $handler),
             $vectorSync,
             $cacheClean,
-            $this->createDataProcessingConfig(),
+            $this->createSemanticDataProcessingConfig(),
             self::createStub(Logger::class)
         );
 
@@ -90,9 +90,9 @@ class ChunkDeleteTest extends TestCase
         return $factory;
     }
 
-    private function createDataProcessingConfig(): DataProcessingConfig
+    private function createSemanticDataProcessingConfig(): SemanticDataProcessingConfig
     {
-        $config = self::createStub(DataProcessingConfig::class);
+        $config = self::createStub(SemanticDataProcessingConfig::class);
         $config->method('getVectorDeleteBatchSize')->willReturn(1000);
         $config->method('getVectorDeleteUpsertAttemptThreshold')->willReturn(3);
         $config->method('getVectorDeleteMaximumRuntimeSeconds')->willReturn(600);

@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Tests\Unit\Indexer;
 
-use DavidBel\AiSearch\Config\DataProcessingConfig;
+use DavidBel\AiSearch\Config\SemanticDataProcessingConfig;
 use DavidBel\AiSearch\Config\EmbeddedAttribute;
 use DavidBel\AiSearch\Config\EmbeddedAttributesConfig;
 use DavidBel\AiSearch\Config\IndexingScopeConfig;
@@ -285,7 +285,7 @@ class ProductAttributeOptionIndexerTest extends TestCase
         $publisher = $this->createMock(ProductIndexerPublisher::class);
         $publisher->expects(self::exactly(6))->method('publishProductIds');
         $publisher->expects(self::once())->method('invalidateProductIndexer');
-        $config = self::createStub(DataProcessingConfig::class);
+        $config = self::createStub(SemanticDataProcessingConfig::class);
         $config->method('getDocumentProcessingBatchSize')->willReturn(100);
         $indexer = new ProductAttributeOptionIndexer($affected, $publisher, $config);
 
@@ -307,7 +307,7 @@ class ProductAttributeOptionIndexerTest extends TestCase
         (new ProductAttributeOptionIndexer(
             self::createStub(AffectedProductIdProvider::class),
             self::createStub(ProductIndexerPublisher::class),
-            self::createStub(DataProcessingConfig::class)
+            self::createStub(SemanticDataProcessingConfig::class)
         ))->executeList($ids);
     }
 

@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace DavidBel\AiSearch\Search;
 
-use DavidBel\AiSearch\Config\SearchResultConfig;
+use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
 use Magento\PageCache\Model\Spi\PageCacheTagsPreprocessorInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
@@ -17,7 +17,7 @@ class ResultCache implements PageCacheTagsPreprocessorInterface
     public const string CACHE_TAG = 'davidbel_ai_search_result';
 
     public function __construct(
-        private readonly SearchResultConfig $searchResultConfig,
+        private readonly SemanticSearchResultConfig $semanticSearchResultConfig,
         private readonly StoreManagerInterface $storeManager
     ) {
     }
@@ -30,7 +30,7 @@ class ResultCache implements PageCacheTagsPreprocessorInterface
     {
         $storeId = (int) (string) $this->storeManager->getStore()->getId();
 
-        if (!$this->searchResultConfig->isEnabled($storeId)) {
+        if (!$this->semanticSearchResultConfig->isEnabled($storeId)) {
             return $tags;
         }
 

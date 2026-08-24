@@ -16,9 +16,9 @@ use UnexpectedValueException;
 class EmbeddedAttributesConfig
 {
     private const string XML_PATH_ENABLE_DOCUMENT_TITLE =
-        'davidbel_ai_search_search_source/document_configuration/enable_document_title';
+        'davidbel_ai_search_semantic_search_source/document_configuration/enable_document_title';
     private const string XML_PATH_DOCUMENT_TITLE =
-        'davidbel_ai_search_search_source/document_configuration/document_title';
+        'davidbel_ai_search_semantic_search_source/document_configuration/document_title';
 
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig,

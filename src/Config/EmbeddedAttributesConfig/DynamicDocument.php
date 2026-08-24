@@ -18,9 +18,9 @@ use UnexpectedValueException;
 class DynamicDocument
 {
     private const string XML_PATH_ENABLED =
-        'davidbel_ai_search_search_source/document_configuration/enable_dynamic_document';
+        'davidbel_ai_search_semantic_search_source/document_configuration/enable_dynamic_document';
     private const string XML_PATH_CONFIGURATION =
-        'davidbel_ai_search_search_source/document_configuration/dynamic_document';
+        'davidbel_ai_search_semantic_search_source/document_configuration/dynamic_document';
 
     /**
      * @var array<string, EmbeddedAttribute|null>

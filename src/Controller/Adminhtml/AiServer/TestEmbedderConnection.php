@@ -21,7 +21,7 @@ use UnexpectedValueException;
 
 class TestEmbedderConnection extends Action implements HttpPostActionInterface
 {
-    public const ADMIN_RESOURCE = 'DavidBel_AiSearch::config_search_source';
+    public const ADMIN_RESOURCE = 'DavidBel_AiSearch::config_semantic_search_source';
     private const string DASHBOARD_RESOURCE = 'DavidBel_AiSearch::dashboard';
     private const int EXPECTED_EMBEDDING_COUNT = 2;
 

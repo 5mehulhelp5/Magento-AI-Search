@@ -10,7 +10,7 @@ namespace DavidBel\AiSearch\Block\Adminhtml\System\Config;
 
 use Magento\Config\Block\System\Config\Form;
 
-class SearchSource extends Form
+class SemanticSearchSource extends Form
 {
     public function getFormHtml(): string
     {
