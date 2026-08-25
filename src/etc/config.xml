@@ -121,7 +121,7 @@
         </davidbel_ai_search_semantic_data_processing>
         <davidbel_ai_search_semantic_search_result>
             <general>
-                <enabled>1</enabled>
+                <enabled>0</enabled>
                 <request_timeout_seconds>2</request_timeout_seconds>
                 <use_previous_semantic_index_during_rebuild>1</use_previous_semantic_index_during_rebuild>
             </general>
