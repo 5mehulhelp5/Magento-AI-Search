@@ -24,6 +24,43 @@
                 type="DavidBel\AiSearch\Repository\ChunkRepository"/>
     <preference for="DavidBel\AiSearch\Api\EmbeddingBacklogRepositoryInterface"
                 type="DavidBel\AiSearch\Repository\EmbeddingBacklogRepository"/>
+    <virtualType name="DavidBel\AiSearch\Model\ResourceModel\Document\Grid\Collection"
+                 type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">davidbel_ai_search_document</argument>
+            <argument name="resourceModel" xsi:type="string">DavidBel\AiSearch\Model\ResourceModel\Document</argument>
+            <argument name="identifierName" xsi:type="string">document_id</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="DavidBel\AiSearch\Model\ResourceModel\Chunk\Grid\Collection"
+                 type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">davidbel_ai_search_chunk</argument>
+            <argument name="resourceModel" xsi:type="string">DavidBel\AiSearch\Model\ResourceModel\Chunk</argument>
+            <argument name="identifierName" xsi:type="string">chunk_id</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Grid\Collection"
+                 type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">davidbel_ai_search_embedding_backlog</argument>
+            <argument name="resourceModel"
+                      xsi:type="string">DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog</argument>
+            <argument name="identifierName" xsi:type="string">backlog_id</argument>
+        </arguments>
+    </virtualType>
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="davidbel_ai_search_document_data_source"
+                      xsi:type="string">DavidBel\AiSearch\Model\ResourceModel\Document\Grid\Collection</item>
+                <item name="davidbel_ai_search_chunk_data_source"
+                      xsi:type="string">DavidBel\AiSearch\Model\ResourceModel\Chunk\Grid\Collection</item>
+                <item name="davidbel_ai_search_backlog_data_source"
+                      xsi:type="string">DavidBel\AiSearch\Model\ResourceModel\EmbeddingBacklog\Grid\Collection</item>
+            </argument>
+        </arguments>
+    </type>
     <type name="DavidBel\AiSearch\Log\Handler">
         <arguments>
             <argument name="fileName" xsi:type="string">/var/log/davidbel/ai-search.log</argument>
