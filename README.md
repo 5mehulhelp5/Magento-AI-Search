@@ -9,7 +9,7 @@ What if there was a module using **Magento's default search engine** to provide 
 
 Inspired by Google Cloud's Commerce AI Search, the module reads and chunks product descriptions, uses a remote AI server to **convert the text chunks into vectors**, then saves those vectors to **Magento's default search engine, OpenSearch**. This enables **intelligent search based on meaning rather than keyword or synonym matching**.
 
-> Note that the AI Search module is currently in public beta.
+> See the [User Guide](https://github.com/DavidBelicza/Magento-AI-Search/blob/main/USER_GUIDE.md) for complete installation and configuration instructions.
 
 ## 🔍 What Semantic / AI Search Is
 
@@ -136,9 +136,15 @@ bin/magento module:enable DavidBel_AiSearch
 bin/magento setup:upgrade
 ```
 
+Complete installation steps are available in the [User Guide](https://github.com/DavidBelicza/Magento-AI-Search/blob/main/USER_GUIDE.md).
+
 ## 🔧 Settings
 
 The module settings are available in **Stores > Settings > Configuration > AI Search**.
+
+The module dashboard is available in **System > AI Search > Dashboard**.
+
+Complete configuration instructions are available in the [User Guide](https://github.com/DavidBelicza/Magento-AI-Search/blob/main/USER_GUIDE.md).
 
 ## 📊 Performance
 

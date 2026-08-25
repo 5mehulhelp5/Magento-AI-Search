@@ -12,10 +12,10 @@
                 <indexed_store_views/>
             </indexing_scope>
             <ai_server>
-                <embedding_api_protocol>openai_compatible</embedding_api_protocol>
-                <embedding_endpoint>http://host.docker.internal:1234/v1/embeddings</embedding_endpoint>
+                <embedding_api_protocol>google_gemini_native</embedding_api_protocol>
+                <embedding_endpoint>https://generativelanguage.googleapis.com/v1beta</embedding_endpoint>
                 <api_key/>
-                <embedding_model>text-embedding-embeddinggemma-300m-qat</embedding_model>
+                <embedding_model>gemini-embedding-001</embedding_model>
                 <vector_dimensions>768</vector_dimensions>
                 <request_timeout_seconds>60</request_timeout_seconds>
                 <embedder_document_template>title: {title} | text: {text}</embedder_document_template>
@@ -36,61 +36,11 @@
                             "attribute_code": "description",
                             "composite": "1",
                             "parsing_strategy": "html_to_text"
-                        },
-                        "name": {
-                            "attribute_code": "name",
-                            "composite": "0",
-                            "parsing_strategy": "text_as_is"
                         }
                     }
                 ]]></documents>
                 <enable_dynamic_document>0</enable_dynamic_document>
-                <dynamic_document><![CDATA[
-                    {
-                        "name": {
-                            "attribute_code": ["name"],
-                            "composite": "0",
-                            "parsing_strategy": "text_as_is",
-                            "template": "This product is called {name}."
-                        },
-                        "color_size": {
-                            "attribute_code": ["color", "size"],
-                            "composite": "1",
-                            "parsing_strategy": "text_as_is",
-                            "template": "It is available in {color}, with size options including {size}."
-                        },
-                        "material": {
-                            "attribute_code": ["material"],
-                            "composite": "1",
-                            "parsing_strategy": "text_as_is",
-                            "template": "It is made from {material}."
-                        },
-                        "pattern": {
-                            "attribute_code": ["pattern"],
-                            "composite": "1",
-                            "parsing_strategy": "text_as_is",
-                            "template": "Its design features a {pattern} pattern."
-                        },
-                        "activity": {
-                            "attribute_code": ["activity"],
-                            "composite": "1",
-                            "parsing_strategy": "text_as_is",
-                            "template": "It is designed for {activity}."
-                        },
-                        "climate": {
-                            "attribute_code": ["climate"],
-                            "composite": "1",
-                            "parsing_strategy": "text_as_is",
-                            "template": "It is well suited to {climate} conditions."
-                        },
-                        "short_description": {
-                            "attribute_code": ["short_description"],
-                            "composite": "1",
-                            "parsing_strategy": "html_to_text",
-                            "template": "Here is a brief description: {short_description}"
-                        }
-                    }
-                ]]></dynamic_document>
+                <dynamic_document/>
             </document_configuration>
         </davidbel_ai_search_semantic_search_source>
         <davidbel_ai_search_semantic_data_processing>
