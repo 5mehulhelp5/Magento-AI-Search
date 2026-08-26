@@ -9,17 +9,14 @@ declare(strict_types=1);
 namespace DavidBel\AiSearch\Search;
 
 use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
-use DavidBel\AiSearch\Indexer\Versioning;
 use Magento\Framework\Search\RequestInterface;
 
 class QuickSearch
 {
     public function __construct(
         private readonly RequestReader $requestReader,
-        private readonly QueryEmbedding $queryEmbedding,
-        private readonly VectorSearch $vectorSearch,
+        private readonly SemanticSearch $semanticSearch,
         private readonly CatalogQueryModifier $catalogQueryModifier,
-        private readonly Versioning $versioning,
         private readonly SemanticSearchResultConfig $semanticSearchResultConfig
     ) {
     }
@@ -46,24 +43,7 @@ class QuickSearch
             return $catalogQuery;
         }
 
-        $searchIndex = $this->versioning->getSearchIndex(
-            $this->semanticSearchResultConfig->usePreviousSemanticIndexDuringRebuild($storeId)
-        );
-
-        if ($searchIndex === null) {
-            return $catalogQuery;
-        }
-
-        $vector = $this->queryEmbedding->execute(
-            $queryText,
-            $storeId,
-            $searchIndex->queryConfigurationSnapshot
-        );
-        $candidates = $this->vectorSearch->execute(
-            $vector,
-            $storeId,
-            $searchIndex
-        );
+        $candidates = $this->semanticSearch->getCandidates($queryText, $storeId);
 
         return $this->catalogQueryModifier->execute($catalogQuery, $candidates);
     }

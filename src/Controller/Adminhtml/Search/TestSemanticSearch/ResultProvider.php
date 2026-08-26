@@ -10,10 +10,11 @@ namespace DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch;
 
 use DavidBel\AiSearch\Config\SearchConfig;
 use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
+use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider\CandidateProductProvider;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider\RelatedDocuments;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider\SearchScores;
+use DavidBel\AiSearch\Search\SemanticSearch;
 use Magento\Backend\Model\UrlInterface;
-use Magento\Catalog\Model\Layer\Resolver;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\StoreRepositoryInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -23,7 +24,8 @@ class ResultProvider
     private const int RESULT_LIMIT = 20;
 
     public function __construct(
-        private readonly Resolver $layerResolver,
+        private readonly SemanticSearch $semanticSearch,
+        private readonly CandidateProductProvider $candidateProductProvider,
         private readonly StoreManagerInterface $storeManager,
         private readonly StoreRepositoryInterface $storeRepository,
         private readonly UrlInterface $backendUrl,
@@ -106,14 +108,18 @@ class ResultProvider
     ): array {
         $this->searchScores->scoresByProductId = [];
         $this->searchScores->scoresByChunkId = [];
-        $this->layerResolver->create(Resolver::CATALOG_LAYER_SEARCH);
-        $collection = $this->layerResolver->get()->getProductCollection();
-        $collection->setPageSize(self::RESULT_LIMIT);
-        $collection->setCurPage(1);
-        $collection->load();
-
-        /** @var array<array-key, \Magento\Catalog\Model\Product> $productItems */
-        $productItems = $collection->getItems();
+        $candidates = $this->semanticSearch->getCandidates($query, $storeId);
+        $scoresByProductId = array_slice(
+            $candidates->scoresByProductId,
+            0,
+            self::RESULT_LIMIT,
+            true
+        );
+        $this->searchScores->scoresByProductId = $scoresByProductId;
+        $productItems = $this->candidateProductProvider->getProductsInScoreOrder(
+            array_keys($scoresByProductId),
+            $storeId
+        );
         $productIds = $this->getProductIds($productItems);
         $documentsByProductId = $this->relatedDocuments->getByProductIds(
             $productIds,
@@ -132,7 +138,7 @@ class ResultProvider
                 'name' => $store->getName(),
                 'code' => $store->getCode(),
             ],
-            'total_count' => $collection->getSize(),
+            'total_count' => count($candidates->scoresByProductId),
             'displayed_count' => count($products),
             'result_limit' => self::RESULT_LIMIT,
             'configuration' => $this->getSearchConfiguration($storeId),

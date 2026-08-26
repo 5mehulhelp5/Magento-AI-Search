@@ -17,14 +17,14 @@ use DavidBel\AiSearch\Api\DocumentRepositoryInterface;
 use DavidBel\AiSearch\Config\SearchConfig;
 use DavidBel\AiSearch\Config\SemanticSearchResultConfig;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider;
+use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider\CandidateProductProvider;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider\RelatedDocuments;
 use DavidBel\AiSearch\Controller\Adminhtml\Search\TestSemanticSearch\ResultProvider\SearchScores;
+use DavidBel\AiSearch\Search\Candidates;
+use DavidBel\AiSearch\Search\SemanticSearch;
 use DavidBel\AiSearch\Tests\Unit\TestDouble\GeneratedFactoryStub;
 use Magento\Backend\Model\UrlInterface;
-use Magento\Catalog\Model\Layer;
-use Magento\Catalog\Model\Layer\Resolver;
 use Magento\Catalog\Model\Product;
-use Magento\Catalog\Model\ResourceModel\Product\Collection;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Api\SearchCriteriaBuilderFactory;
 use Magento\Framework\Api\SearchCriteriaInterface;
@@ -123,87 +123,12 @@ class AdminSearchResultProviderTest extends TestCase
             $result['configuration']
         );
         self::assertSame(10, $result['products'][0]['id']);
-        self::assertNull($result['products'][0]['score']);
-        self::assertSame([], $result['products'][0]['documents']);
-    }
-
-    public function testAddsScoresAndReturnsOnlyDocumentsWithScoredChunks(): void
-    {
-        $result = $this->createScorePopulatingResultProvider()->getSearchResults('shoes', 1);
-
         self::assertSame(0.9, $result['products'][0]['score']);
-        $documents = $result['products'][0]['documents'];
-        self::assertCount(1, $documents);
-        $firstDocument = $documents[0];
-        $chunks = $firstDocument['chunks'];
-        self::assertIsArray($chunks);
-        $firstChunk = $chunks[0];
-        self::assertIsArray($firstChunk);
-        self::assertSame(0.8, $firstChunk['score']);
-    }
-
-    private function createScorePopulatingResultProvider(): ResultProvider
-    {
-        $scores = new SearchScores();
-        $store = $this->store(1, 'Store', 'store');
-        $storeRepository = self::createStub(StoreRepositoryInterface::class);
-        $storeRepository->method('getById')->willReturn($store);
-        $storeManager = self::createStub(StoreManagerInterface::class);
-        $storeManager->method('getStore')->willReturn($store);
-        [$resultConfig, $searchConfig] = $this->searchConfigurations();
-
-        return new ResultProvider(
-            $this->scorePopulatingResolver($scores),
-            $storeManager,
-            $storeRepository,
-            self::createStub(UrlInterface::class),
-            $this->scoredRelatedDocuments(),
-            $resultConfig,
-            $searchConfig,
-            $scores
-        );
-    }
-
-    private function scorePopulatingResolver(SearchScores $scores): Resolver
-    {
-        $product = self::createStub(Product::class);
-        $product->method('getId')->willReturn(10);
-        $product->method('getName')->willReturn('Product');
-        $product->method('getSku')->willReturn('sku');
-        $product->method('getTypeId')->willReturn('simple');
-        $collection = new ScorePopulatingProductCollection(
-            $scores,
-            [$product],
-            [10 => 0.9],
-            [100 => 0.8]
-        );
-        $layer = self::createStub(Layer::class);
-        $layer->method('getProductCollection')->willReturn($collection);
-        $resolver = self::createStub(Resolver::class);
-        $resolver->method('get')->willReturn($layer);
-
-        return $resolver;
-    }
-
-    private function scoredRelatedDocuments(): RelatedDocuments
-    {
-        $related = self::createStub(RelatedDocuments::class);
-        $related->method('getByProductIds')->willReturn([
-            10 => [
-                ['id' => 1, 'chunks' => [
-                    ['id' => 100, 'content' => 'returned'],
-                    ['id' => 101, 'content' => 'not returned'],
-                ]],
-                ['id' => 2, 'chunks' => [['id' => 102, 'content' => 'not returned']]],
-            ],
-        ]);
-
-        return $related;
+        self::assertSame([], $result['products'][0]['documents']);
     }
 
     private function createResultProvider(): ResultProvider
     {
-        $resolver = $this->searchLayerResolver();
         $store = $this->store(1, 'Store', 'store');
         $previousStore = $this->store(2, 'Previous', 'previous');
         $storeRepository = self::createStub(StoreRepositoryInterface::class);
@@ -219,11 +144,10 @@ class AdminSearchResultProviderTest extends TestCase
         ]);
         [$resultConfig, $searchConfig] = $this->searchConfigurations();
         $scores = new SearchScores();
-        $scores->scoresByProductId = [10 => 0.9];
-        $scores->scoresByChunkId = [100 => 0.8];
 
         return new ResultProvider(
-            $resolver,
+            $this->semanticSearch([10 => 0.9]),
+            $this->candidateProductProvider(),
             $storeManager,
             $storeRepository,
             $backendUrl,
@@ -234,26 +158,30 @@ class AdminSearchResultProviderTest extends TestCase
         );
     }
 
-    private function searchLayerResolver(): Resolver
+    private function candidateProductProvider(): CandidateProductProvider
     {
         $product = self::createStub(Product::class);
         $product->method('getId')->willReturn(10);
         $product->method('getName')->willReturn('Product');
         $product->method('getSku')->willReturn('sku');
         $product->method('getTypeId')->willReturn('simple');
-        $collection = $this->createMock(Collection::class);
-        $collection->expects(self::once())->method('setPageSize')->with(20)->willReturnSelf();
-        $collection->expects(self::once())->method('setCurPage')->with(1)->willReturnSelf();
-        $collection->expects(self::once())->method('load')->willReturnSelf();
-        $collection->method('getItems')->willReturn([$product]);
-        $collection->method('getSize')->willReturn(1);
-        $layer = self::createStub(Layer::class);
-        $layer->method('getProductCollection')->willReturn($collection);
-        $resolver = $this->createMock(Resolver::class);
-        $resolver->expects(self::once())->method('create')->with(Resolver::CATALOG_LAYER_SEARCH);
-        $resolver->method('get')->willReturn($layer);
+        $provider = self::createStub(CandidateProductProvider::class);
+        $provider->method('getProductsInScoreOrder')->with([10], 1)->willReturn([$product]);
 
-        return $resolver;
+        return $provider;
+    }
+
+    /**
+     * @param array<int, float> $scoresByProductId
+     */
+    private function semanticSearch(array $scoresByProductId): SemanticSearch
+    {
+        $semanticSearch = self::createStub(SemanticSearch::class);
+        $semanticSearch->method('getCandidates')->with('shoes', 1)->willReturn(
+            new Candidates($scoresByProductId)
+        );
+
+        return $semanticSearch;
     }
 
     /**

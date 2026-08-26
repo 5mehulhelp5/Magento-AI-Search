@@ -20,6 +20,7 @@ use DavidBel\AiSearch\Search\CatalogQueryModifier;
 use DavidBel\AiSearch\Search\QueryEmbedding;
 use DavidBel\AiSearch\Search\QuickSearch;
 use DavidBel\AiSearch\Search\RequestReader;
+use DavidBel\AiSearch\Search\SemanticSearch;
 use DavidBel\AiSearch\Search\VectorSearch;
 use GuzzleHttp\Promise\Create;
 use Magento\Framework\Search\Request\Dimension;
@@ -30,6 +31,7 @@ use Magento\Framework\Search\Request\QueryInterface;
 use Magento\Framework\Search\RequestInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use UnexpectedValueException;
 
 class SearchTest extends TestCase
@@ -346,7 +348,8 @@ class SearchTest extends TestCase
         $vectorSearch->expects(self::once())->method('execute')->willReturn(new Candidates([10 => 0.9]));
         $modifier = $this->createMock(CatalogQueryModifier::class);
         $modifier->expects(self::once())->method('execute')->willReturn(['modified' => true]);
-        $quickSearch = new QuickSearch($reader, $embedding, $vectorSearch, $modifier, $versioning, $config);
+        $semanticSearch = new SemanticSearch($embedding, $vectorSearch, $versioning, $config);
+        $quickSearch = new QuickSearch($reader, $semanticSearch, $modifier, $config);
 
         self::assertSame(['modified' => true], $quickSearch->execute($request, ['body' => []]));
     }
@@ -397,7 +400,7 @@ class SearchTest extends TestCase
         );
     }
 
-    public function testSkipsAQuickSearchWithoutAnIndex(): void
+    public function testRejectsAQuickSearchWithoutAnIndex(): void
     {
         $reader = self::createStub(RequestReader::class);
         $reader->method('isSemanticSearchRequest')->willReturn(true);
@@ -406,13 +409,22 @@ class SearchTest extends TestCase
         $config = self::createStub(SemanticSearchResultConfig::class);
         $config->method('isEnabled')->willReturn(true);
 
-        self::assertSame(
-            ['original' => true],
-            $this->createQuickSearch($reader, $config)->execute(
-                self::createStub(RequestInterface::class),
-                ['original' => true]
-            )
+        $semanticSearch = new SemanticSearch(
+            self::createStub(QueryEmbedding::class),
+            self::createStub(VectorSearch::class),
+            self::createStub(Versioning::class),
+            $config
         );
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('A semantic search index is not available.');
+
+        (new QuickSearch(
+            $reader,
+            $semanticSearch,
+            self::createStub(CatalogQueryModifier::class),
+            $config
+        ))->execute(self::createStub(RequestInterface::class), ['original' => true]);
     }
 
     private function createPhysicalIndex(): PhysicalIndex
@@ -467,10 +479,8 @@ class SearchTest extends TestCase
     ): QuickSearch {
         return new QuickSearch(
             $requestReader,
-            self::createStub(QueryEmbedding::class),
-            self::createStub(VectorSearch::class),
+            self::createStub(SemanticSearch::class),
             self::createStub(CatalogQueryModifier::class),
-            self::createStub(Versioning::class),
             $config ?? self::createStub(SemanticSearchResultConfig::class)
         );
     }
