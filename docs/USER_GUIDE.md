@@ -328,11 +328,13 @@ Test the removal in a non-production environment and back up the database before
 Then run the standard Magento module uninstall command from the Magento root directory:
 
 ```shell
-bin/magento module:uninstall --clear-static-content DavidBel_AiSearch
+bin/magento module:uninstall --remove-data --clear-static-content DavidBel_AiSearch
 ```
 
-Magento disables the module, removes it from the deployment configuration, removes the
-Composer package, clears the cache, and updates generated classes.
+The `--remove-data` option removes the module database tables, configuration, indexer state,
+processing records, and physical OpenSearch indexes. Magento also disables the module,
+removes it from the deployment configuration, removes the Composer package, clears the cache,
+and updates generated classes.
 
 ## 10. Support and license
 

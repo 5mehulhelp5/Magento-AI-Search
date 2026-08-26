@@ -216,4 +216,4 @@ pie showData title End-to-end processing time distribution
 | **Headless GraphQL semantic search support** | GraphQL | Planned | ✅ Complete |
 | **Progress and error observability** | Operations | Planned | ✅ Complete |
 | **Preparing the module for a stable release** | Release | Essential | ⏳ Open |
-| **Complete module uninstall command for database data and OpenSearch indexes** | Maintenance | Essential | ⏳ Open |
+| **Complete module uninstall command for database data and OpenSearch indexes** | Maintenance | Essential | ✅ Complete |
