@@ -30,7 +30,7 @@
                    showInStore="1">
                 <label>General</label>
                 <field id="enabled"
-                       translate="label"
+                       translate="label comment"
                        type="select"
                        sortOrder="10"
                        showInDefault="1"
@@ -38,10 +38,11 @@
                        showInStore="1"
                        canRestore="1">
                     <label>Enabled</label>
+                    <comment>Enables semantic search for storefront catalog searches in this scope. When disabled, Magento uses its default catalog search.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="request_timeout_seconds"
-                       translate="label"
+                       translate="label comment"
                        type="text"
                        sortOrder="20"
                        showInDefault="1"
@@ -49,10 +50,11 @@
                        showInStore="1"
                        canRestore="1">
                     <label>Request Timeout (Seconds)</label>
+                    <comment>Maximum time to wait for the AI server to embed a search query. A timeout fails the semantic request, and storefront searches fall back to Magento's default catalog search.</comment>
                     <validate>required-entry validate-number validate-greater-than-zero</validate>
                 </field>
                 <field id="use_previous_semantic_index_during_rebuild"
-                       translate="label"
+                       translate="label comment"
                        type="select"
                        sortOrder="30"
                        showInDefault="1"
@@ -60,6 +62,7 @@
                        showInStore="1"
                        canRestore="1">
                     <label>Use Previous Semantic Index During Rebuild</label>
+                    <comment>Keeps the currently active semantic index available while a replacement index is being built. When disabled, storefront searches use Magento's default catalog search until the new semantic index becomes active.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
             </group>
@@ -80,7 +83,7 @@
                     <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\TestSemanticSearch</frontend_model>
                 </field>
                 <field id="collapse_results_by_product"
-                       translate="label"
+                       translate="label comment"
                        type="select"
                        sortOrder="10"
                        showInDefault="1"
@@ -88,10 +91,11 @@
                        showInStore="1"
                        canRestore="1">
                     <label>Collapse Results by Product</label>
+                    <comment>Returns at most one OpenSearch hit per product, preventing multiple chunks from the same product from consuming the result limit. When disabled, the result limit applies to chunk hits instead of distinct products.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="product_result_limit"
-                       translate="label"
+                       translate="label comment"
                        type="text"
                        sortOrder="20"
                        showInDefault="1"
@@ -99,10 +103,11 @@
                        showInStore="1"
                        canRestore="1">
                     <label>Product Result Limit</label>
+                    <comment>Maximum number of semantic candidates requested from OpenSearch before Magento applies catalog filters and pagination. Higher values can return more eligible products but increase search work and response size.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
                 <field id="minimum_score"
-                       translate="label"
+                       translate="label comment"
                        type="text"
                        sortOrder="30"
                        showInDefault="1"
@@ -110,6 +115,7 @@
                        showInStore="1"
                        canRestore="1">
                     <label>Minimum Score</label>
+                    <comment>Excludes semantic matches with a lower similarity score. Higher values return fewer, more closely related results. The appropriate value depends on the embedding model and should be tuned with Test Semantic Search.</comment>
                     <validate>required-entry validate-number validate-zero-or-greater</validate>
                 </field>
             </group>
@@ -122,7 +128,7 @@
                    showInStore="1">
                 <label>Embedding</label>
                 <field id="embedder_query_template"
-                       translate="label"
+                       translate="label comment"
                        type="text"
                        sortOrder="10"
                        showInDefault="1"
@@ -130,6 +136,7 @@
                        showInStore="1"
                        canRestore="1">
                     <label>Embedder Query Template</label>
+                    <comment>Formats the customer's search text before it is sent to the embedding model. The {text} placeholder is replaced with the query. Use the format recommended by the selected model.</comment>
                     <validate>required-entry</validate>
                 </field>
             </group>
@@ -151,12 +158,13 @@
                    showInDefault="1">
                 <label>Indexing Scope</label>
                 <field id="indexed_store_views"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        type="multiselect"
                        sortOrder="10"
                        showInDefault="1"
                        canRestore="1">
                     <label>Store Views for Indexing</label>
+                    <comment><![CDATA[Select the store views whose catalogs should be processed and added to the AI Search index. (This does not enable AI Search on the storefront.)<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <source_model>Magento\Config\Model\Config\Source\Store</source_model>
                 </field>
@@ -174,99 +182,109 @@
                     <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\TestEmbedderConnection</frontend_model>
                 </field>
                 <field id="embedding_api_protocol"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        type="select"
                        sortOrder="20"
                        showInDefault="1"
                        canRestore="1">
                     <label>Embedding API Protocol</label>
+                    <comment><![CDATA[Select the API protocol used by the AI server.<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <source_model>DavidBel\AiSearch\Model\Config\Source\EmbeddingApiProtocol</source_model>
                 </field>
                 <field id="embedding_endpoint"
-                       translate="label"
+                       translate="label comment"
                        type="text"
                        sortOrder="10"
                        showInDefault="1"
                        canRestore="1">
                     <label>Embedding Endpoint URL</label>
+                    <comment>Enter the embedding endpoint URL of the local or remote AI server.</comment>
                     <validate>required-entry validate-url</validate>
                 </field>
                 <field id="api_key"
-                       translate="label"
+                       translate="label comment"
                        type="obscure"
                        sortOrder="30"
                        showInDefault="1"
                        canRestore="1">
                     <label>API Key</label>
+                    <comment>Enter the API key used to authenticate with the AI server. Leave it empty for endpoints that do not require authentication.</comment>
                     <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                 </field>
                 <field id="embedding_model"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        type="text"
                        sortOrder="40"
                        showInDefault="1"
                        canRestore="1">
                     <label>Embedding Model</label>
+                    <comment><![CDATA[Enter the embedding model configured on the AI server.<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <validate>required-entry</validate>
                 </field>
                 <field id="vector_dimensions"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        type="text"
                        sortOrder="50"
                        showInDefault="1"
                        canRestore="1">
                     <label>Vector Dimensions</label>
+                    <comment><![CDATA[Enter the number of vector dimensions defined by the embedding model specification.<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
                 <field id="request_timeout_seconds"
-                       translate="label"
+                       translate="label comment"
                        type="text"
                        sortOrder="60"
                        showInDefault="1"
                        canRestore="1">
                     <label>Request Timeout (Seconds)</label>
+                    <comment>The number of seconds Magento waits for the AI server before an embedding request fails.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
                 <field id="embedder_document_template"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        type="text"
                        sortOrder="70"
                        showInDefault="1"
                        canRestore="1">
                     <label>Embedder Document Template</label>
+                    <comment><![CDATA[Define the text sent to the embedding model for each document chunk. Use {title} for the document title and {text} for the chunk text. Follow the embedding model specification for the required format.<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <validate>required-entry</validate>
                 </field>
                 <field id="maximum_chunk_tokens"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        type="text"
                        sortOrder="80"
                        showInDefault="1"
                        canRestore="1">
                     <label>Maximum Chunk Tokens</label>
+                    <comment><![CDATA[The estimated maximum number of tokens in each chunk. Smaller chunks create more vectors, while larger chunks create fewer vectors. This value must be lower than the maximum input token limit defined by the embedding model.<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
                 <field id="chunk_overlap_tokens"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        type="text"
                        sortOrder="90"
                        showInDefault="1"
                        canRestore="1">
                     <label>Chunk Overlap Tokens</label>
+                    <comment><![CDATA[The estimated number of tokens repeated between neighboring chunks to preserve context.<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <validate>required-entry validate-digits validate-zero-or-greater</validate>
                 </field>
                 <field id="estimated_characters_per_token"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        type="text"
                        sortOrder="100"
                        showInDefault="1"
                        canRestore="1">
                     <label>Estimated Characters per Token</label>
+                    <comment><![CDATA[The number of characters the module estimates as one token when splitting text into chunks.<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <validate>required-entry validate-number validate-greater-than-zero</validate>
                 </field>
@@ -278,22 +296,24 @@
                    showInDefault="1">
                 <label>Search Engine</label>
                 <field id="vector_engine"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        type="select"
                        sortOrder="10"
                        showInDefault="1"
                        canRestore="1">
                     <label>Vector Engine</label>
+                    <comment><![CDATA[Select the OpenSearch engine used for vector indexing and search.<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <source_model>DavidBel\AiSearch\Model\Config\Source\VectorEngine</source_model>
                 </field>
                 <field id="vector_space"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        type="select"
                        sortOrder="20"
                        showInDefault="1"
                        canRestore="1">
                     <label>Vector Space</label>
+                    <comment><![CDATA[Select how OpenSearch compares search query vectors with catalog vectors. This setting affects the relevance scores.<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <source_model>DavidBel\AiSearch\Model\Config\Source\VectorSpace</source_model>
                 </field>
@@ -306,22 +326,24 @@
                    showInStore="1">
                 <label>Document Configuration</label>
                 <field id="enable_document_title"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        type="select"
                        sortOrder="10"
                        showInDefault="1"
                        canRestore="1">
                     <label>Enable Document Title</label>
+                    <comment><![CDATA[Choose whether to add a product attribute as the title of each document.<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="document_title"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        type="select"
                        sortOrder="20"
                        showInDefault="1"
                        canRestore="1">
                     <label>Document Title</label>
+                    <comment><![CDATA[Select the product attribute used as the document title. Product Name is recommended for most catalogs.<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <source_model>DavidBel\AiSearch\Model\Config\Source\ProductAttribute</source_model>
                     <validate>required-entry</validate>
@@ -330,33 +352,36 @@
                     </depends>
                 </field>
                 <field id="documents"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        sortOrder="30"
                        showInDefault="1"
                        canRestore="1">
                     <label>Documents</label>
+                    <comment><![CDATA[Select the product attributes used to create searchable documents. Each row also controls child product content and text parsing. The more descriptive the attribute content is, the better the search results can be. Prefer meaningful text rather than short option values.<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\Documents</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                 </field>
                 <field id="enable_dynamic_document"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        type="select"
                        sortOrder="40"
                        showInDefault="1"
                        showInStore="1"
                        canRestore="1">
                     <label>Enable Dynamic Document</label>
+                    <comment><![CDATA[Choose whether to create an additional document from product attributes and text templates for this store view.<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="dynamic_document"
-                       translate="label tooltip"
+                       translate="label comment tooltip"
                        sortOrder="50"
                        showInDefault="1"
                        showInStore="1"
                        canRestore="1">
                     <label>Dynamic Document</label>
+                    <comment><![CDATA[Create a deterministic product description from existing product attributes and text templates. All rows are combined into one searchable document. This is useful for catalogs without product descriptions.<br/><span style="color:#eb5202">Changing this setting rebuilds the entire AI Search index.</span>]]></comment>
                     <tooltip>Changing this setting requires a full AI Search rebuild. The rebuild may send many requests to the configured AI server and take a significant amount of time.</tooltip>
                     <frontend_model>DavidBel\AiSearch\Block\Adminhtml\System\Config\Form\Field\DynamicDocument</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -382,12 +407,13 @@
                    showInDefault="1">
                 <label>Document Processing</label>
                 <field id="batch_size"
-                       translate="label"
+                       translate="label comment"
                        type="text"
                        sortOrder="10"
                        showInDefault="1"
                        canRestore="1">
                     <label>Batch Size</label>
+                    <comment>The maximum number of products loaded, parsed, and split into chunks in one indexing batch.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
             </group>
@@ -398,30 +424,33 @@
                    showInDefault="1">
                 <label>Vector Embedding</label>
                 <field id="batch_size"
-                       translate="label"
+                       translate="label comment"
                        type="text"
                        sortOrder="10"
                        showInDefault="1"
                        canRestore="1">
                     <label>Batch Size</label>
+                    <comment>The maximum number of pending backlog items sent to the AI server in one embedding request during ingestion cron processing.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
                 <field id="concurrent_requests"
-                       translate="label"
+                       translate="label comment"
                        type="text"
                        sortOrder="20"
                        showInDefault="1"
                        canRestore="1">
                     <label>Concurrent Requests</label>
+                    <comment>The maximum number of simultaneous embedding requests sent to the AI server during ingestion cron processing.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
                 <field id="maximum_runtime_seconds"
-                       translate="label"
+                       translate="label comment"
                        type="text"
                        sortOrder="30"
                        showInDefault="1"
                        canRestore="1">
                     <label>Maximum Runtime (Seconds)</label>
+                    <comment>The maximum time for selecting new embedding batches during one ingestion cron run. After this time, the worker stops selecting new batches and allows requests already in progress to finish.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
             </group>
@@ -432,30 +461,23 @@
                    showInDefault="1">
                 <label>Vector Delete</label>
                 <field id="batch_size"
-                       translate="label"
+                       translate="label comment"
                        type="text"
                        sortOrder="10"
                        showInDefault="1"
                        canRestore="1">
                     <label>Batch Size</label>
+                    <comment>The maximum number of vectors deleted from OpenSearch in one vector deletion request.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
-                <field id="upsert_attempt_threshold"
-                       translate="label"
+                <field id="maximum_runtime_seconds"
+                       translate="label comment"
                        type="text"
                        sortOrder="20"
                        showInDefault="1"
                        canRestore="1">
-                    <label>Upsert Attempt Threshold</label>
-                    <validate>required-entry validate-digits validate-zero-or-greater</validate>
-                </field>
-                <field id="maximum_runtime_seconds"
-                       translate="label"
-                       type="text"
-                       sortOrder="30"
-                       showInDefault="1"
-                       canRestore="1">
                     <label>Maximum Runtime (Seconds)</label>
+                    <comment>The maximum time the vector deletion cron selects new batches during one run. After this time, the cron stops selecting new batches and allows any current OpenSearch request to finish.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
             </group>
@@ -466,12 +488,13 @@
                    showInDefault="1">
                 <label>Retry</label>
                 <field id="attempt_threshold"
-                       translate="label"
+                       translate="label comment"
                        type="text"
                        sortOrder="10"
                        showInDefault="1"
                        canRestore="1">
                     <label>Attempt Threshold</label>
+                    <comment>The maximum number of failed processing attempts for upsert and delete backlog items.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
             </group>
@@ -481,22 +504,14 @@
                    sortOrder="50"
                    showInDefault="1">
                 <label>Cleanup</label>
-                <field id="attempt_threshold"
-                       translate="label"
+                <field id="result_retention"
+                       translate="label comment"
                        type="text"
                        sortOrder="10"
                        showInDefault="1"
                        canRestore="1">
-                    <label>Attempt Threshold</label>
-                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
-                </field>
-                <field id="result_retention"
-                       translate="label"
-                       type="text"
-                       sortOrder="20"
-                       showInDefault="1"
-                       canRestore="1">
                     <label>Result Retention (Hours)</label>
+                    <comment>Completed and outdated backlog items are deleted by the cleanup cron after this many hours.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
             </group>
@@ -507,21 +522,23 @@
                    showInDefault="1">
                 <label>Indexer</label>
                 <field id="lock_timeout_seconds"
-                       translate="label"
+                       translate="label comment"
                        type="text"
                        sortOrder="10"
                        showInDefault="1"
                        canRestore="1">
                     <label>Lock Timeout (Seconds)</label>
+                    <comment>The maximum time a full reindex waits when another process is updating the index version state.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
                 <field id="minimum_success_percentage"
-                       translate="label"
+                       translate="label comment"
                        type="text"
                        sortOrder="20"
                        showInDefault="1"
                        canRestore="1">
                     <label>Minimum Successful Full Reindex (%)</label>
+                    <comment>The minimum percentage of full reindex backlog items that must be indexed successfully in OpenSearch before the target index is activated.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
             </group>

@@ -23,14 +23,10 @@ class SemanticDataProcessingConfig
         'davidbel_ai_search_semantic_data_processing/vector_embedding/maximum_runtime_seconds';
     private const string XML_PATH_VECTOR_DELETE_BATCH_SIZE =
         'davidbel_ai_search_semantic_data_processing/vector_delete/batch_size';
-    private const string XML_PATH_DELETE_UPSERT_ATTEMPT_THRESHOLD =
-        'davidbel_ai_search_semantic_data_processing/vector_delete/upsert_attempt_threshold';
     private const string XML_PATH_DELETE_MAXIMUM_RUNTIME_SECONDS =
         'davidbel_ai_search_semantic_data_processing/vector_delete/maximum_runtime_seconds';
     private const string XML_PATH_RETRY_ATTEMPT_THRESHOLD =
         'davidbel_ai_search_semantic_data_processing/retry/attempt_threshold';
-    private const string XML_PATH_CLEANUP_ATTEMPT_THRESHOLD =
-        'davidbel_ai_search_semantic_data_processing/cleanup/attempt_threshold';
     private const string XML_PATH_CLEANUP_RESULT_RETENTION_HOURS =
         'davidbel_ai_search_semantic_data_processing/cleanup/result_retention';
     private const string XML_PATH_INDEXER_LOCK_TIMEOUT_SECONDS =
@@ -71,11 +67,6 @@ class SemanticDataProcessingConfig
         return $this->getPositiveInteger(self::XML_PATH_VECTOR_DELETE_BATCH_SIZE);
     }
 
-    public function getVectorDeleteUpsertAttemptThreshold(): int
-    {
-        return $this->getPositiveInteger(self::XML_PATH_DELETE_UPSERT_ATTEMPT_THRESHOLD);
-    }
-
     public function getVectorDeleteMaximumRuntimeSeconds(): int
     {
         return $this->getPositiveInteger(self::XML_PATH_DELETE_MAXIMUM_RUNTIME_SECONDS);
@@ -84,11 +75,6 @@ class SemanticDataProcessingConfig
     public function getRetryAttemptThreshold(): int
     {
         return $this->getPositiveInteger(self::XML_PATH_RETRY_ATTEMPT_THRESHOLD);
-    }
-
-    public function getCleanupAttemptThreshold(): int
-    {
-        return $this->getPositiveInteger(self::XML_PATH_CLEANUP_ATTEMPT_THRESHOLD);
     }
 
     public function getCleanupResultRetentionHours(): int

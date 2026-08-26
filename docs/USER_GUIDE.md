@@ -1,10 +1,4 @@
-<!--
-  davidbel/magento-ai-search by David Belicza
-  SPDX-License-Identifier: MIT
-  https://github.com/DavidBelicza/Magento-AI-Search
--->
-
-# AI Search module user guide
+# User Guide: AI Search module
 
 This guide explains how to install and configure the AI Search module and prepare it for
 storefront use. The sections follow the order in which a new installation is normally set
@@ -322,10 +316,8 @@ defaults are recommended unless performance testing shows that they should be ad
 | **Vector Embedding: Concurrent Requests** | `3` | Sets how many embedding batches may be sent to the AI server at the same time. |
 | **Vector Embedding: Maximum Runtime (Seconds)** | `600` | Limits how long one worker run continues selecting new embedding batches. |
 | **Vector Delete: Batch Size** | `1000` | Sets how many pending vector deletions are processed in one batch. |
-| **Vector Delete: Upsert Attempt Threshold** | `3` | Stops a related upsert from blocking a deletion after it reaches this attempt count. |
 | **Vector Delete: Maximum Runtime (Seconds)** | `600` | Limits how long one worker run continues selecting vector deletion batches. |
-| **Retry: Attempt Threshold** | `3` | Retries failed backlog items while their attempt count remains below this value. |
-| **Cleanup: Attempt Threshold** | `3` | Removes failed backlog items after they reach this attempt count. |
+| **Retry: Attempt Threshold** | `3` | Defines the maximum number of failed processing attempts for upsert and delete backlog items. |
 | **Cleanup: Result Retention (Hours)** | `24` | Retains completed and outdated backlog results for this many hours before cleanup. |
 | **Indexer: Lock Timeout (Seconds)** | `10` | Limits how long index version management waits to acquire its lock. |
 | **Indexer: Minimum Successful Full Reindex (%)** | `50` | Sets the minimum successful share of a completed full rebuild required before the new index can become active. |

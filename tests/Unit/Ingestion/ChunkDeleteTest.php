@@ -127,7 +127,7 @@ class ChunkDeleteTest extends TestCase
     {
         $config = self::createStub(SemanticDataProcessingConfig::class);
         $config->method('getVectorDeleteBatchSize')->willReturn(1000);
-        $config->method('getVectorDeleteUpsertAttemptThreshold')->willReturn(3);
+        $config->method('getRetryAttemptThreshold')->willReturn(3);
         $config->method('getVectorDeleteMaximumRuntimeSeconds')->willReturn(600);
 
         return $config;

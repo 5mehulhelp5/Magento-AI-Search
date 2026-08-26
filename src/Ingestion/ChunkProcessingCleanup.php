@@ -46,7 +46,7 @@ class ChunkProcessingCleanup
         }
 
         return $deletedCount + $this->backlogMaintenance->deleteExhaustedUpsertsOrExpiredResults(
-            $this->semanticDataProcessingConfig->getCleanupAttemptThreshold(),
+            $this->semanticDataProcessingConfig->getRetryAttemptThreshold(),
             $expiredBefore,
             $targetIndexVersion
         );

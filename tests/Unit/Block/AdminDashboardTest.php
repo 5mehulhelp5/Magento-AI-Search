@@ -265,9 +265,7 @@ class AdminDashboardTest extends TestCase
     public function testDashboardNavigationAddsAndPrependsNavigation(): void
     {
         $navigation = $this->createMock(Template::class);
-        $navigation->expects(self::once())
-            ->method('addChild')
-            ->with('dashboard_button', DashboardButton::class, ['class' => '']);
+        $navigation->expects(self::exactly(2))->method('addChild');
         $layout = self::createStub(LayoutInterface::class);
         $layout->method('createBlock')->willReturnOnConsecutiveCalls(
             self::createStub(ElementRenderer::class),

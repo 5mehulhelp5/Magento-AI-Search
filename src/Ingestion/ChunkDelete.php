@@ -99,7 +99,7 @@ class ChunkDelete
         $cursorBacklogId = null;
         $batchSize = $this->semanticDataProcessingConfig->getVectorDeleteBatchSize();
         $upsertAttemptThreshold = $this->semanticDataProcessingConfig
-            ->getVectorDeleteUpsertAttemptThreshold();
+            ->getRetryAttemptThreshold();
         $maxRuntimeNanoseconds = $this->semanticDataProcessingConfig
             ->getVectorDeleteMaximumRuntimeSeconds() * self::NANOSECONDS_PER_SECOND;
 

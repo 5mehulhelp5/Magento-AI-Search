@@ -68,7 +68,6 @@ class ChunkProcessingMaintenanceTest extends TestCase
     {
         $config = self::createStub(SemanticDataProcessingConfig::class);
         $config->method('getRetryAttemptThreshold')->willReturn(3);
-        $config->method('getCleanupAttemptThreshold')->willReturn(3);
         $config->method('getCleanupResultRetentionHours')->willReturn(24);
 
         return $config;

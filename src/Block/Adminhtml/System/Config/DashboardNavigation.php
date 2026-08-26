@@ -10,11 +10,15 @@ namespace DavidBel\AiSearch\Block\Adminhtml\System\Config;
 
 use DavidBel\AiSearch\Block\Adminhtml\DashboardButton;
 use Magento\Backend\Block\Template;
+use Magento\Backend\Block\Widget\Button;
 use Magento\Config\Block\System\Config\Form;
 use Magento\Framework\View\Element\AbstractBlock;
 
 class DashboardNavigation extends Form
 {
+    private const string USER_GUIDE_URL =
+        'https://github.com/DavidBelicza/Magento-AI-Search/blob/main/docs/USER_GUIDE.md';
+
     protected function _prepareLayout(): AbstractBlock
     {
         $navigation = $this->addChild(
@@ -26,6 +30,18 @@ class DashboardNavigation extends Form
             'dashboard_button',
             DashboardButton::class,
             ['class' => '']
+        );
+        $navigation->addChild(
+            'user_guide_button',
+            Button::class,
+            [
+                'label' => __('User Guide'),
+                'class' => '',
+                'on_click' => sprintf(
+                    "window.open('%s', '_blank', 'noopener');",
+                    self::USER_GUIDE_URL
+                ),
+            ]
         );
 
         return parent::_prepareLayout();

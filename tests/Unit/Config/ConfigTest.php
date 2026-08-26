@@ -30,10 +30,8 @@ class ConfigTest extends TestCase
         self::assertSame(5, $config->getVectorEmbeddingConcurrentRequests());
         self::assertSame(5, $config->getVectorEmbeddingMaximumRuntimeSeconds());
         self::assertSame(5, $config->getVectorDeleteBatchSize());
-        self::assertSame(5, $config->getVectorDeleteUpsertAttemptThreshold());
         self::assertSame(5, $config->getVectorDeleteMaximumRuntimeSeconds());
         self::assertSame(5, $config->getRetryAttemptThreshold());
-        self::assertSame(5, $config->getCleanupAttemptThreshold());
         self::assertSame(5, $config->getCleanupResultRetentionHours());
         self::assertSame(5, $config->getIndexerLockTimeoutSeconds());
         self::assertSame(5, $config->getIndexerMinimumSuccessPercentage());
