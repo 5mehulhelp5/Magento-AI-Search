@@ -8,6 +8,7 @@ up. The guide also covers monitoring, testing, other configuration options, and 
 
 - [1. Installing the module](#1-installing-the-module)
 - [2. Choosing an AI provider](#2-choosing-an-ai-provider)
+  - [2.1. Understanding costs](#21-understanding-costs)
 - [3. Configuring the AI server](#3-configuring-the-ai-server)
   - [3.1. Local AI server](#31-local-ai-server)
   - [3.2. Cloud AI server](#32-cloud-ai-server)
@@ -49,6 +50,18 @@ A wide range of embedding models can be used through these supported endpoints, 
 text-embedding models, Gemini Embedding, EmbeddingGemma, BGE, E5, Nomic Embed, Qwen Embedding,
 and Mistral Embed. The right provider and model depend on the company's requirements, policies,
 AI strategy, and whether the configuration is intended for testing or production.
+
+### 2.1. Understanding costs
+
+The module is open source and has no license fee. It reuses Magento's existing OpenSearch service,
+so the main additional usage cost is normally the selected embedding provider. A local AI server
+can avoid API usage costs entirely.
+
+For a catalog of 100,000 products in two languages with 1 million submitted searches per month,
+the estimated first-year embedding cost is **$6.53 with OpenAI** or **$48.96 with Google Gemini**.
+These estimates exclude existing Magento, OpenSearch, hosting, and operational costs. See the
+[Cost Analysis](COST_ANALYSIS.md) for the assumptions, calculations, and comparison with managed
+search services.
 
 ## 3. Configuring the AI server
 

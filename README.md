@@ -1,15 +1,51 @@
-# Magento AI Search
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/fb8f8224-2cd4-422d-bdc8-e3929accd0c2"
+       alt="Magento AI Search"
+       width="410">
+</p>
 
-[![CI](https://github.com/DavidBelicza/Magento-AI-Search/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/DavidBelicza/Magento-AI-Search/actions/workflows/quality.yml)
-[![Codecov](https://codecov.io/gh/DavidBelicza/Magento-AI-Search/branch/main/graph/badge.svg)](https://codecov.io/gh/DavidBelicza/Magento-AI-Search)
-[![Latest Stable Version](https://img.shields.io/packagist/v/davidbel/magento-ai-search)](https://packagist.org/packages/davidbel/magento-ai-search)
-[![MIT License](https://img.shields.io/github/license/DavidBelicza/Magento-AI-Search)](LICENSE)
+<h1 align="center">Magento AI Search</h1>
+
+<p align="center">
+  <a href="https://github.com/DavidBelicza/Magento-AI-Search/actions/workflows/quality.yml"><img src="https://github.com/DavidBelicza/Magento-AI-Search/actions/workflows/quality.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="https://codecov.io/gh/DavidBelicza/Magento-AI-Search"><img src="https://codecov.io/gh/DavidBelicza/Magento-AI-Search/branch/main/graph/badge.svg" alt="Codecov"></a>
+  <a href="https://packagist.org/packages/davidbel/magento-ai-search"><img src="https://img.shields.io/packagist/v/davidbel/magento-ai-search" alt="Latest Stable Version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/DavidBelicza/Magento-AI-Search" alt="MIT License"></a>
+</p>
+
+<p align="center">
+  An <strong>AI provider-agnostic semantic search solution</strong><br>
+  for <strong>Magento, Mage-OS, and Adobe Commerce</strong>.
+</p>
+
+> See the [User Guide](https://github.com/DavidBelicza/Magento-AI-Search/blob/main/docs/USER_GUIDE.md) for complete installation and configuration instructions.
+
+> See the [Cost Analysis](https://github.com/DavidBelicza/Magento-AI-Search/blob/main/docs/COST_ANALYSIS.md) to learn how this module can save **up to $29,993 per year**.
+
+## 💡 Motivation
 
 What if there was a module using **Magento's default search engine** to provide **actual meaning-based AI search without breaking the default one**? This is that module.
 
 Inspired by Google Cloud's Commerce AI Search, the module reads and chunks product descriptions, uses a remote AI server to **convert the text chunks into vectors**, then saves those vectors to **Magento's default search engine, OpenSearch**. This enables **intelligent search based on meaning rather than keyword or synonym matching**.
 
-> See the [User Guide](https://github.com/DavidBelicza/Magento-AI-Search/blob/main/docs/USER_GUIDE.md) for complete installation and configuration instructions.
+## 💰 Cost Analysis
+
+This chart compares estimated first-year direct vendor costs for a catalog of 100,000 products in
+two languages with 1 million submitted searches per month. The assumptions, calculations, pricing
+sources, and limitations are documented in the
+[Cost Analysis](https://github.com/DavidBelicza/Magento-AI-Search/blob/main/docs/COST_ANALYSIS.md).
+
+```mermaid
+%%{init: {"theme":"base","xyChart":{"xAxis":{"labelRotation":-30}},"themeVariables":{"xyChart":{"plotColorPalette":"#fd8504"}}}}%%
+xychart-beta
+    title "First-year direct vendor cost at 1 million monthly searches"
+    x-axis ["Module with OpenAI", "Module with Google", "Google Agent Search", "Algolia public proxy", "Google AI Commerce"]
+    y-axis "USD per year" 0 --> 30000
+    bar [6.53, 48.96, 17820, 21270, 30000]
+```
+
+The module bars appear almost flat because the managed services cost hundreds
+or thousands of times more on the same linear scale.
 
 ## 🔍 What Semantic / AI Search Is
 
@@ -196,24 +232,12 @@ pie showData title End-to-end processing time distribution
     "Cron orchestration" : 0.743
 ```
 
-## 🗺️ Roadmap
+## 📚 Documentation
 
-| Feature | Area | Priority | Status |
-|---|---|---|---|
-| **Automated index version switching** | Index versioning | Essential | ✅ Complete |
-| **Avoiding duplicate embedding requests for identical chunk text** | Embedding | Essential | ✅ Complete |
-| **Removing orphaned documents and chunks after product deletion or visibility changes** | Ingestion | Essential | ✅ Complete |
-| **Handling failed deletion backlog items after the retry threshold** | Operations | Essential | ✅ Complete |
-| **Explicit store-view indexing scope** | Store scope | Essential | ✅ Complete |
-| **Attribute change detection for documents dependent on complex attributes** | Documents | Essential | ✅ Complete |
-| **Search-result cache membership invalidation** | Storefront | Essential | ✅ Complete |
-| **Authenticated OpenAI-compatible endpoints** | AI server | Planned | ✅ Complete |
-| **Native Google Gemini API support** | AI server | Planned | ✅ Complete |
-| **Store-view languages for dynamic documents** | Documents | Planned | ✅ Complete |
-| **AI server configuration test** | Admin | Planned | ✅ Complete |
-| **Document, chunk, and backlog Admin grids and views** | Admin | Planned | ✅ Complete |
-| **Semantic search testing in Admin** | Admin | Planned | ✅ Complete |
-| **Headless GraphQL semantic search support** | GraphQL | Planned | ✅ Complete |
-| **Progress and error observability** | Operations | Planned | ✅ Complete |
-| **Preparing the module for a stable release** | Release | Essential | ⏳ Open |
-| **Complete module uninstall command for database data and OpenSearch indexes** | Maintenance | Essential | ✅ Complete |
+- [User Guide](docs/USER_GUIDE.md)
+- [Cost Analysis](docs/COST_ANALYSIS.md)
+- [Solution Discovery](docs/SOLUTION_DISCOVERY.md)
+- [Contributing Guide](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [MIT License](LICENSE)
