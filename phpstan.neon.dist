@@ -11,8 +11,24 @@ includes:
 parameters:
     level: max
     paths:
-        - src
-        - tests
+        - Api
+        - Block
+        - Client
+        - Config
+        - Controller
+        - Cron
+        - Indexer
+        - Ingestion
+        - Log
+        - Model
+        - Observer
+        - Plugin
+        - Repository
+        - Search
+        - Setup
+        - Ui
+        - registration.php
+        - Test
     tmpDir: .phpstan.cache
     checkUninitializedProperties: true
     reportUnmatchedIgnoredErrors: true

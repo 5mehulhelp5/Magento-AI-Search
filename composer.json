@@ -76,15 +76,18 @@
     },
     "autoload": {
         "files": [
-            "src/registration.php"
+            "registration.php"
         ],
         "psr-4": {
-            "DavidBel\\AiSearch\\": "src/"
-        }
+            "DavidBel\\AiSearch\\": ""
+        },
+        "exclude-from-classmap": [
+            "/Test/"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
-            "DavidBel\\AiSearch\\Tests\\": "tests/"
+            "DavidBel\\AiSearch\\Test\\": "Test/"
         }
     },
     "config": {
@@ -98,8 +101,8 @@
         "analyse": "@php vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress",
         "cs": "@php vendor/bin/phpcs --runtime-set testVersion 8.3- --standard=phpcs.xml.dist",
         "cs:fix": "@php vendor/bin/phpcbf --runtime-set testVersion 8.3- --standard=phpcs.xml.dist",
-        "lint": "@php vendor/bin/parallel-lint --exclude vendor src tests",
-        "mess": "@php vendor/bin/phpmd src,tests text phpmd.xml",
+        "lint": "@php vendor/bin/parallel-lint --exclude vendor --exclude .phpstan.cache .",
+        "mess": "@php vendor/bin/phpmd Api,Block,Client,Config,Controller,Cron,Indexer,Ingestion,Log,Model,Observer,Plugin,Repository,Search,Setup,Test,Ui text phpmd.xml",
         "qa": [
             "@qa:checks",
             "@test"
@@ -118,6 +121,6 @@
         ],
         "security": "@composer audit --locked --abandoned=report",
         "test": "@php vendor/bin/phpunit --configuration=phpunit.xml.dist",
-        "test:coverage": "@test --coverage-filter=src --coverage-clover=coverage.xml"
+        "test:coverage": "@test --coverage-clover=coverage.xml"
     }
 }

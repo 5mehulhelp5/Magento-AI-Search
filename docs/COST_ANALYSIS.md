@@ -57,7 +57,7 @@ The primary calculation assumes:
 
 The 500-token assumption represents a moderate product description using the module's
 four-characters-per-token estimator. Current defaults are defined in
-[`src/etc/config.xml`](../src/etc/config.xml).
+[`etc/config.xml`](../etc/config.xml).
 
 ## Embedding workload
 

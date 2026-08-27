@@ -15,8 +15,26 @@
     <config name="installed_paths"
             value="../../magento/magento-coding-standard,../../magento/php-compatibility-fork,../../slevomat/coding-standard"/>
 
-    <file>src</file>
-    <file>tests</file>
+    <file>Api</file>
+    <file>Block</file>
+    <file>Client</file>
+    <file>Config</file>
+    <file>Controller</file>
+    <file>Cron</file>
+    <file>Indexer</file>
+    <file>Ingestion</file>
+    <file>Log</file>
+    <file>Model</file>
+    <file>Observer</file>
+    <file>Plugin</file>
+    <file>Repository</file>
+    <file>Search</file>
+    <file>Setup</file>
+    <file>Ui</file>
+    <file>etc</file>
+    <file>registration.php</file>
+    <file>Test</file>
+    <file>view</file>
 
     <exclude-pattern>*/vendor/*</exclude-pattern>
 
@@ -52,16 +70,16 @@
     </rule>
     <rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHint"/>
     <rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHint.UselessAnnotation">
-        <exclude-pattern>src/Api/*</exclude-pattern>
+        <exclude-pattern>Api/*</exclude-pattern>
     </rule>
     <rule ref="SlevomatCodingStandard.TypeHints.PropertyTypeHint"/>
     <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint"/>
     <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint.UselessAnnotation">
-        <exclude-pattern>src/Api/*</exclude-pattern>
+        <exclude-pattern>Api/*</exclude-pattern>
     </rule>
     <rule ref="SlevomatCodingStandard.Variables.UnusedVariable"/>
 
     <rule ref="Generic.Files.LineLength">
-        <exclude-pattern>src/etc/adminhtml/system.xml</exclude-pattern>
+        <exclude-pattern>etc/adminhtml/system.xml</exclude-pattern>
     </rule>
 </ruleset>

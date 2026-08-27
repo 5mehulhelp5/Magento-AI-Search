@@ -11,9 +11,20 @@
          colors="true"
          failOnRisky="true"
          failOnWarning="true">
+    <source>
+        <include>
+            <directory suffix=".php">.</directory>
+        </include>
+        <exclude>
+            <directory>.phpstan.cache</directory>
+            <directory>.phpunit.cache</directory>
+            <directory>Test</directory>
+            <directory>vendor</directory>
+        </exclude>
+    </source>
     <testsuites>
         <testsuite name="AiSearch Unit Tests">
-            <directory suffix="Test.php">tests/Unit</directory>
+            <directory suffix="Test.php">Test/Unit</directory>
         </testsuite>
     </testsuites>
 </phpunit>
