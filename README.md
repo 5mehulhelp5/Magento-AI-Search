@@ -47,6 +47,32 @@ xychart-beta
 The module bars appear almost flat because the managed services cost hundreds
 or thousands of times more on the same linear scale.
 
+## 🛍️ Use Cases
+
+### Customer product discovery
+
+Semantic search is most useful when shoppers describe a need, experience, or intended use instead
+of entering the exact words used in the catalog. It works especially well when product descriptions
+and dynamic documents contain rich, specific information.
+
+| Store type | Useful product content | Example search |
+|---|---|---|
+| Consumer electronics | Compatibility details, technical features, setup instructions, and usage guidance | *comfortable headphones that block office noise* |
+| Tea and specialty food | Flavor, aroma, origin, preparation, and recommended occasions | *a gentle floral tea for a calm evening* |
+| Fashion and luxury | Fit, texture, materials, comfort, quality, mood, and occasion | *an elegant coat that feels soft and comfortable all day* |
+| Home and furniture | Dimensions, materials, room type, style, comfort, and practical use | *a compact comfortable chair for a small reading corner* |
+| Outdoor and sports | Activities, terrain, weather, durability, and performance characteristics | *waterproof shoes for long walks on wet rocky paths* |
+| Technical and B2B catalogs | Applications, constraints, compatibility, operating conditions, and specialist terminology | *a compact pump suitable for corrosive liquids* |
+
+### Catalog content quality review
+
+Admin semantic-search testing can reveal weak product descriptions by showing whether representative
+shopper queries find the expected products and text chunks. This is a content-quality signal, not a
+measure of marketing effectiveness, which still requires conversion analytics or A/B testing.
+
+The module produces stronger results when indexed product content clearly describes the benefits,
+attributes, and use cases that shoppers are likely to search for.
+
 ## 🔍 What Semantic / AI Search Is
 
 | Search query | Matching product descriptions |
@@ -128,7 +154,7 @@ Only key configuration changes trigger automatic full reindexing. The Admin UI f
 | Magento Open Source | ✅ Supported |
 | Adobe Commerce | ✅ Supported<br>ℹ️ Product Staging, Catalog Permissions, and B2B Shared Catalogs are not supported yet |
 | Adobe Commerce on Cloud | ✅ Supported<br>ℹ️ Product Staging, Catalog Permissions, and B2B Shared Catalogs are not supported yet |
-| Mage-OS | 🧪 To be tested |
+| Mage-OS | ✅ Supported |
 
 ### Magento
 

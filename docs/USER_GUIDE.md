@@ -6,6 +6,7 @@ up. The guide also covers monitoring, testing, other configuration options, and 
 
 ## Table of contents
 
+- [0. Use cases](#0-use-cases)
 - [1. Installing the module](#1-installing-the-module)
 - [2. Choosing an AI provider](#2-choosing-an-ai-provider)
   - [2.1. Understanding costs](#21-understanding-costs)
@@ -28,6 +29,16 @@ up. The guide also covers monitoring, testing, other configuration options, and 
 - [10. Uninstalling the module](#10-uninstalling-the-module)
 - [11. Support and license](#11-support-and-license)
 - [12. Further information](#12-further-information)
+
+## 0. Use cases
+
+Semantic search is useful when product content explains compatibility, features, flavor, comfort,
+materials, or intended use. Shoppers can describe what they need instead of using exact catalog
+terms.
+
+The Admin search test can also reveal descriptions that do not clearly express these details.
+Search quality depends on the indexed content, while Magento continues to handle filters,
+visibility, and catalog rules.
 
 ## 1. Installing the module
 
