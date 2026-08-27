@@ -10,26 +10,26 @@
         <job name="davidbel_ai_search_chunk_processing"
              instance="DavidBel\AiSearch\Cron\ChunkProcessing"
              method="execute">
-            <schedule>* * * * *</schedule>
+            <config_path>davidbel_ai_search_semantic_data_processing/vector_embedding/cron_schedule</config_path>
         </job>
     </group>
     <group id="davidbel_ai_search_maintenance">
         <job name="davidbel_ai_search_chunk_processing_retry"
              instance="DavidBel\AiSearch\Cron\ChunkProcessingRetry"
              method="execute">
-            <schedule>*/5 * * * *</schedule>
+            <config_path>davidbel_ai_search_semantic_data_processing/retry/cron_schedule</config_path>
         </job>
         <job name="davidbel_ai_search_chunk_processing_cleanup"
              instance="DavidBel\AiSearch\Cron\ChunkProcessingCleanup"
              method="execute">
-            <schedule>0 0 * * *</schedule>
+            <config_path>davidbel_ai_search_semantic_data_processing/cleanup/cron_schedule</config_path>
         </job>
     </group>
     <group id="davidbel_ai_search_delete">
         <job name="davidbel_ai_search_chunk_delete"
              instance="DavidBel\AiSearch\Cron\ChunkDelete"
              method="execute">
-            <schedule>* * * * *</schedule>
+            <config_path>davidbel_ai_search_semantic_data_processing/vector_delete/cron_schedule</config_path>
         </job>
     </group>
 </config>

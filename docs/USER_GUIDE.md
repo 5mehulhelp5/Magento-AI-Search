@@ -311,12 +311,24 @@ defaults are recommended unless performance testing shows that they should be ad
 | **Vector Embedding: Batch Size** | `100` | Sets how many pending items are included in one embedding batch. |
 | **Vector Embedding: Concurrent Requests** | `3` | Sets how many embedding batches may be sent to the AI server at the same time. |
 | **Vector Embedding: Maximum Runtime (Seconds)** | `600` | Limits how long one worker run continues selecting new embedding batches. |
+| **Vector Embedding: Cron Schedule** | `* * * * *` | Runs embedding and OpenSearch upsert processing every minute. |
 | **Vector Delete: Batch Size** | `1000` | Sets how many pending vector deletions are processed in one batch. |
 | **Vector Delete: Maximum Runtime (Seconds)** | `600` | Limits how long one worker run continues selecting vector deletion batches. |
+| **Vector Delete: Cron Schedule** | `* * * * *` | Runs OpenSearch vector deletion processing every minute. |
 | **Retry: Attempt Threshold** | `3` | Defines the maximum number of failed processing attempts for upsert and delete backlog items. |
+| **Retry: Cron Schedule** | `*/5 * * * *` | Makes eligible failed backlog items available for another attempt every five minutes. |
 | **Cleanup: Result Retention (Hours)** | `24` | Retains completed and outdated backlog results for this many hours before cleanup. |
+| **Cleanup: Cron Schedule** | `0 0 * * *` | Removes retained backlog records and obsolete physical indexes daily at midnight. |
 | **Indexer: Lock Timeout (Seconds)** | `10` | Limits how long index version management waits to acquire its lock. |
 | **Indexer: Minimum Successful Full Reindex (%)** | `50` | Sets the minimum successful share of a completed full rebuild required before the new index can become active. |
+
+Each Vector Embedding cron job starts one worker run. The worker can send up
+to `Batch Size × Concurrent Requests` backlog items at once and continues selecting batches until
+no pending work remains or Maximum Runtime is reached.
+
+Vector Delete processes up to its Batch
+Size in each OpenSearch request and also continues until no pending deletions remain or its Maximum
+Runtime is reached.
 
 ## 9. Developer operations
 

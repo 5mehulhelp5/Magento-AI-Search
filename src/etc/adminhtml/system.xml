@@ -418,11 +418,12 @@
                 </field>
             </group>
             <group id="vector_embedding"
-                   translate="label"
+                   translate="label comment"
                    type="text"
                    sortOrder="20"
                    showInDefault="1">
                 <label>Vector Embedding</label>
+                <comment>Each processing round can send up to Batch Size multiplied by Concurrent Requests backlog items to the AI server. The cron starts further rounds until no pending work remains or Maximum Runtime is reached.</comment>
                 <field id="batch_size"
                        translate="label comment"
                        type="text"
@@ -453,13 +454,24 @@
                     <comment>The maximum time for selecting new embedding batches during one ingestion cron run. After this time, the worker stops selecting new batches and allows requests already in progress to finish.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
+                <field id="cron_schedule"
+                       translate="label comment"
+                       type="text"
+                       sortOrder="40"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Cron Schedule</label>
+                    <comment>The five-part cron expression that controls how often pending upsert backlog items are embedded and indexed in OpenSearch.</comment>
+                    <validate>required-entry</validate>
+                </field>
             </group>
             <group id="vector_delete"
-                   translate="label"
+                   translate="label comment"
                    type="text"
                    sortOrder="30"
                    showInDefault="1">
                 <label>Vector Delete</label>
+                <comment>Each request deletes up to Batch Size vectors from OpenSearch. The cron starts further requests until no pending deletions remain or Maximum Runtime is reached.</comment>
                 <field id="batch_size"
                        translate="label comment"
                        type="text"
@@ -480,6 +492,16 @@
                     <comment>The maximum time the vector deletion cron selects new batches during one run. After this time, the cron stops selecting new batches and allows any current OpenSearch request to finish.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
+                <field id="cron_schedule"
+                       translate="label comment"
+                       type="text"
+                       sortOrder="30"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Cron Schedule</label>
+                    <comment>The five-part cron expression that controls how often pending delete backlog items are removed from OpenSearch.</comment>
+                    <validate>required-entry</validate>
+                </field>
             </group>
             <group id="retry"
                    translate="label"
@@ -497,6 +519,16 @@
                     <comment>The maximum number of failed processing attempts for upsert and delete backlog items.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
                 </field>
+                <field id="cron_schedule"
+                       translate="label comment"
+                       type="text"
+                       sortOrder="20"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Cron Schedule</label>
+                    <comment>The five-part cron expression that controls how often eligible failed backlog items are made available for another processing attempt.</comment>
+                    <validate>required-entry</validate>
+                </field>
             </group>
             <group id="cleanup"
                    translate="label"
@@ -513,6 +545,16 @@
                     <label>Result Retention (Hours)</label>
                     <comment>Completed and outdated backlog items are deleted by the cleanup cron after this many hours.</comment>
                     <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="cron_schedule"
+                       translate="label comment"
+                       type="text"
+                       sortOrder="20"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Cron Schedule</label>
+                    <comment>The five-part cron expression that controls how often retained backlog records and obsolete physical indexes are removed.</comment>
+                    <validate>required-entry</validate>
                 </field>
             </group>
             <group id="indexer"
