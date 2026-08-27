@@ -84,7 +84,7 @@ class OpenSearch
             );
         }
 
-        return $this->getClient()->bulkQuery([
+        return $this->getClient()->getOpenSearchClient()->bulk([
             'index' => $physicalIndex->indexName,
             'body' => $body,
             'refresh' => 'wait_for',

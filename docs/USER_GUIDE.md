@@ -23,9 +23,10 @@ up. The guide also covers monitoring, testing, other configuration options, and 
   - [8.2. Dynamic documents](#82-dynamic-documents)
   - [8.3. Embedder document template](#83-embedder-document-template)
   - [8.4. Data processing optimization](#84-data-processing-optimization)
-- [9. Uninstalling the module](#9-uninstalling-the-module)
-- [10. Support and license](#10-support-and-license)
-- [11. Further information](#11-further-information)
+- [9. Developer operations](#9-developer-operations)
+- [10. Uninstalling the module](#10-uninstalling-the-module)
+- [11. Support and license](#11-support-and-license)
+- [12. Further information](#12-further-information)
 
 ## 1. Installing the module
 
@@ -162,12 +163,7 @@ Catalog processing starts automatically as soon as the selected store views are 
 ## 5. Monitoring the module
 
 Make sure Magento cron is running. It should already be active on a fully configured Magento
-installation. To run one processing cycle manually, use:
-
-```shell
-bin/magento cron:run --group=index
-bin/magento cron:run --group=davidbel_ai_search
-```
+installation.
 
 Go to **System > AI Search > Dashboard** to monitor catalog processing. **Indexing Progress** shows
 how many products are waiting for the first processing stage. **Ingestion Pipeline Progress** shows
@@ -322,7 +318,35 @@ defaults are recommended unless performance testing shows that they should be ad
 | **Indexer: Lock Timeout (Seconds)** | `10` | Limits how long index version management waits to acquire its lock. |
 | **Indexer: Minimum Successful Full Reindex (%)** | `50` | Sets the minimum successful share of a completed full rebuild required before the new index can become active. |
 
-## 9. Uninstalling the module
+## 9. Developer operations
+
+To rebuild all AI Search documents and chunks, run the following command from the Magento root
+directory:
+
+```shell
+bin/magento indexer:reindex davidbel_ai_search_product_indexer
+```
+
+The reindex creates the backlog items required for embedding and OpenSearch indexing. To process
+them immediately instead of waiting for the scheduled cron job, run:
+
+```shell
+bin/magento cron:run --group=davidbel_ai_search
+```
+
+Indexer, cron, batch, and error information is written to:
+
+```text
+var/log/davidbel/ai-search.log
+```
+
+To follow new log entries from the Magento root directory, run:
+
+```shell
+tail -f var/log/davidbel/ai-search.log
+```
+
+## 10. Uninstalling the module
 
 Test the removal in a non-production environment and back up the database before proceeding.
 Then run the standard Magento module uninstall command from the Magento root directory:
@@ -336,14 +360,14 @@ processing records, and physical OpenSearch indexes. Magento also disables the m
 removes it from the deployment configuration, removes the Composer package, clears the cache,
 and updates generated classes.
 
-## 10. Support and license
+## 11. Support and license
 
 The module is published under the [MIT License](https://github.com/DavidBelicza/Magento-AI-Search/blob/main/LICENSE) by David Belicza, a certified Adobe Commerce Expert.
 
 If you find a bug or would like to request a feature, open an
 [issue on GitHub](https://github.com/DavidBelicza/Magento-AI-Search/issues).
 
-## 11. Further information
+## 12. Further information
 
 For architecture, compatibility, performance measurements, and other technical details, see
 the project's [README file](https://github.com/DavidBelicza/Magento-AI-Search#readme).

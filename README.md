@@ -98,16 +98,16 @@ Only key configuration changes trigger automatic full reindexing. The Admin UI f
 
 | Magento | PHP | OpenSearch | Status |
 |---:|---:|---:|---|
-| 2.4.9 | 8.5 | 3 | 🧪 To be tested |
-| 2.4.9 | 8.5 | 2 | 🧪 To be tested |
+| 2.4.9 | 8.5 | 3 | ✅ Supported |
+| 2.4.9 | 8.5 | 2.19 | ✅ Supported |
 | 2.4.9 | 8.4 | 3 | ✅ Supported |
-| 2.4.9 | 8.4 | 2 | 🧪 To be tested |
-| 2.4.8-p3+ | 8.4 | 3 | 🧪 To be tested |
-| 2.4.8 | 8.4 | 2 | 🧪 To be tested |
-| 2.4.8-p3+ | 8.3 | 3 | 🧪 To be tested |
-| 2.4.8 | 8.3 | 2 | 🧪 To be tested |
-| 2.4.7-p10 | 8.3 | 3 | 🧪 To be tested |
-| 2.4.7 | 8.3 | 2 | 🧪 To be tested |
+| 2.4.9 | 8.4 | 2.19 | ✅ Supported |
+| 2.4.8-p3+ | 8.4 | 3 | ✅ Supported |
+| 2.4.8 | 8.4 | 2.19 | ✅ Supported |
+| 2.4.8-p3+ | 8.3 | 3 | ✅ Supported |
+| 2.4.8 | 8.3 | 2.19 | ✅ Supported |
+| 2.4.7-p10 | 8.3 | 3 | ✅ Supported |
+| 2.4.7-p5+ | 8.3 | 2.19 | ✅ Supported |
 
 OpenSearch must include the k-NN plugin, which is bundled with the standard OpenSearch
 distribution normally used with Magento.

@@ -102,11 +102,15 @@ class OpenSearchTest extends TestCase
 
     public function testBulkQueryUsesWritablePhysicalIndex(): void
     {
-        $client = $this->createMock(SearchClient::class);
-        $client->expects(self::once())
-            ->method('bulkQuery')
+        $openSearchClient = $this->createMock(Client::class);
+        $openSearchClient->expects(self::once())
+            ->method('bulk')
             ->with(['index' => 'alias_v2', 'body' => [['index' => []]], 'refresh' => 'wait_for'])
             ->willReturn(['errors' => false]);
+        $client = $this->createMock(SearchClient::class);
+        $client->expects(self::once())
+            ->method('getOpenSearchClient')
+            ->willReturn($openSearchClient);
         $provider = self::createStub(PhysicalIndexProvider::class);
         $provider->method('getForIngestion')->willReturn($this->physicalIndex());
 

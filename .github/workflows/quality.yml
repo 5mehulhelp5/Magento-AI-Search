@@ -28,14 +28,14 @@ jobs:
           coverage: none
           tools: composer:v2
 
-      - name: Install dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
+      - name: Resolve and install dependencies
+        run: composer update --no-interaction --no-progress --prefer-dist
 
       - name: Run quality checks
         run: composer qa
 
   quality-php-84:
-    name: PHP 8.4 and code coverage
+    name: PHP 8.4
     needs: quality-php-83
     runs-on: ubuntu-latest
     env:
@@ -48,11 +48,34 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.4"
+          coverage: none
+          tools: composer:v2
+
+      - name: Resolve and install dependencies
+        run: composer update --no-interaction --no-progress --prefer-dist
+
+      - name: Run quality checks
+        run: composer qa
+
+  quality-php-85:
+    name: PHP 8.5 and code coverage
+    needs: quality-php-84
+    runs-on: ubuntu-latest
+    env:
+      COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
           coverage: pcov
           tools: composer:v2
 
-      - name: Install dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
+      - name: Resolve and install dependencies
+        run: composer update --no-interaction --no-progress --prefer-dist
 
       - name: Run quality checks and generate coverage
         run: composer qa:coverage
