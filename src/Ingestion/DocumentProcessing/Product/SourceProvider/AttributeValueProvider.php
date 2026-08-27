@@ -153,11 +153,19 @@ class AttributeValueProvider
         $rows = $connection->fetchAll(
             $connection->select()
                 ->from(
-                    $productResource->getTable('catalog_product_entity_' . $backendType),
-                    ['attribute_id', 'entity_id', 'store_id', 'value']
+                    ['attribute_value' => $productResource->getTable('catalog_product_entity_' . $backendType)],
+                    ['attribute_id', 'store_id', 'value']
                 )
-                ->where('attribute_id IN (?)', array_keys($attributes))
-                ->where('entity_id IN (?)', $productIds)
+                ->join(
+                    ['product' => $productResource->getEntityTable()],
+                    sprintf(
+                        'product.%1$s = attribute_value.%1$s',
+                        $productResource->getLinkField()
+                    ),
+                    ['entity_id']
+                )
+                ->where('attribute_value.attribute_id IN (?)', array_keys($attributes))
+                ->where('product.entity_id IN (?)', $productIds)
         );
         $valuesBySourceCode = [];
 

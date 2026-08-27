@@ -90,8 +90,8 @@ Only key configuration changes trigger automatic full reindexing. The Admin UI f
 | Distribution | Status |
 |---|---|
 | Magento Open Source | ✅ Supported |
-| Adobe Commerce | 🧪 To be tested |
-| Adobe Commerce on Cloud | 🧪 To be tested |
+| Adobe Commerce | ✅ Supported<br>ℹ️ Product Staging, Catalog Permissions, and B2B Shared Catalogs are not supported yet |
+| Adobe Commerce on Cloud | ✅ Supported<br>ℹ️ Product Staging, Catalog Permissions, and B2B Shared Catalogs are not supported yet |
 | Mage-OS | 🧪 To be tested |
 
 ### Magento

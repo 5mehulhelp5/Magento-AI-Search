@@ -42,14 +42,16 @@ class DataProvider
             $connection,
             $attributeTable,
             'status',
-            $attributeIds['status']
+            $attributeIds['status'],
+            $productResource
         );
         $this->joinScopedAttribute(
             $select,
             $connection,
             $attributeTable,
             'visibility',
-            $attributeIds['visibility']
+            $attributeIds['visibility'],
+            $productResource
         );
         $select->where('product.entity_id IN (?)', $productIds)
             ->where('store.store_id IN (?)', $storeIds)
@@ -80,11 +82,19 @@ class DataProvider
         $rows = $connection->fetchAll(
             $connection->select()
                 ->from(
-                    $productResource->getTable('catalog_product_relation'),
-                    ['parent_id', 'child_id']
+                    ['relation' => $productResource->getTable('catalog_product_relation')],
+                    ['child_id']
                 )
-                ->where('parent_id IN (?)', $parentIds)
-                ->order(['parent_id ASC', 'child_id ASC'])
+                ->join(
+                    ['parent_product' => $productResource->getEntityTable()],
+                    sprintf(
+                        'parent_product.%s = relation.parent_id',
+                        $productResource->getLinkField()
+                    ),
+                    ['parent_id' => 'entity_id']
+                )
+                ->where('parent_product.entity_id IN (?)', $parentIds)
+                ->order(['parent_product.entity_id ASC', 'relation.child_id ASC'])
         );
         $childIdsByParentId = [];
 
@@ -152,10 +162,18 @@ class DataProvider
             $connection->fetchCol(
                 $connection->select()
                     ->from(
-                        $productResource->getTable('catalog_product_relation'),
-                        ['parent_id']
+                        ['relation' => $productResource->getTable('catalog_product_relation')],
+                        []
                     )
-                    ->where('child_id IN (?)', $childIds)
+                    ->join(
+                        ['parent_product' => $productResource->getEntityTable()],
+                        sprintf(
+                            'parent_product.%s = relation.parent_id',
+                            $productResource->getLinkField()
+                        ),
+                        ['entity_id']
+                    )
+                    ->where('relation.child_id IN (?)', $childIds)
                     ->distinct()
             ),
             'parent_id'
@@ -225,7 +243,10 @@ class DataProvider
             )
             ->join(
                 ['assignment' => $productResource->getProductWebsiteTable()],
-                'assignment.product_id = product.entity_id',
+                sprintf(
+                    'assignment.product_id = product.%s',
+                    $productResource->getLinkField()
+                ),
                 []
             )
             ->join(
@@ -240,14 +261,21 @@ class DataProvider
         AdapterInterface $connection,
         string $attributeTable,
         string $alias,
-        int $attributeId
+        int $attributeId,
+        ProductResource $productResource
     ): void {
         $defaultAlias = $alias . '_default';
         $storeAlias = $alias . '_store';
+        $productLinkField = $productResource->getLinkField();
         $select->join(
             [$defaultAlias => $attributeTable],
             $connection->quoteInto(
-                $defaultAlias . '.entity_id = product.entity_id AND '
+                sprintf(
+                    '%s.%s = product.%s AND ',
+                    $defaultAlias,
+                    $productLinkField,
+                    $productLinkField
+                )
                 . $defaultAlias . '.attribute_id = ?',
                 $attributeId
             ) . $connection->quoteInto(
@@ -259,7 +287,12 @@ class DataProvider
         $select->joinLeft(
             [$storeAlias => $attributeTable],
             $connection->quoteInto(
-                $storeAlias . '.entity_id = product.entity_id AND '
+                sprintf(
+                    '%s.%s = product.%s AND ',
+                    $storeAlias,
+                    $productLinkField,
+                    $productLinkField
+                )
                 . $storeAlias . '.attribute_id = ?',
                 $attributeId
             ) . ' AND ' . $storeAlias . '.store_id = store.store_id',
@@ -296,7 +329,8 @@ class DataProvider
             $connection,
             $productResource->getTable('catalog_product_entity_int'),
             'status',
-            $statusAttributeId
+            $statusAttributeId,
+            $productResource
         );
         $select->reset(Select::COLUMNS)
             ->columns(['child_id' => 'product.entity_id', 'store_id' => 'store.store_id'])
