@@ -179,7 +179,7 @@ distribution normally used with Magento.
 | Storefront | Status |
 |---|---|
 | Luma | ✅ Supported |
-| Hyvä | 🧪 To be tested |
+| Hyvä | ❌ Not supported<br>ℹ️ Hyvä's layered navigation customization breaks Magento's default relevance sorting, which also affects semantic result ordering.<br>(Package: `hyva-themes/magento2-default-theme` `1.5.2`; issue: `position_category_*` replaces relevance sorting.) |
 | Headless (GraphQL) | ✅ Supported |
 
 ### AI server
