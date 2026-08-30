@@ -6,10 +6,71 @@
     ],
     "davidbel_ai_search_embedding_backlog": {
         "index": {
-            "DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_OPERATION_STATUS": true
+            "DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_OPERATION_STATUS": true,
+            "DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_STATUS": true,
+            "IDX_87A95129091947C576447D8B83077BCE": true,
+            "DAVIDBEL_AI_SRCH_EMBEDDING_BACKLOG_IDX_VERSION_FULL_REIDX_STS": true
         },
         "constraint": {
-            "DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_CHUNK_ID": true
+            "DAVIDBEL_AI_SEARCH_EMBEDDING_BACKLOG_CHUNK_ID": true,
+            "PRIMARY": true,
+            "UNQ_B18AC323A4418500E85BF8F675870C58": true
+        },
+        "column": {
+            "backlog_id": true,
+            "chunk_id": true,
+            "source_entity_type": true,
+            "source_entity_id": true,
+            "operation": true,
+            "status": true,
+            "index_version": true,
+            "full_reindex_status": true,
+            "backlog_version": true,
+            "attempt_count": true,
+            "last_error_stage": true,
+            "last_error_code": true,
+            "last_error_message": true,
+            "created_at": true,
+            "updated_at": true
+        }
+    },
+    "davidbel_ai_search_document": {
+        "column": {
+            "document_id": true,
+            "source_entity_type": true,
+            "source_entity_id": true,
+            "store_id": true,
+            "source_code": true,
+            "title": true,
+            "source_hash": true,
+            "created_at": true,
+            "updated_at": true
+        },
+        "index": {
+            "DAVIDBEL_AI_SEARCH_DOCUMENT_SOURCE_HASH": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "UNQ_0A89EA93C215294FAF6688F4721ACAF5": true
+        }
+    },
+    "davidbel_ai_search_chunk": {
+        "column": {
+            "chunk_id": true,
+            "document_id": true,
+            "chunk_index": true,
+            "content": true,
+            "content_hash": true,
+            "created_at": true,
+            "updated_at": true
+        },
+        "index": {
+            "DAVIDBEL_AI_SEARCH_CHUNK_CONTENT_HASH": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "FK_3AB5875FC2EF44E43AEBAFE38B33C733": true,
+            "DAVIDBEL_AI_SEARCH_CHUNK_DOCUMENT_ID_CHUNK_INDEX": true
         }
     }
 }
